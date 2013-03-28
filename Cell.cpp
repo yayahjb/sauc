@@ -493,4 +493,5 @@ arma::mat33 mat66tomat33(const arma::mat66& m6) {
         j = l - 3*i;
         if (std::abs(m(i,j))< 1.e-8) m(i,j) = 0.;
     }
+    return m;
 }

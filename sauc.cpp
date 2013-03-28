@@ -67,6 +67,7 @@
 #define ARMA_DONT_USE_BLAS
 #define ARMA_DONT_USE_LAPACK
 #include <armadillo>
+#include <vector>
 
 
 using namespace std;
@@ -89,7 +90,7 @@ int nearest = 0, numRow = 0;
 int quitAlgorithm = 0, quitSimilar = 0, quitContinue = 0, endProgram = 0, choiceAlgorithm = 0, choiceSimilar = 0, choiceContinue = 0, goBack = 0,
     priorAlgorithm = -1;
 double result0 = 0, result1 = 0, result2 = 0, result3 = 0, result4 = 0, result5 = 0, resultSumTemp = 0, resultSum = 0, numRange = 0;
-double numRangeA, numRangeB, numRangeC, numRangeAlpha, numRangeBeta, numRangeGamma;
+double numRangeA, numRangeB, numRangeC, numRangeAlpha, numRangeBeta, numRangeGamma, sphereRange;
 string valueDump;
 
 double convertToDouble(string value)
@@ -296,34 +297,6 @@ void makeDatabase(string filename)
 	infile.close();
 }
 
-void probeDatabase()
-{
-	for (int i = 0; i < NUM_ROWS; i++)
-	{
-		result0 = abs(probeArray[0] - cellDArray[i][0]);
-		result1 = abs(probeArray[1] - cellDArray[i][1]);
-		result2 = abs(probeArray[2] - cellDArray[i][2]);
-		result3 = abs(probeArray[3] - cellDArray[i][3]);
-		result4 = abs(probeArray[4] - cellDArray[i][4]);
-		result5 = abs(probeArray[5] - cellDArray[i][5]);
-		resultSumTemp = result0 + result1 + result2 + result3 + result4 + result5;
-		if (i == 0)
-		{
-			resultSum = resultSumTemp;
-			nearest = i;
-		}
-		else if (resultSumTemp < resultSum)
-		{
-			resultSum = resultSumTemp;
-			nearest = i;
-		}
-	}
-	//cout << "*--------------------*" << endl;
-	//cout << "Probe Point: " << probeArray[0] << "/" << probeArray[1] << "/" << probeArray[2] << "/" << probeArray[3] << "/" << probeArray[4] << "/" << probeArray[5] << endl;
-	//cout << "Nearest Point: " << cellDArray[nearest][0] << "/" << cellDArray[nearest][1] << "/" << cellDArray[nearest][2] << "/" << cellDArray[nearest][3] << "/" << cellDArray[nearest][4] << "/" << cellDArray[nearest][5] << endl;
-	//cout << "*--------------------*" << endl;
-}
-
 bool makeprimredprobe(void)
 {
     string latsym;
@@ -471,6 +444,51 @@ void findNearest()
     
     /* code for duplicates removed here -- should be handled in the Sphere search */
 	
+}
+
+void findSphere()
+{
+	cout << endl;
+	// unitcell unknownCell = unitcell(probeArray[0], probeArray[1], probeArray[2], probeArray[3], probeArray[4], probeArray[5], 0, 0, 0, 0, 0, 0, 0);
+    unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
+	cout << "Raw Unknown Cell\n" <<
+        "A: " << probeArray[0] << " " <<
+        "B: " << probeArray[1] << " " <<
+        "C: " << probeArray[2] << " " <<
+		"Alpha: " <<probeArray[3] << " " <<
+        "Beta: " << probeArray[4] << " " <<
+        "Gamma: " << probeArray[5] <<
+        " Lattice: "<< probelattice <<  endl;
+	cout << "Reduced Primitive Cell\n" <<
+        "A: " << primredprobe[0] << " " <<
+        "B: " << primredprobe[1] << " " <<
+        "C: " << primredprobe[2] << " " <<
+        "Alpha: " <<primredprobe[3] << " " <<
+        "Beta: " << primredprobe[4] << " " <<
+        "Gamma: " << primredprobe[5]  <<  endl;
+	vector <unitcell> myvector;
+	long sphereData = cellTree.FindInSphere(sphereRange, myvector, unknownCell);
+
+	for (vector <unitcell>::iterator cell = myvector.begin(); cell != myvector.end(); ++cell)
+	{
+		numRow = (int)(*cell).getRow();
+		cout << "Nearest Results\n" << "PDBID: " << idArray[numRow][0] << " " <<
+        "A: " << cellDArray[numRow][0] << " " <<
+        "B: " << cellDArray[numRow][1] << " " <<
+        "C: " << cellDArray[numRow][2] << " " <<
+        "Alpha: " << cellDArray[numRow][3] << " " <<
+        "Beta: "  << cellDArray[numRow][4] << " " <<
+        "Gamma: " << cellDArray[numRow][5] << " " <<
+        "Space Group: " << spaceArray[numRow][0] << " " <<
+        "Z: " << zArray[numRow][0] << endl;
+		cout << "As Primitive Reduced\n"<<
+		"A: " << (*cell).getData(0) << " " <<
+        "B: " << (*cell).getData(1) << " " <<
+        "C: " << (*cell).getData(2) << " " <<
+		"Alpha: " << (*cell).getData(3) << " " <<
+        "Beta: " << (*cell).getData(4) << " " <<
+        "Gamma: " << (*cell).getData(5) << endl;
+	}
 }
 
 void findRange()
@@ -621,6 +639,9 @@ int main ()
 			}
 			else if (choiceSimilar == 2)
 			{
+				cout << "\nPlease Input Your Sphere's Range: ";
+				cin >> sphereRange;
+				findSphere();
 				quitSimilar = 1;
 			}
 			else if (choiceSimilar == 3)
@@ -670,6 +691,7 @@ int main ()
 			cin >> choiceContinue;
 			if (choiceContinue == 1)
 			{
+                goBack = 0; //Added so that it would loop back to main menu
 				quitContinue = 1;
 			}
 			else if (choiceContinue == 2)

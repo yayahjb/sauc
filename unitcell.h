@@ -3,6 +3,7 @@
 #include <armadillo>
 #include "Cell.h"
 #include "V7.h"
+#include "NCDist.h"
 
 double NCDist(double *, double *);
 
@@ -122,22 +123,37 @@ public:
 		}
 		else if (algorithm == 3)
 		{
-            
+            /*
             const Cell c1(cellD[0]/cellD[2],cellD[1]/cellD[2],1.,cellD[3],cellD[4],cellD[5]);
             const Cell c2(cellD[6]/cellD[8],cellD[7]/cellD[8],1.,cellD[9],cellD[10],cellD[11]);
+            */
+            const Cell c1(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5]);
+            const Cell c2(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11]);
             const arma::vec6 gv1(c1.Cell2V6());
             const arma::vec6 gv2(c2.Cell2V6());
             double dgv1[6];
             double dgv2[6];
+            double szv1, szv2;
             int ii;
             
-			//NCDist
+            szv1 = szv2 = 0.;
             for (ii=0; ii < 6; ii++){
                 dgv1[ii] = gv1[ii];
+                szv1 += dgv1[ii]*dgv1[ii];
                 dgv2[ii] = gv2[ii];
+                szv2 += dgv2[ii]*dgv2[ii];
+            }
+            szv1 = std::sqrt(szv1);
+            szv2 = std::sqrt(szv2);
+            for (ii=0; ii < 6; ii++){
+                dgv1[ii] /= szv1;
+                dgv2[ii] /= szv2;
             }
             
-			return std::abs(cellD[2]-cellD[8])+std::sqrt(NCDist(dgv1,dgv2));
+			/* return std::abs(cellD[2]-cellD[8])+std::sqrt(NCDist(dgv1,dgv2));*/
+            // return NCDist(dgv1,dgv2);
+            return std::abs(std::sqrt(szv1)-std::sqrt(szv2))+std::sqrt(NCDist(dgv1,dgv2));
+            
 		}
 		else if (algorithm == 4)
 		{
