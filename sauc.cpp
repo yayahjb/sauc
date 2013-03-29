@@ -419,7 +419,7 @@ void findNearest()
         "Alpha: " <<primredprobe[3] << " " <<
         "Beta: " << primredprobe[4] << " " <<
         "Gamma: " << primredprobe[5]  <<  endl;
-	unitcell nearestData = *cellTree.NearestNeighbor(1000000000000, unknownCell);
+	unitcell nearestData = *cellTree.NearestNeighbor(1.e38, unknownCell);
     
     cout << "Depth: " << cellTree.GetDepth() << endl;
 

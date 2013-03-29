@@ -863,12 +863,12 @@ double NCDist(double gvec1[6],double gvec2[6]) {
     for (i1=0; i1<24; i1++) {
         for (ix2 = 1; ix2 < 24; ix2++) {
             i2 = (i1+ix2)%24;
-            for (jx1 = 0; jx1 < 15; jx1++);
-            j1 = jord[jx1];
-            if (dists1[j1][i1] < distsq) {
-                jx2 = jx1;
-                j2 = jord2[jx2];
-                if (j1==j2) {
+            for (jx1 = 0; jx1 < 15; jx1++) {
+              j1 = jord[jx1];
+              if (dists1[j1][i1] < distsq) {
+                  jx2 = jx1;
+                  j2 = jord2[jx2];
+                  if (j1==j2) {
                     if(dists1[j1][i1]+dists2[j2][i2] < distsq) {
                         dpg1pg2 = NCD_min(NCD_min(NCD_min(CNCM_g456distsq(pgs1[j1][i1],pgs2[j2][i2]),
                                               CNCM_g456distsq(pgs1[j1][i1],mpgs2[j2][i2])),
@@ -892,8 +892,9 @@ double NCDist(double gvec1[6],double gvec2[6]) {
                         distsq = NCD_min(distsq, ((dists1[j1][i1]+dists2[j2][i2])
                                                *(dists1[j1][i1]+dists2[j2][i2])
                                                + dpg1pg2*dpg1pg2));
-                    }
-                }
+		    }
+		  }
+	      }	  
             }
         }
         /*     69 */

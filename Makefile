@@ -13,7 +13,7 @@ sauc: \
     rhrand.h \
     triple.h \
     TNear.h
-	g++ -Wall  -O3 -g -o sauc \
+	g++ -Wall  -O3 -Wall -DUSE_LOCAL_HEADERS -g -o sauc \
     BasicDistance.cpp    \
     Cell.cpp \
     sauc.cpp \
