@@ -579,10 +579,13 @@ static void bdmaps(double gvec[6],
     
     for (ii = 0; ii < 24; ii++) {
         cpyvn(6,gvec,vecs[ii]);
-        if ((ii >= 6 && ii <= 17)|| ii >= 18) {
+        if (ii >= 6 && ii <= 17) {
             vecs[ii][5] = -vecs[ii][5];
         }
-        if (ii>=13) {
+        if ((ii >= 6 && ii <= 11)|| ii >= 18) {
+            vecs[ii][4] = -vecs[ii][4];
+        }
+        if (ii>=12) {
             vecs[ii][3] = -vecs[ii][3];
         }
         jj = ii%6;
@@ -632,7 +635,7 @@ static void bdmaps(double gvec[6],
         dists[11][ii] = fabs(vecs[ii][0]-vecs[ii][5])/sqrt(2.);
         dists[12][ii] = fabs(vecs[ii][0]-vecs[ii][5])/sqrt(2.);
         dists[13][ii] = fabs(vecs[ii][0]+vecs[ii][5])/sqrt(2.);
-        dists[14][ii] = fabs(vecs[ii][0]+vecs[ii][1]+vecs[ii][3]+vecs[ii][4]+vecs[ii][5]);
+        dists[14][ii] = fabs(vecs[ii][0]+vecs[ii][1]+vecs[ii][3]+vecs[ii][4]+vecs[ii][5])/sqrt(5.);
         for (jj = 0; jj < 15; jj++ ) {
             rmv6(vecs[ii], prj[jj], pgs[jj][ii]);
             imv6(pgs[jj][ii], MS[jj], mpgs[jj][ii]);
@@ -849,8 +852,8 @@ double NCDist(double gvec1[6],double gvec2[6]) {
     double dpg1pg2;
     double distsq;
     int jx1, jx2, ix2;
-    int jord[15] = {1,2,9,10,11,6,7,8,12,13,14,3,4,5,15},
-    jord2[15] = {1,2,11,10,9,8,7,6,14,13,12,3,4,5,15};
+    int jord[15] = {0,1,8,9,10,5,6,7,11,12,13,2,3,4,14},
+    jord2[15] = {0,1,10,9,8,7,6,5,13,12,11,2,3,4,14};
     int i1,i2,j1,j2;
     
     bdmaps(gvec1,vecs1,dists1,pgs1,mpgs1);
@@ -865,11 +868,11 @@ double NCDist(double gvec1[6],double gvec2[6]) {
             i2 = (i1+ix2)%24;
             for (jx1 = 0; jx1 < 15; jx1++) {
               j1 = jord[jx1];
-              if (dists1[j1][i1] < distsq) {
-                  jx2 = jx1;
-                  j2 = jord2[jx2];
-                  if (j1==j2) {
-                    if(dists1[j1][i1]+dists2[j2][i2] < distsq) {
+              if (dists1[j1][i1]*dists1[j1][i1] < distsq) {
+                jx2 = jx1;
+                j2 = jord2[jx2];
+                if (j1==j2) {
+                    if((dists1[j1][i1]+dists2[j2][i2])*(dists1[j1][i1]+dists2[j2][i2]) < distsq) {
                         dpg1pg2 = NCD_min(NCD_min(NCD_min(CNCM_g456distsq(pgs1[j1][i1],pgs2[j2][i2]),
                                               CNCM_g456distsq(pgs1[j1][i1],mpgs2[j2][i2])),
                                           CNCM_g456distsq(mpgs1[j1][i1],pgs2[j2][i2])),
@@ -877,128 +880,128 @@ double NCDist(double gvec1[6],double gvec2[6]) {
                         distsq = NCD_min(distsq,
                                    ((dists1[j1][i1]+dists2[j2][i2])
                                              *(dists1[j1][i1]+dists2[j2][i2])
-                                             + dpg1pg2*dpg1pg2));
+                                             + dpg1pg2));
                     }
                     else
-                        if (dists1[j1][i1]+dists2[j1][i2] < distsq) {
+                        if ((dists1[j1][i1]+dists2[j1][i2])*(dists1[j1][i1]+dists2[j1][i2]) < distsq) {
                             dpg1pg2 =  CNCM_g456distsq(pgs1[j1][i1],pgs2[j1][i2]);
                             distsq = NCD_min(distsq,
                                        ((dists1[j1][i1]+dists2[j1][i2])
                                                  *(dists1[j1][i1]+dists2[j1][i2])
-                                                 + dpg1pg2*dpg1pg2));
+                                                 + dpg1pg2));
                         }
-                    if (dists1[j1][i1]+dists2[j2][i2] < distsq) {
+                    if ((dists1[j1][i1]+dists2[j2][i2])*(dists1[j1][i1]+dists2[j2][i2]) < distsq) {
                         dpg1pg2 =  CNCM_g456distsq(pgs1[j1][i1],mpgs2[j2][i2]);
                         distsq = NCD_min(distsq, ((dists1[j1][i1]+dists2[j2][i2])
                                                *(dists1[j1][i1]+dists2[j2][i2])
-                                               + dpg1pg2*dpg1pg2));
-		    }
-		  }
-	      }	  
+                                               + dpg1pg2));
+                    }
+                }
+              }
             }
         }
         /*     69 */
-        if (fdists1[4][i1]+fdists2[4][i2]< distsq) {
+        if ((fdists1[4][i1]+fdists2[4][i2])*(fdists1[4][i1]+fdists2[4][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[4][i1]+fdists2[4][i2])*(fdists1[4][i1]+fdists2[4][i2])
                                  + CNCM_g456distsq(fpgs1[4][i1],fpgs2[4][i2])));
         }
-        if (fdists1[4][i1]+fdists2[0][i2]< distsq) {
+        if ((fdists1[4][i1]+fdists2[0][i2])*(fdists1[4][i1]+fdists2[0][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[4][i1]+fdists2[0][i2])
                                  *(fdists1[4][i1]+fdists2[0][i2])
                                  + CNCM_g456distsq(fpgs1[4][i1],fmpgs2[0][i2])));
         }
-        if (fdists1[4][i1]+fdists2[1][i2]< distsq) {
+        if ((fdists1[4][i1]+fdists2[1][i2])*(fdists1[4][i1]+fdists2[1][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[4][i1]+fdists2[1][i2])
                                  *(fdists1[4][i1]+fdists2[1][i2])
                                  + CNCM_g456distsq(fpgs1[4][i1],fmpgs2[1][i2])));
         }
-        if (fdists1[0][i1]+fdists2[4][i2]< distsq) {
+        if ((fdists1[0][i1]+fdists2[4][i2])*(fdists1[0][i1]+fdists2[4][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[0][i1]+fdists2[4][i2])
                                  *(fdists1[0][i1]+fdists2[4][i2])
                                  + CNCM_g456distsq(fmpgs1[0][i1],fpgs2[4][i2])));
         }
-        if (fdists1[1][i1]+fdists2[4][i2]< distsq) {
+        if ((fdists1[1][i1]+fdists2[4][i2])*(fdists1[1][i1]+fdists2[4][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[1][i1]+fdists2[4][i2])
                                  *(fdists1[1][i1]+fdists2[4][i2])
                                  + CNCM_g456distsq(fmpgs1[1][i1],fpgs2[4][i2])));
         }
         /*     6C */
-        if (fdists1[3][i1]+fdists2[3][i2]< distsq) {
+        if ((fdists1[3][i1]+fdists2[3][i2])*(fdists1[3][i1]+fdists2[3][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[3][i1]+fdists2[3][i2])
                                  *(fdists1[3][i1]+fdists2[3][i2])
                                  + CNCM_g456distsq(fpgs1[3][i1],fpgs2[3][i2])));
         }
-        if (fdists1[3][i1]+fdists2[2][i2]< distsq) {
+        if ((fdists1[3][i1]+fdists2[2][i2])*(fdists1[3][i1]+fdists2[2][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[3][i1]+fdists2[2][i2])
                                  *(fdists1[3][i1]+fdists2[2][i2])
                                  + CNCM_g456distsq(fpgs1[3][i1],fmpgs2[2][i1])));
         }
-        if (fdists1[2][i1]+fdists2[3][i2]< distsq) {
+        if ((fdists1[2][i1]+fdists2[3][i2])*(fdists1[2][i1]+fdists2[3][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[2][i1]+fdists2[3][i2])
                                  *(fdists1[2][i1]+fdists2[3][i2])
                                  + CNCM_g456distsq(fmpgs1[2][i1],fpgs2[3][i2])));
         }
         /*     8F */
-        if (fdists1[0][i1]+fdists2[0][i2]< distsq) {
+        if ((fdists1[0][i1]+fdists2[0][i2])*(fdists1[0][i1]+fdists2[0][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[0][i1]+fdists2[0][i2])
                                  *(fdists1[0][i1]+fdists2[0][i2])
                                  + CNCM_g456distsq(fpgs1[0][i1],fpgs2[0][i2])));
         }
-        if (fdists1[0][i1]+fdists2[4][i2]< distsq) {
+        if ((fdists1[0][i1]+fdists2[4][i2])*(fdists1[0][i1]+fdists2[4][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[0][i1]+fdists2[4][i2])
                                  *(fdists1[0][i1]+fdists2[4][i2])
                                  + CNCM_g456distsq(fpgs1[0][i1],fmpgs2[4][i2])));
         }
-        if (fdists1[4][i1]+fdists2[0][i2]< distsq) {
+        if ((fdists1[4][i1]+fdists2[0][i2])*(fdists1[4][i1]+fdists2[0][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[4][i1]+fdists2[0][i2])
                                  *(fdists1[4][i1]+fdists2[0][i2])
                                  + CNCM_g456distsq(fmpgs1[4][i1],fpgs2[0][i2])));
         }
         /*     BF */
-        if (fdists1[1][i1]+fdists2[1][i2]< distsq) {
+        if ((fdists1[1][i1]+fdists2[1][i2])*(fdists1[1][i1]+fdists2[1][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[0][i1]+fdists2[0][i2])
                                  *(fdists1[0][i1]+fdists2[0][i2])
                                  + CNCM_g456distsq(fpgs1[0][i1],fpgs2[0][i2])));
         }
-        if (fdists1[1][i1]+fdists2[4][i2]< distsq) {
+        if ((fdists1[1][i1]+fdists2[4][i2])*(fdists1[1][i1]+fdists2[4][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[1][i1]+fdists2[4][i2])
                                  *(fdists1[1][i1]+fdists2[4][i2])
                                  + CNCM_g456distsq(fpgs1[1][i1],fmpgs2[5][i2])));
         }
-        if (fdists1[4][i1]+fdists2[1][i2]< distsq) {
+        if ((fdists1[4][i1]+fdists2[1][i2])*(fdists1[4][i1]+fdists2[1][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[4][i1]+fdists2[1][i2])
                                  *(fdists1[4][i1]+fdists2[1][i2])
                                  + CNCM_g456distsq(fmpgs1[5][i1],fpgs2[1][i2])));
         }
         /*     EF */
-        if (fdists1[2][i1]+fdists2[2][i2]< distsq) {
+        if ((fdists1[2][i1]+fdists2[2][i2])*(fdists1[2][i1]+fdists2[2][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[2][i1]+fdists2[2][i2])
                                  *(fdists1[2][i1]+fdists2[2][i2])
                                  + CNCM_g456distsq(fpgs1[2][i1],fpgs2[2][i1])));
         }
-        if (fdists1[2][i1]+fdists2[3][i2]< distsq) {
+        if ((fdists1[2][i1]+fdists2[3][i2])*(fdists1[2][i1]+fdists2[3][i2])< distsq) {
             distsq = NCD_min( distsq,
                        ((fdists1[2][i1]+fdists2[3][i2])
                                  *(fdists1[2][i1]+fdists2[3][i2])
                                  + CNCM_g456distsq(fpgs1[2][i1],fmpgs2[3][i2])));
         }
-        if (fdists1[3][i1]+fdists2[2][i2]< distsq) {
-            distsq = NCD_min( distsq,sqrt((fdists1[3][i1]+fdists2[2][i2])
+        if ((fdists1[3][i1]+fdists2[2][i2])*(fdists1[3][i1]+fdists2[2][i2])< distsq) {
+            distsq = NCD_min( distsq,((fdists1[3][i1]+fdists2[2][i2])
                                        *(fdists1[3][i1]+fdists2[2][i2])
                                        + CNCM_g456distsq(fmpgs1[3][i1],fpgs2[2][i1])));
         }

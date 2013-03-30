@@ -10,10 +10,8 @@ sauc: \
     V7.cpp \
     V7.h \
     unitcell.h \
-    rhrand.h \
-    triple.h \
     TNear.h
-	g++ -Wall  -O3 -Wall -DUSE_LOCAL_HEADERS -g -o sauc \
+	g++ -Wall  -O3 -g -o sauc \
     BasicDistance.cpp    \
     Cell.cpp \
     sauc.cpp \
