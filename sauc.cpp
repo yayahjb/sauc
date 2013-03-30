@@ -425,7 +425,7 @@ void findNearest()
 
 	
 	numRow = (int)nearestData.getRow();
-	cout << "Nearest Results\n" << "PDBID: " << idArray[numRow][0] << " " <<
+	cout << "\nNearest Results\n" << "PDBID: " << idArray[numRow][0] << " " <<
         "A: " << cellDArray[numRow][0] << " " <<
         "B: " << cellDArray[numRow][1] << " " <<
         "C: " << cellDArray[numRow][2] << " " <<
@@ -469,10 +469,11 @@ void findSphere()
 	vector <unitcell> myvector;
 	long sphereData = cellTree.FindInSphere(sphereRange, myvector, unknownCell);
 
+	cout << "\nSphere Results" << endl;
 	for (vector <unitcell>::iterator cell = myvector.begin(); cell != myvector.end(); ++cell)
 	{
 		numRow = (int)(*cell).getRow();
-		cout << "Nearest Results\n" << "PDBID: " << idArray[numRow][0] << " " <<
+		cout << "PDBID: " << idArray[numRow][0] << " " <<
         "A: " << cellDArray[numRow][0] << " " <<
         "B: " << cellDArray[numRow][1] << " " <<
         "C: " << cellDArray[numRow][2] << " " <<
@@ -496,7 +497,7 @@ void findRange()
 	cout << endl;
 	cout << "Unknown Cell\n" << "A: " << probeArray[0] << " " << "B: " << probeArray[1] << " " << "C: " << probeArray[2] << " " <<
 		"Alpha: " <<probeArray[3] << " " << "Beta: " << probeArray[4] << " " << "Gamma: " << probeArray[5] << endl;
-	cout << "Range Results\n";
+	cout << "\nRange Results\n";
 	for (int i = 0; i < NUM_ROWS; i++)
 	{
 		if ((probeArray[0] + numRangeA) >= cellDArray[i][0] && (probeArray[0] - numRangeA) <= cellDArray[i][0] &&
