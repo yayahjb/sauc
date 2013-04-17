@@ -53,6 +53,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <time.h>
 #include <iostream>
 #include "TNear.h"
@@ -72,7 +73,9 @@
 
 using namespace std;
 
-CNearTree <unitcell> cellTree;
+CNearTree <unitcell> * cellTree[4] = {NULL,NULL,NULL,NULL};
+CNearTree <unitcell>::iterator cellTree_itend[4];
+string filenames[5];
 
 const int NUM_COLUMNS = 9, NUM_ROWS = 75325, NUM_DUMP = 2;
 //const int NUM_COLUMNS = 9, NUM_ROWS = 10000, NUM_DUMP = 2;
@@ -226,73 +229,73 @@ void makeDatabase(string filename)
 	for (int i = 0; i < NUM_DUMP; i++)
 	{
 		getline (infile, valueDump, 'r');
-		//cout << valueDump << endl;
+		//cout << valueDump << std::endl;
 	}
 	for (int i = 0; i < NUM_ROWS; i++)
 	{
 		string value;
 
 		getline (infile, value, ',');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		idArray[i][0] = string(value, 2, value.length()-3);
-		//cout << idArray[i][0] << endl;
+		//cout << idArray[i][0] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << endl;
+		//cout << value << std::endl;
 		cellDArray[i][3] = convertToDouble(value);
-		//cout << cellDArray[i][3] << endl;
+		//cout << cellDArray[i][3] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << endl;
+		//cout << value << std::endl;
 		cellDArray[i][4] = convertToDouble(value);
-		//cout << cellDArray[i][4] << endl;
+		//cout << cellDArray[i][4] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << endl;
+		//cout << value << std::endl;
 		cellDArray[i][5] = convertToDouble(value);
-		//cout << cellDArray[i][5] << endl;
+		//cout << cellDArray[i][5] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << endl;
+		//cout << value << std::endl;
 		cellDArray[i][0] = convertToDouble(value);
-		//cout << cellDArray[i][0] << endl;
+		//cout << cellDArray[i][0] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << endl;
+		//cout << value << std::endl;
 		cellDArray[i][1] = convertToDouble(value);
-		//cout << cellDArray[i][1] << endl;
+		//cout << cellDArray[i][1] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << endl;
+		//cout << value << std::endl;
 		cellDArray[i][2] = convertToDouble(value);
-		//cout << cellDArray[i][2] << endl;
+		//cout << cellDArray[i][2] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		spaceArray[i][0] = string(value, 1, value.length()-2);
-		//cout << spaceArray[i][0] << endl;
+		//cout << spaceArray[i][0] << std::endl;
 
 		getline (infile, valueDump, '"');
 		getline (infile, value, '"');
-		//cout << value << endl;
+		//cout << value << std::endl;
 		value = string(value, 0, value.length());
-		//cout << value << endl;
+		//cout << value << std::endl;
 		zArray[i][0] = convertToInt(value);
-		//cout << zArray[i][0] << endl;
+		//cout << zArray[i][0] << std::endl;
 
-		//cout << "-----------------------------------------------" << endl;
+		//cout << "-----------------------------------------------" << std::endl;
 	}
 	infile.close();
 }
@@ -342,7 +345,7 @@ bool makeprimredprobe(void)
                 primcell[ii] = probeArray[ii];
             }
         default:
-            cerr << "Unrecognized lattice symbol "<< probelattice<<" treated as P"<<endl;
+            cerr << "Unrecognized lattice symbol "<< probelattice<<" treated as P" << std::endl;
             latsym = "P";
             mc = rawcell.LatSymMat66(latsym);
             primcell = mc*(rawcell.Cell2V6());
@@ -356,9 +359,17 @@ bool makeprimredprobe(void)
       primredprobe[2]<<" "<<
       primredprobe[3]<<" "<<
       primredprobe[4]<<" "<<
-      primredprobe[5]<<endl;
+      primredprobe[5] << std::endl;
     return ret;
 }
+
+#define putoutst(serialout,value) \
+    if (value != ULONG_MAX) { \
+        (serialout) << (value); \
+    } else { \
+        (serialout) << "-1"; \
+    } \
+
 
 void buildNearTree(void)
 {
@@ -367,8 +378,36 @@ void buildNearTree(void)
     arma::vec6 primcell;
     arma::vec6 redprimcell;
     arma::vec6 searchcell;
+    std::ofstream serialout;
+    size_t si;
+    size_t sv;
+    double cell[6];
+    double row;
+    unitcell ucell;
+    std::vector<long> * DelayedIndices; // objects queued for insertion, possibly in random order
+    std::vector<unitcell>  * ObjectStore;    // all inserted objects go here
+    std::vector<size_t>
+    * ObjectCollide;  // overflow chain of colliding objects
+    size_t            DeepestDepth;     // maximum depth of the tree
+    std::vector< CNearTree<unitcell>::NearTreeNode<unitcell> * >
+    * NearTreeNodes;  // vector of pointers to nodes to build the tree
+    CNearTree<unitcell>::NearTreeNode<unitcell>
+    * BaseNode;       // the tree's data is stored down
+    // this node in m_NearTreeNodes
+    long              Flags;            // flags for operational control (mainly for testing)
+    double            DiamEstimate;     // estimated diameter
+    double            SumSpacings;      // sum of spacings at time of insertion
+    double            SumSpacingsSq;    // sum of squares of spacings at time of insertion
+    double            DimEstimate;      // estimated dimension
+    double            DimEstimateEsd;   // estimated dimension estimated standard deviation
+#ifdef CNEARTREE_INSTRUMENTED
+    size_t            NodeVisits;       // number of node visits
+#endif
+    CNearTree<unitcell>::NearTreeNode<unitcell> * curntn;
 	int count = 0;
-
+    
+    cellTree[choiceAlgorithm-1] = new CNearTree <unitcell> ();
+    
 	for (int i = 0; i < NUM_ROWS; i++)
 	{
         Cell rawcell(cellDArray[i][0], cellDArray[i][1], cellDArray[i][2], cellDArray[i][3], cellDArray[i][4], cellDArray[i][5]);
@@ -382,26 +421,125 @@ void buildNearTree(void)
             cellDArray[i][0]<<" "<<
             cellDArray[i][1]<<" "<<
             cellDArray[i][2]<<" "<<
-            spaceArray[i][0]<<endl;
+            spaceArray[i][0] << std::endl;
             cout << "Primitive G6 " << primcell[0]<<" "<<
             primcell[1]<<" "<<
             primcell[2]<<" "<<
             primcell[3]<<" "<<
             primcell[4]<<" "<<
-            primcell[5]<<endl;
+            primcell[5] << std::endl;
         };
         searchcell = Cell(redprimcell).CellWithDegrees();
         unitcell cellData(searchcell[0],searchcell[1],searchcell[2],
                           searchcell[3],searchcell[4],searchcell[5],
                           0,0,0,0,0,0, (double)i);
-        cellTree.insert(cellData);
+        cellTree[choiceAlgorithm-1]->insert(cellData);
         
 	}
+    cellTree[choiceAlgorithm-1]->CompleteDelayedInsert();
+    cellTree_itend[choiceAlgorithm-1] = cellTree[choiceAlgorithm-1]->end();
+    cellTree[choiceAlgorithm-1]->Get_Checkpoint(&DelayedIndices,
+                                                &ObjectStore,
+                                                &ObjectCollide,
+                                                &DeepestDepth,
+                                                &NearTreeNodes,
+                                                &BaseNode,
+                                                &Flags,
+                                                &DiamEstimate,
+                                                &SumSpacings,
+                                                &SumSpacingsSq,
+                                                &DimEstimate,
+                                                &DimEstimateEsd
+#ifdef CNEARTREE_INSTRUMENTED
+                                                , &NodeVisits
+#endif
+                                                );
+    serialout.open(filenames[choiceAlgorithm].c_str(),std::ios::out|std::ios::trunc);
+    serialout << "Algorithm: "<< choiceAlgorithm << std::endl;
+    serialout << "DelayedIndices: { ";
+    for (si = 0; si < DelayedIndices->size(); si++) {
+        serialout << (*DelayedIndices)[si];
+        if (si+1 < DelayedIndices->size()) serialout <<" ";
+        if (si%64==63) serialout << std::endl;
+    }
+    serialout << " }" << std::endl;
+    
+    serialout << "ObjectStore: { ";
+    for (si = 0; si < ObjectCollide->size(); si++) {
+        ucell = (*ObjectStore)[si];
+        ucell.getCell(cell,&row);
+        serialout << "{ " << cell[0] << " "
+        << cell[1] << " "
+        << cell[2] << " "
+        << cell[3] << " "
+        << cell[4] << " "
+        << cell[5] << " "
+        << " " << row << " }"  << std::endl;
+    }
+    serialout << " }" << std::endl;
+
+    serialout << "ObjectCollide: { ";
+    for (si = 0; si < ObjectCollide->size(); si++) {
+        sv = (*ObjectCollide)[si];
+        putoutst(serialout,sv);
+        if (si+1 < ObjectCollide->size()) serialout <<" ";
+        if (si%64==63) serialout << std::endl;
+    }
+    serialout << " }" << std::endl;
+    
+    serialout << "DeepestDepth: " << DeepestDepth << std::endl;
+    
+    serialout << "NearTreeNodes: { ";
+    
+    serialout << "{ ";
+    putoutst(serialout,BaseNode->m_ptLeft); serialout << " ";
+    putoutst(serialout,BaseNode->m_ptRight); serialout << " ";
+    serialout << BaseNode->m_dMaxLeft << " "
+    << BaseNode->m_dMaxRight << " ";
+    putoutst(serialout,BaseNode->m_pLeftBranch); serialout << " ";
+    putoutst(serialout,BaseNode->m_pRightBranch); serialout << " ";
+    putoutst(serialout,BaseNode->m_iTreeSize); serialout << " ";
+#ifdef CNEARTREE_INSTRUMENTED
+    putoutst(serialout,BaseNode->m_iHeight); serialout << " ";
+    putoutst(serialout,BaseNode->m_imultLeft); serialout << " ";
+    putoutst(serialout,BaseNode->m_imultRight); serialout << " ";
+#endif
+    serialout << "} " << std::endl;
+    
+    for (si = 0; si < NearTreeNodes->size(); si++) {
+        curntn= (*NearTreeNodes)[si];
+        serialout << "{ ";
+        putoutst(serialout,curntn->m_ptLeft); serialout << " ";
+        putoutst(serialout,curntn->m_ptRight); serialout << " ";
+        serialout << curntn->m_dMaxLeft << " " << curntn->m_dMaxRight << " ";
+        putoutst(serialout,curntn->m_pLeftBranch); serialout << " ";
+        putoutst(serialout,curntn->m_pRightBranch); serialout << " ";
+        putoutst(serialout,curntn->m_iTreeSize); serialout << " ";
+#ifdef CNEARTREE_INSTRUMENTED
+        putoutst(serialout,curntn->m_iHeight); serialout << " ";
+        putoutst(serialout,curntn->m_imultLeft); serialout << " ";
+        putoutst(serialout,curntn->m_imultRight); serialout << " ";
+#endif
+        serialout << "} ";
+        if (si+1 < NearTreeNodes->size()) serialout <<std::endl;
+    }
+    serialout << " }" << std::endl;
+    serialout << "Flags: " << Flags  << std::endl;
+    serialout << "DiamEstimate: " << DiamEstimate  << std::endl;
+    serialout << "SumSpacings: " << SumSpacings  << std::endl;
+    serialout << "SumSpacingsSq: " << SumSpacingsSq  << std::endl;
+    serialout << "DimEstimate: " << DimEstimate  << std::endl;
+    serialout << "DimEstimateEsd: " << DimEstimateEsd  << std::endl;
+#ifdef CNEARTREE_INSTRUMENTED
+    serialout << "NodeVisits: " << NodeVisits  << std::endl;
+#endif
+    serialout.close();
 }
 
 void findNearest()
 {
-	cout << endl;
+    CNearTree <unitcell>::iterator nnresult;
+	cout << std::endl;
 	// unitcell unknownCell = unitcell(probeArray[0], probeArray[1], probeArray[2], probeArray[3], probeArray[4], probeArray[5], 0, 0, 0, 0, 0, 0, 0);
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
 	cout << "Raw Unknown Cell\n" <<
@@ -411,17 +549,19 @@ void findNearest()
 		"Alpha: " <<probeArray[3] << " " <<
         "Beta: " << probeArray[4] << " " <<
         "Gamma: " << probeArray[5] <<
-        " Lattice: "<< probelattice <<  endl;
+        " Lattice: "<< probelattice <<  std::endl;
 	cout << "Reduced Primitive Cell\n" <<
         "A: " << primredprobe[0] << " " <<
         "B: " << primredprobe[1] << " " <<
         "C: " << primredprobe[2] << " " <<
         "Alpha: " <<primredprobe[3] << " " <<
         "Beta: " << primredprobe[4] << " " <<
-        "Gamma: " << primredprobe[5]  <<  endl;
-	unitcell nearestData = *cellTree.NearestNeighbor(1.e38, unknownCell);
+        "Gamma: " << primredprobe[5]  <<  std::endl;
+    nnresult = cellTree[choiceAlgorithm-1]->NearestNeighbor(1.e38, unknownCell);
+    if (nnresult != cellTree_itend[choiceAlgorithm-1]) {
+	unitcell nearestData = *nnresult;
     
-    cout << "Depth: " << cellTree.GetDepth() << endl;
+    cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
 
 	
 	numRow = (int)nearestData.getRow();
@@ -433,22 +573,21 @@ void findNearest()
         "Beta: "  << cellDArray[numRow][4] << " " <<
         "Gamma: " << cellDArray[numRow][5] << " " <<
         "Space Group: " << spaceArray[numRow][0] << " " <<
-        "Z: " << zArray[numRow][0] << endl;
+        "Z: " << zArray[numRow][0] << std::endl;
     cout << "As Primitive Reduced\n"<<
 		"A: " << nearestData.getData(0) << " " <<
         "B: " << nearestData.getData(1) << " " <<
         "C: " << nearestData.getData(2) << " " <<
 		"Alpha: " << nearestData.getData(3) << " " <<
         "Beta: " << nearestData.getData(4) << " " <<
-        "Gamma: " << nearestData.getData(5) << endl;
-    
-    /* code for duplicates removed here -- should be handled in the Sphere search */
-	
+        "Gamma: " << nearestData.getData(5) << std::endl;
+    }
+    	
 }
 
 void findSphere()
 {
-	cout << endl;
+	cout << std::endl;
 	// unitcell unknownCell = unitcell(probeArray[0], probeArray[1], probeArray[2], probeArray[3], probeArray[4], probeArray[5], 0, 0, 0, 0, 0, 0, 0);
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
 	cout << "Raw Unknown Cell\n" <<
@@ -458,18 +597,18 @@ void findSphere()
 		"Alpha: " <<probeArray[3] << " " <<
         "Beta: " << probeArray[4] << " " <<
         "Gamma: " << probeArray[5] <<
-        " Lattice: "<< probelattice <<  endl;
+        " Lattice: "<< probelattice <<  std::endl;
 	cout << "Reduced Primitive Cell\n" <<
         "A: " << primredprobe[0] << " " <<
         "B: " << primredprobe[1] << " " <<
         "C: " << primredprobe[2] << " " <<
         "Alpha: " <<primredprobe[3] << " " <<
         "Beta: " << primredprobe[4] << " " <<
-        "Gamma: " << primredprobe[5]  <<  endl;
+        "Gamma: " << primredprobe[5]  <<  std::endl;
 	vector <unitcell> myvector;
-	long sphereData = cellTree.FindInSphere(sphereRange, myvector, unknownCell);
+	long sphereData = cellTree[choiceAlgorithm-1]->FindInSphere(sphereRange, myvector, unknownCell);
 
-	cout << "\nSphere Results" << endl;
+	cout << "\nSphere Results" << std::endl;
 	for (vector <unitcell>::iterator cell = myvector.begin(); cell != myvector.end(); ++cell)
 	{
 		numRow = (int)(*cell).getRow();
@@ -481,22 +620,22 @@ void findSphere()
         "Beta: "  << cellDArray[numRow][4] << " " <<
         "Gamma: " << cellDArray[numRow][5] << " " <<
         "Space Group: " << spaceArray[numRow][0] << " " <<
-        "Z: " << zArray[numRow][0] << endl;
+        "Z: " << zArray[numRow][0] << std::endl;
 		cout << "As Primitive Reduced\n"<<
 		"A: " << (*cell).getData(0) << " " <<
         "B: " << (*cell).getData(1) << " " <<
         "C: " << (*cell).getData(2) << " " <<
 		"Alpha: " << (*cell).getData(3) << " " <<
         "Beta: " << (*cell).getData(4) << " " <<
-        "Gamma: " << (*cell).getData(5) << endl;
+        "Gamma: " << (*cell).getData(5) << std::endl;
 	}
 }
 
 void findRange()
 {
-	cout << endl;
+	cout << std::endl;
 	cout << "Unknown Cell\n" << "A: " << probeArray[0] << " " << "B: " << probeArray[1] << " " << "C: " << probeArray[2] << " " <<
-		"Alpha: " <<probeArray[3] << " " << "Beta: " << probeArray[4] << " " << "Gamma: " << probeArray[5] << endl;
+		"Alpha: " <<probeArray[3] << " " << "Beta: " << probeArray[4] << " " << "Gamma: " << probeArray[5] << std::endl;
 	cout << "\nRange Results\n";
 	for (int i = 0; i < NUM_ROWS; i++)
 	{
@@ -510,7 +649,7 @@ void findRange()
 			cout << "PDBID: " << idArray[i][0] << " " << 
 				"A: " << cellDArray[i][0] << " " << "B: " << cellDArray[i][1] << " " << "C: " << cellDArray[i][2] << " " <<
 				"Alpha: " << cellDArray[i][3] << " " << "Beta: " << cellDArray[i][4] << " " << "Gamma: " << cellDArray[i][5] << " " << 
-				"Space Group: " << spaceArray[i][0] << " " << "Z: " << zArray[i][0] << endl;
+				"Space Group: " << spaceArray[i][0] << " " << "Z: " << zArray[i][0] << std::endl;
 		}
 	}
 }
@@ -518,16 +657,20 @@ void findRange()
 int main ()
 {
 	//Create Database
-	string filename = "proteindatabase.csv";
-	makeDatabase(filename);
+    filenames[0] = "PDBcelldatabase.csv";
+    filenames[1] = "PDBcellneartreeL1.dmp";
+    filenames[2] = "PDBcellneartreeL2.dmp";
+    filenames[3] = "PDBcellneartreeNCDist.dmp";
+    filenames[4] = "PDBcellneartreeV7.dmp";
+	makeDatabase(filenames[0]);
 
 	unitcell cell;
     
-    cout << "sauc Copyright (C) Keith McGill 2013" << endl;
-    cout << "This program comes with ABSOLUTELY NO WARRANTY" << endl;
-    cout << "This is free software, and you are welcome to" << endl;
-    cout << "redistribute it under the GPL" << endl;
-    cout << "See the program documentation for details" << endl;
+    cout << "sauc Copyright (C) Keith McGill 2013" << std::endl;
+    cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
+    cout << "This is free software, and you are welcome to" << std::endl;
+    cout << "redistribute it under the GPL" << std::endl;
+    cout << "See the program documentation for details" << std::endl;
 
 	while (endProgram != 1)
 	{
@@ -549,7 +692,7 @@ int main ()
 			cin >> probeArray[4];
 			cout << "Gamma: ";
 			cin >> probeArray[5];
-			cout << endl;
+			cout << std::endl;
             makeprimredprobe();
 		}
 
@@ -570,40 +713,32 @@ int main ()
 				cell.changeOperator(1);
 				cell.changeAlgorithm(1);
 				quitAlgorithm = 1;
-				//Destroy Tree
-				cellTree.clear();
 				//Build Tree
-				buildNearTree();
+				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
 			}
 			else if (choiceAlgorithm == 2 && priorAlgorithm!= 2)
 			{
 				cell.changeOperator(1);
 				cell.changeAlgorithm(2);
 				quitAlgorithm = 1;
-				//Destroy Tree
-				cellTree.clear();
 				//Build Tree
-				buildNearTree();
+				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
 			}
 			else if (choiceAlgorithm == 3 && priorAlgorithm!= 3)
 			{
 				cell.changeOperator(2);
 				cell.changeAlgorithm(3);
 				quitAlgorithm = 1;
-				//Destroy Tree
-				cellTree.clear();
 				//Build Tree
-				buildNearTree();
+				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
 			}
 			else if (choiceAlgorithm == 4 && priorAlgorithm!= 4)
 			{
 				cell.changeOperator(2);
 				cell.changeAlgorithm(4);
 				quitAlgorithm = 1;
-				//Destroy Tree
-				cellTree.clear();
 				//Build Tree
-				buildNearTree();
+				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
 			}
 			else if (choiceAlgorithm == 5 && priorAlgorithm!= 5)
 			{
@@ -620,7 +755,7 @@ int main ()
             {
                 quitAlgorithm = 1;
             }
-			cout << endl;
+			cout << std::endl;
 		}
 		quitAlgorithm = 0;
 
@@ -678,7 +813,7 @@ int main ()
 			{
 				cout << "Inncorrect Choice. Please Choose Again.\n";
 			}
-			cout << endl;
+			cout << std::endl;
 		}
 		quitSimilar = 0;
 
@@ -715,7 +850,7 @@ int main ()
 			{
 				cout << "Inncorrect Choice. Please Choose Again.\n";
 			}
-			cout << endl;
+			cout << std::endl;
 		}
 		quitContinue = 0;
 	}

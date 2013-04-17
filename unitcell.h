@@ -48,6 +48,14 @@ public:
 		cellD[11] = val11;
 		numRow = val12;
 	}
+    
+    void getCell(double cell[6], double * row ) {
+        int ii;
+        for (ii=0; ii < 6; ii++) {
+            cell[ii] = cellD[ii];
+        }
+        *row = numRow;
+    }
 
 	double getData(int index)
 	{
@@ -114,11 +122,11 @@ public:
 	{
 		if (algorithm == 1)
 		{
-			return(abs(cellD[0]) + abs(cellD[1]) + abs(cellD[2]) + abs(cellD[3]) + abs(cellD[4]) + abs(cellD[5]));
+			return(std::abs(cellD[0]) + std::abs(cellD[1]) + std::abs(cellD[2]) + std::abs(cellD[3]) + std::abs(cellD[4]) + std::abs(cellD[5]));
 		}
 		else if (algorithm == 2)
 		{
-			return(sqrt((cellD[0]*cellD[0]) + (cellD[1]*cellD[1]) + (cellD[2]*cellD[2]) +
+			return(std::sqrt((cellD[0]*cellD[0]) + (cellD[1]*cellD[1]) + (cellD[2]*cellD[2]) +
 			(cellD[3]*cellD[3]) + (cellD[4]*cellD[4]) + cellD[5]*cellD[5]));
 		}
 		else if (algorithm == 3)

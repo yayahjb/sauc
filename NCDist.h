@@ -621,21 +621,21 @@ static void bdmaps(double gvec[6],
             vecs[ii][4] = vecs[ii][5];
             vecs[ii][5] = xtemp;
         }
-        dists[0][ii] = fabs(vecs[ii][1]-vecs[ii][0])/sqrt(2.);
-        dists[1][ii] = fabs(vecs[ii][2]-vecs[ii][1])/sqrt(2.);
+        dists[0][ii] = fabs(vecs[ii][1]-vecs[ii][0])/std::sqrt(2.);
+        dists[1][ii] = fabs(vecs[ii][2]-vecs[ii][1])/std::sqrt(2.);
         dists[2][ii] = fabs(vecs[ii][3]);
         dists[3][ii] = fabs(vecs[ii][4]);
         dists[4][ii] = fabs(vecs[ii][5]);
-        dists[5][ii] = fabs(vecs[ii][1]-vecs[ii][3])/sqrt(2.);
-        dists[6][ii] = fabs(vecs[ii][1]-vecs[ii][3])/sqrt(2.);
-        dists[7][ii] = fabs(vecs[ii][1]+vecs[ii][3])/sqrt(2.);
-        dists[8][ii] = fabs(vecs[ii][0]-vecs[ii][4])/sqrt(2.);
-        dists[9][ii] = fabs(vecs[ii][0]-vecs[ii][4])/sqrt(2.);
-        dists[10][ii] = fabs(vecs[ii][0]+vecs[ii][4])/sqrt(2.);
-        dists[11][ii] = fabs(vecs[ii][0]-vecs[ii][5])/sqrt(2.);
-        dists[12][ii] = fabs(vecs[ii][0]-vecs[ii][5])/sqrt(2.);
-        dists[13][ii] = fabs(vecs[ii][0]+vecs[ii][5])/sqrt(2.);
-        dists[14][ii] = fabs(vecs[ii][0]+vecs[ii][1]+vecs[ii][3]+vecs[ii][4]+vecs[ii][5])/sqrt(5.);
+        dists[5][ii] = fabs(vecs[ii][1]-vecs[ii][3])/std::sqrt(2.);
+        dists[6][ii] = fabs(vecs[ii][1]-vecs[ii][3])/std::sqrt(2.);
+        dists[7][ii] = fabs(vecs[ii][1]+vecs[ii][3])/std::sqrt(2.);
+        dists[8][ii] = fabs(vecs[ii][0]-vecs[ii][4])/std::sqrt(2.);
+        dists[9][ii] = fabs(vecs[ii][0]-vecs[ii][4])/std::sqrt(2.);
+        dists[10][ii] = fabs(vecs[ii][0]+vecs[ii][4])/std::sqrt(2.);
+        dists[11][ii] = fabs(vecs[ii][0]-vecs[ii][5])/std::sqrt(2.);
+        dists[12][ii] = fabs(vecs[ii][0]-vecs[ii][5])/std::sqrt(2.);
+        dists[13][ii] = fabs(vecs[ii][0]+vecs[ii][5])/std::sqrt(2.);
+        dists[14][ii] = fabs(vecs[ii][0]+vecs[ii][1]+vecs[ii][3]+vecs[ii][4]+vecs[ii][5])/std::sqrt(5.);
         for (jj = 0; jj < 15; jj++ ) {
             rmv6(vecs[ii], prj[jj], pgs[jj][ii]);
             imv6(pgs[jj][ii], MS[jj], mpgs[jj][ii]);
@@ -695,17 +695,17 @@ static void bdfmaps(double vecs[24][6],
       double pgtemp[6];
       
       for (ii=0; ii < 24; ii++) {
-          dists[3][ii] = sqrt((vecs[ii][0]-vecs[ii][5])*(vecs[ii][0]-vecs[ii][5])
-                                   + (vecs[ii][1]-vecs[ii][3])*(vecs[ii][1]-vecs[ii][3]))/sqrt(2.);
-          dists[4][ii] = sqrt((vecs[ii][0]-vecs[ii][4])*(vecs[ii][0]-vecs[ii][4])
-                                   + (vecs[ii][1]-vecs[ii][3])*(vecs[ii][1]-vecs[ii][3]))/sqrt(2.);
-          dists[0][ii] = sqrt( 2.*(vecs[ii][5]+vecs[ii][4]+vecs[ii][0])
+          dists[3][ii] = std::sqrt((vecs[ii][0]-vecs[ii][5])*(vecs[ii][0]-vecs[ii][5])
+                                   + (vecs[ii][1]-vecs[ii][3])*(vecs[ii][1]-vecs[ii][3]))/std::sqrt(2.);
+          dists[4][ii] = std::sqrt((vecs[ii][0]-vecs[ii][4])*(vecs[ii][0]-vecs[ii][4])
+                                   + (vecs[ii][1]-vecs[ii][3])*(vecs[ii][1]-vecs[ii][3]))/std::sqrt(2.);
+          dists[0][ii] = std::sqrt( 2.*(vecs[ii][5]+vecs[ii][4]+vecs[ii][0])
                                    *(vecs[ii][5]+vecs[ii][4]+vecs[ii][0])
-                                   +3.*(vecs[ii][3]+vecs[ii][1])*(vecs[ii][3]+vecs[ii][1]))/sqrt(6.);
-          dists[1][ii] = sqrt( 2.*(vecs[ii][5]+vecs[ii][3]+vecs[ii][1])*(vecs[ii][5]+vecs[ii][3]+vecs[ii][1])
-                                   +3.*(vecs[ii][4]+vecs[ii][0])*(vecs[ii][4]+vecs[ii][0]))/sqrt(6.);
-          dists[2][ii] = sqrt( 2.*(vecs[ii][4]+vecs[ii][3]+vecs[ii][1])*(vecs[ii][4]+vecs[ii][3]+vecs[ii][1])
-                                   +3.*(vecs[ii][5]+vecs[ii][0])*(vecs[ii][5]+vecs[ii][0]))/sqrt(6.);
+                                   +3.*(vecs[ii][3]+vecs[ii][1])*(vecs[ii][3]+vecs[ii][1]))/std::sqrt(6.);
+          dists[1][ii] = std::sqrt( 2.*(vecs[ii][5]+vecs[ii][3]+vecs[ii][1])*(vecs[ii][5]+vecs[ii][3]+vecs[ii][1])
+                                   +3.*(vecs[ii][4]+vecs[ii][0])*(vecs[ii][4]+vecs[ii][0]))/std::sqrt(6.);
+          dists[2][ii] = std::sqrt( 2.*(vecs[ii][4]+vecs[ii][3]+vecs[ii][1])*(vecs[ii][4]+vecs[ii][3]+vecs[ii][1])
+                                   +3.*(vecs[ii][5]+vecs[ii][0])*(vecs[ii][5]+vecs[ii][0]))/std::sqrt(6.);
           /*
            prj[22] is P_8F
            prj[23] is P_BF
@@ -758,7 +758,7 @@ static double g456distsq(double v1[6], double v2[6]){
 }
 static double g456dist(double v1[6], double v2[6]){
 
-    return sqrt(g456distsq(v1,v2));
+    return std::sqrt(g456distsq(v1,v2));
     
 }
 
@@ -782,7 +782,7 @@ static double g456dist(double v1[6], double v2[6]){
              v1[4]*v2[4]+v1[5]*v2[5]))
 
 #define CNCM_g456dist(v1,v2) \
-    sqrt(CNCM_g456distsq(v1,v2))
+    std::sqrt(CNCM_g456distsq(v1,v2))
 
 
 /*     Compute the best distance between 2 G6 vectors
@@ -1006,5 +1006,5 @@ double NCDist(double gvec1[6],double gvec2[6]) {
                                        + CNCM_g456distsq(fmpgs1[3][i1],fpgs2[2][i1])));
         }
     }
-    return sqrt(distsq);
+    return std::sqrt(distsq);
 }
