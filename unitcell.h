@@ -48,6 +48,22 @@ public:
 		cellD[11] = val11;
 		numRow = val12;
 	}
+	unitcell(double val[6], double row)
+	{
+		cellD[0] = val[0];
+		cellD[1] = val[1];
+		cellD[2] = val[2];
+		cellD[3] = val[3];
+		cellD[4] = val[4];
+		cellD[5] = val[5];
+		cellD[6] = 0.;
+		cellD[7] = 0.;
+		cellD[8] = 0.;
+		cellD[9] = 0.;
+		cellD[10] = 0.;
+		cellD[11] = 0.;
+		numRow = row;
+	}
     
     void getCell(double cell[6], double * row ) {
         int ii;

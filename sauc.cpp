@@ -379,6 +379,7 @@ void buildNearTree(void)
     arma::vec6 redprimcell;
     arma::vec6 searchcell;
     std::ofstream serialout;
+    std::ifstream serialin;
     size_t si;
     size_t sv;
     double cell[6];
@@ -386,13 +387,12 @@ void buildNearTree(void)
     unitcell ucell;
     std::vector<long> * DelayedIndices; // objects queued for insertion, possibly in random order
     std::vector<unitcell>  * ObjectStore;    // all inserted objects go here
-    std::vector<size_t>
-    * ObjectCollide;  // overflow chain of colliding objects
+    std::vector<size_t>    * ObjectCollide;  // overflow chain of colliding objects
     size_t            DeepestDepth;     // maximum depth of the tree
     std::vector< CNearTree<unitcell>::NearTreeNode<unitcell> * >
-    * NearTreeNodes;  // vector of pointers to nodes to build the tree
+                           * NearTreeNodes;  // vector of pointers to nodes to build the tree
     CNearTree<unitcell>::NearTreeNode<unitcell>
-    * BaseNode;       // the tree's data is stored down
+                           * BaseNode;       // the tree's data is stored down
     // this node in m_NearTreeNodes
     long              Flags;            // flags for operational control (mainly for testing)
     double            DiamEstimate;     // estimated diameter
@@ -405,6 +405,346 @@ void buildNearTree(void)
 #endif
     CNearTree<unitcell>::NearTreeNode<unitcell> * curntn;
 	int count = 0;
+    bool gotckp = false;
+    
+    serialin.open(filenames[choiceAlgorithm].c_str(),std::ios::in);
+    while (true) {
+        string token;
+        int Algorithm = 0;
+        int itoken;
+        if (serialin.is_open()) {
+            cout << "Reading database " << filenames[choiceAlgorithm] << endl;
+            serialin >> token; if (!serialin.good() || token != string("Algorithm:")) {
+                cout << filenames[choiceAlgorithm] << "badly formatted, no 'Algorithm:' token" << std::endl;
+                break;
+            }
+            serialin >> Algorithm;
+            if (!serialin.good() || algorithm != choiceAlgorithm) {
+                cout << filenames[choiceAlgorithm] << "badly formatted, algorithm value wrong" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("DelayedIndices:")) {
+                cout << filenames[choiceAlgorithm] << "badly formatted, no 'DelayedIndices:' token" << std::endl;
+                break;
+            }
+            serialin >> token; if (!serialin.good() || token != string("{")) {
+                cout << filenames[choiceAlgorithm] << "badly formatted, no DelayedIndices '{' token" << std::endl;
+                break;
+            }
+            DelayedIndices = new std::vector<long>();
+            while (serialin.good()) {
+                serialin >> token;
+                if (!serialin.good()) break;
+                if (token == string("}")) break;
+                DelayedIndices->push_back(atol(token.c_str()));
+            }
+            if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << "badly formatted DelayedIndices" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("ObjectStore:")) {
+                cout << filenames[choiceAlgorithm] << "badly formatted, no 'ObjectStore:' token" << std::endl;
+                break;
+            }
+            serialin >> token; if (!serialin.good() || token != string("{")) {
+                cout << filenames[choiceAlgorithm] << "badly formatted, no ObjectStore '{' token" << std::endl;
+                break;
+            }
+            ObjectStore = new std::vector<unitcell>();
+            while (serialin.good()) {
+                double cell[6];
+                double row;
+                serialin >> token;
+                if (token == string("}")) break;
+                if (!serialin.good() || token != string("{")) {
+                    cout << filenames[choiceAlgorithm] << "badly formatted, missing ObjectStore '{' token" << std::endl;
+                    break;
+                }
+                serialin >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5] >> row;
+                if (!serialin.good()) {
+                    cout << filenames[choiceAlgorithm] << "badly formatted, bad object" << std::endl;
+                    break;
+                }
+                ObjectStore->push_back(unitcell(cell,row));
+                serialin >> token; if (!serialin.good() || token != string("}")) {
+                    cout << filenames[choiceAlgorithm] << "badly formatted, missing ObjectStore '}' token" << std::endl;
+                    break;
+                }
+                
+            }
+            if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << "badly formatted ObjectStore" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("ObjectCollide:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'ObjectCollide:' token" << std::endl;
+                break;
+            }
+            serialin >> token; if (!serialin.good() || token != string("{")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no ObjectCollide '{' token" << std::endl;
+                break;
+            }
+            ObjectCollide = new std::vector<size_t>();
+            while (serialin.good()) {
+                long longval;
+                serialin >> token;
+                if (!serialin.good()) break;
+                if (token == string("}")) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    ObjectCollide->push_back(size_t(longval));
+                } else {
+                    ObjectCollide->push_back(ULONG_MAX);
+                }
+            }
+            if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted ObjectCollide" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("DeepestDepth:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'DeepestDepth:' token" << std::endl;
+                break;
+            }
+            
+            serialin >> DeepestDepth; if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted DeepestDepth" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("NearTreeNodes:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'NearTreeNodes:' token" << std::endl;
+                break;
+            }
+            serialin >> token; if (!serialin.good() || token != string("{")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNodes '{' token" << std::endl;
+                break;
+            }
+            NearTreeNodes = new std::vector< CNearTree<unitcell>::NearTreeNode<unitcell> * >;
+            BaseNode = NULL;
+            while (serialin.good()) {
+                long longval;
+                size_t            ptLeft;            // index of left m_Object (of type TNode) stored in this node
+                size_t            ptRight;           // index of right m_Object (of type TNode) stored in this node
+                double            dMaxLeft;          // longest distance from the left m_Object to
+                // anything below it in the tree
+                double            dMaxRight;         // longest distance from the right m_Object to
+                // anything below it in the tree
+                size_t            pLeftBranch;       // tree descending from the left m_Object
+                size_t            pRightBranch;      // tree descending from the right m_Object
+                size_t            iTreeSize;         // size of this node tree
+#ifdef CNEARTREE_INSTRUMENTED
+                size_t            iHeight;           // height of the tree
+                size_t            imultLeft;         // multiplicity at the left m_Object position
+                size_t            imultRight;        // multiplicity at the right m_Object position
+#endif
+                serialin >> token;
+                if (!serialin.good()) break;
+                if (token == string("}")) break;
+                
+                if (token != string("{")) {
+                    cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNode '{' token " << token << std::endl;
+                    break;
+                }
+                
+                serialin >> token;
+                if (!serialin.good()) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    ptLeft = size_t(longval);
+                } else {
+                    ptLeft = ULONG_MAX;
+                }
+                
+                serialin >> token;
+                if (!serialin.good()) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    ptRight = size_t(longval);
+                } else {
+                    ptRight = ULONG_MAX;
+                }
+                
+                serialin >> dMaxLeft >> dMaxRight;
+                if (!serialin.good()) break;
+                
+                serialin >> token;
+                if (!serialin.good()) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    pLeftBranch = size_t(longval);
+                } else {
+                    pLeftBranch = ULONG_MAX;
+                }
+                
+                serialin >> token;
+                if (!serialin.good()) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    pRightBranch = size_t(longval);
+                } else {
+                    pRightBranch = ULONG_MAX;
+                }
+                
+                serialin >> token;
+                if (!serialin.good()) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    iTreeSize = size_t(longval);
+                } else {
+                    iTreeSize = ULONG_MAX;
+                }
+                
+#ifdef CNEARTREE_INSTRUMENTED
+                serialin >> token;
+                if (!serialin.good()) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    iHeight = size_t(longval);
+                } else {
+                    iHeight = ULONG_MAX;
+                }
+                
+                serialin >> token;
+                if (!serialin.good()) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    imultLeft = size_t(longval);
+                } else {
+                    imultLeft = ULONG_MAX;
+                }
+                
+                serialin >> token;
+                if (!serialin.good()) break;
+                longval = atol(token.c_str());
+                if (longval != -1) {
+                    imultRight = size_t(longval);
+                } else {
+                    imultRight = ULONG_MAX;
+                }
+#endif
+                serialin >> token; if (!serialin.good() || token != string("}")) {
+                    cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNode '}' token: " << token <<std::endl;
+                    break;
+                }
+                
+                if (!BaseNode) {
+                    BaseNode = new CNearTree<unitcell>::NearTreeNode<unitcell>
+                    (ptLeft, ptRight, dMaxLeft, dMaxRight,pLeftBranch, pRightBranch,iTreeSize
+#ifdef CNEARTREE_INSTRUMENTED
+                     , iHeight, imultLeft, imultRight
+#endif
+                     , * NearTreeNodes, *ObjectStore, *ObjectCollide);
+                } else {
+                    NearTreeNodes->push_back(new CNearTree<unitcell>::NearTreeNode<unitcell>
+                                             (ptLeft, ptRight, dMaxLeft, dMaxRight,pLeftBranch, pRightBranch,iTreeSize
+#ifdef CNEARTREE_INSTRUMENTED
+                                              , iHeight, imultLeft, imultRight
+#endif
+                                              , * NearTreeNodes, * ObjectStore, * ObjectCollide));
+                }
+                
+            }
+            if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted NearTreeNodes" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("Flags:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'Flags:' token" << std::endl;
+                break;
+            }
+            
+            serialin >> Flags; if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted Flags" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("DiamEstimate:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'DiamEstimate:' token" << std::endl;
+                break;
+            }
+            
+            serialin >> DiamEstimate; if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted DiamEstimate" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("SumSpacings:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'SumSpacings:' token" << std::endl;
+                break;
+            }
+            
+            serialin >> SumSpacings; if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted SumSpacings" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("SumSpacingsSq:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'SumSpacingsSq:' token" << std::endl;
+                break;
+            }
+            
+            serialin >> SumSpacingsSq; if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted SumSpacings" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("DimEstimate:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'DimEstimate:' token" << std::endl;
+                break;
+            }
+            
+            serialin >> DimEstimate; if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted DimEstimate" << std::endl;
+                break;
+            }
+            
+            serialin >> token; if (!serialin.good() || token != string("DimEstimateEsd:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'DimEstimateEsd:' token" << std::endl;
+                break;
+            }
+            
+            serialin >> DimEstimateEsd; if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted DimEstimateEsd" << std::endl;
+                break;
+            }
+            
+#ifdef CNEARTREE_INSTRUMENTED
+            serialin >> token; if (!serialin.good() || token != string("NodeVisits:")) {
+                cout << filenames[choiceAlgorithm] << " badly formatted, no 'NodeVisits:' token" << std::endl;
+                break;
+            }
+            
+            serialin >> NodeVisits; if (!serialin.good()) {
+                cout << filenames[choiceAlgorithm] << " badly formatted NodeVisits << std::endl;
+                break;
+            }
+#endif
+            cellTree[choiceAlgorithm-1] =
+            new CNearTree <unitcell> (*DelayedIndices, *ObjectStore, *ObjectCollide, DeepestDepth,
+                                      *NearTreeNodes, *BaseNode, Flags,DiamEstimate, SumSpacings, SumSpacingsSq,
+                                      DimEstimate, DimEstimateEsd  // estimated dimension estimated standard deviation
+#ifdef CNEARTREE_INSTRUMENTED
+                                      , NodeVisits
+#endif
+                                      );
+            gotckp = true;
+            delete DelayedIndices;
+            delete ObjectStore;
+            delete ObjectCollide;
+            delete NearTreeNodes;
+            delete BaseNode;
+            
+        }
+        break;
+    }
+    if (serialin.is_open()) serialin.close();
+    if (gotckp) return;
+    
     
     cellTree[choiceAlgorithm-1] = new CNearTree <unitcell> ();
     
@@ -455,85 +795,94 @@ void buildNearTree(void)
 #endif
                                                 );
     serialout.open(filenames[choiceAlgorithm].c_str(),std::ios::out|std::ios::trunc);
-    serialout << "Algorithm: "<< choiceAlgorithm << std::endl;
-    serialout << "DelayedIndices: { ";
-    for (si = 0; si < DelayedIndices->size(); si++) {
-        serialout << (*DelayedIndices)[si];
-        if (si+1 < DelayedIndices->size()) serialout <<" ";
-        if (si%64==63) serialout << std::endl;
-    }
-    serialout << " }" << std::endl;
-    
-    serialout << "ObjectStore: { ";
-    for (si = 0; si < ObjectCollide->size(); si++) {
-        ucell = (*ObjectStore)[si];
-        ucell.getCell(cell,&row);
-        serialout << "{ " << cell[0] << " "
-        << cell[1] << " "
-        << cell[2] << " "
-        << cell[3] << " "
-        << cell[4] << " "
-        << cell[5] << " "
-        << " " << row << " }"  << std::endl;
-    }
-    serialout << " }" << std::endl;
-
-    serialout << "ObjectCollide: { ";
-    for (si = 0; si < ObjectCollide->size(); si++) {
-        sv = (*ObjectCollide)[si];
-        putoutst(serialout,sv);
-        if (si+1 < ObjectCollide->size()) serialout <<" ";
-        if (si%64==63) serialout << std::endl;
-    }
-    serialout << " }" << std::endl;
-    
-    serialout << "DeepestDepth: " << DeepestDepth << std::endl;
-    
-    serialout << "NearTreeNodes: { ";
-    
-    serialout << "{ ";
-    putoutst(serialout,BaseNode->m_ptLeft); serialout << " ";
-    putoutst(serialout,BaseNode->m_ptRight); serialout << " ";
-    serialout << BaseNode->m_dMaxLeft << " "
-    << BaseNode->m_dMaxRight << " ";
-    putoutst(serialout,BaseNode->m_pLeftBranch); serialout << " ";
-    putoutst(serialout,BaseNode->m_pRightBranch); serialout << " ";
-    putoutst(serialout,BaseNode->m_iTreeSize); serialout << " ";
-#ifdef CNEARTREE_INSTRUMENTED
-    putoutst(serialout,BaseNode->m_iHeight); serialout << " ";
-    putoutst(serialout,BaseNode->m_imultLeft); serialout << " ";
-    putoutst(serialout,BaseNode->m_imultRight); serialout << " ";
-#endif
-    serialout << "} " << std::endl;
-    
-    for (si = 0; si < NearTreeNodes->size(); si++) {
-        curntn= (*NearTreeNodes)[si];
+    if (serialout.is_open()) {
+        serialout << "Algorithm: "<< choiceAlgorithm << std::endl;
+        serialout << "DelayedIndices: { ";
+        for (si = 0; si < DelayedIndices->size(); si++) {
+            serialout << (*DelayedIndices)[si];
+            if (si+1 < DelayedIndices->size()) serialout <<" ";
+            if (si%64==63) serialout << std::endl;
+        }
+        serialout << " }" << std::endl;
+        
+        serialout << "ObjectStore: { ";
+        for (si = 0; si < ObjectCollide->size(); si++) {
+            ucell = (*ObjectStore)[si];
+            ucell.getCell(cell,&row);
+            serialout << "{ " << cell[0] << " "
+            << cell[1] << " "
+            << cell[2] << " "
+            << cell[3] << " "
+            << cell[4] << " "
+            << cell[5] << " "
+            << " " << row << " }"  << std::endl;
+        }
+        serialout << " }" << std::endl;
+        
+        serialout << "ObjectCollide: { ";
+        for (si = 0; si < ObjectCollide->size(); si++) {
+            sv = (*ObjectCollide)[si];
+            putoutst(serialout,sv);
+            if (si+1 < ObjectCollide->size()) serialout <<" ";
+            if (si%64==63) serialout << std::endl;
+        }
+        serialout << " }" << std::endl;
+        
+        serialout << "DeepestDepth: " << DeepestDepth << std::endl;
+        
+        serialout << "NearTreeNodes: { ";
+        
         serialout << "{ ";
-        putoutst(serialout,curntn->m_ptLeft); serialout << " ";
-        putoutst(serialout,curntn->m_ptRight); serialout << " ";
-        serialout << curntn->m_dMaxLeft << " " << curntn->m_dMaxRight << " ";
-        putoutst(serialout,curntn->m_pLeftBranch); serialout << " ";
-        putoutst(serialout,curntn->m_pRightBranch); serialout << " ";
-        putoutst(serialout,curntn->m_iTreeSize); serialout << " ";
+        putoutst(serialout,BaseNode->m_ptLeft); serialout << " ";
+        putoutst(serialout,BaseNode->m_ptRight); serialout << " ";
+        serialout << BaseNode->m_dMaxLeft << " "<< BaseNode->m_dMaxRight << " ";
+        putoutst(serialout,BaseNode->m_pLeftBranch); serialout << " ";
+        putoutst(serialout,BaseNode->m_pRightBranch); serialout << " ";
+        putoutst(serialout,BaseNode->m_iTreeSize); serialout << " ";
 #ifdef CNEARTREE_INSTRUMENTED
-        putoutst(serialout,curntn->m_iHeight); serialout << " ";
-        putoutst(serialout,curntn->m_imultLeft); serialout << " ";
-        putoutst(serialout,curntn->m_imultRight); serialout << " ";
+        putoutst(serialout,BaseNode->m_iHeight); serialout << " ";
+        putoutst(serialout,BaseNode->m_imultLeft); serialout << " ";
+        putoutst(serialout,BaseNode->m_imultRight); serialout << " ";
 #endif
-        serialout << "} ";
-        if (si+1 < NearTreeNodes->size()) serialout <<std::endl;
+        serialout << " }" << std::endl;
+        
+        for (si = 0; si < NearTreeNodes->size(); si++) {
+            curntn= (*NearTreeNodes)[si];
+            serialout << "{ ";
+            putoutst(serialout,curntn->m_ptLeft); serialout << " ";
+            putoutst(serialout,curntn->m_ptRight); serialout << " ";
+            serialout << curntn->m_dMaxLeft << " " << curntn->m_dMaxRight << " ";
+            putoutst(serialout,curntn->m_pLeftBranch); serialout << " ";
+            putoutst(serialout,curntn->m_pRightBranch); serialout << " ";
+            putoutst(serialout,curntn->m_iTreeSize); serialout << " ";
+#ifdef CNEARTREE_INSTRUMENTED
+            putoutst(serialout,curntn->m_iHeight); serialout << " ";
+            putoutst(serialout,curntn->m_imultLeft); serialout << " ";
+            putoutst(serialout,curntn->m_imultRight); serialout << " ";
+#endif
+            serialout << " }";
+            if (si+1 < NearTreeNodes->size()) serialout <<std::endl;
+        }
+        serialout << " }" << std::endl;
+        serialout << "Flags: " << Flags  << std::endl;
+        serialout << "DiamEstimate: " << DiamEstimate  << std::endl;
+        serialout << "SumSpacings: " << SumSpacings  << std::endl;
+        serialout << "SumSpacingsSq: " << SumSpacingsSq  << std::endl;
+        serialout << "DimEstimate: " << DimEstimate  << std::endl;
+        serialout << "DimEstimateEsd: " << DimEstimateEsd  << std::endl;
+#ifdef CNEARTREE_INSTRUMENTED
+        serialout << "NodeVisits: " << NodeVisits  << std::endl;
+#endif
+        serialout.close();
+        delete DelayedIndices;
+        delete ObjectStore;
+        delete ObjectCollide;
+        delete NearTreeNodes;
+        delete BaseNode;
+        
+    } else {
+        cout << "unable to save database checkpoint file "<<filenames[choiceAlgorithm] << endl;
     }
-    serialout << " }" << std::endl;
-    serialout << "Flags: " << Flags  << std::endl;
-    serialout << "DiamEstimate: " << DiamEstimate  << std::endl;
-    serialout << "SumSpacings: " << SumSpacings  << std::endl;
-    serialout << "SumSpacingsSq: " << SumSpacingsSq  << std::endl;
-    serialout << "DimEstimate: " << DimEstimate  << std::endl;
-    serialout << "DimEstimateEsd: " << DimEstimateEsd  << std::endl;
-#ifdef CNEARTREE_INSTRUMENTED
-    serialout << "NodeVisits: " << NodeVisits  << std::endl;
-#endif
-    serialout.close();
 }
 
 void findNearest()
