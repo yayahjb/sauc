@@ -64,7 +64,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="proteindatabase.csv" />
+    <None Include="PDBcelldatabase.csv" />
+    <None Include="PDBcellneartreeL1.dmp" />
+    <None Include="PDBcellneartreeL2.dmp" />
+    <None Include="PDBcellneartreeNCDist.dmp" />
+    <None Include="PDBcellneartreeV7.dmp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BasicDistance.cpp" />
