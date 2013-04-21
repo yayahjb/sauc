@@ -6,8 +6,11 @@
 #include "NCDist.h"
 
 double NCDist(double *, double *);
+static double pi = 3.141592653589793;
+static double torad = pi/180.;
 
 int algorithm, operatorCheck;
+double Scaledist = 1.;
 class unitcell
 {
 	double numRow;
@@ -93,29 +96,13 @@ public:
 		operatorCheck = numOper;
 	}
 
+	void changeScaledist(double scaledist)
+	{
+		Scaledist = scaledist;
+	}
+    
 	unitcell operator- (const unitcell &unitcell2) const
 	{
-		if (operatorCheck == 1)
-		{
-		unitcell cellReturn
-			(cellD[0] - unitcell2.cellD[0],
-			cellD[1] - unitcell2.cellD[1],
-			cellD[2] - unitcell2.cellD[2],
-			cellD[3] - unitcell2.cellD[3],
-			cellD[4] - unitcell2.cellD[4],
-			cellD[5] - unitcell2.cellD[5],
-			0,
-			0,
-			0,
-			0,
-			0,
-			0,
-			numRow);
-		return(cellReturn);
-		}
-
-		else if(operatorCheck == 2)
-		{
 		unitcell cellReturn
 			(cellD[0],
 			cellD[1],
@@ -131,19 +118,27 @@ public:
 			unitcell2.cellD[5],
 			numRow);
 		return(cellReturn);
-		}
 	}
 
 	double Norm(void) const
 	{
 		if (algorithm == 1)
 		{
-			return(std::abs(cellD[0]) + std::abs(cellD[1]) + std::abs(cellD[2]) + std::abs(cellD[3]) + std::abs(cellD[4]) + std::abs(cellD[5]));
+			return (std::abs(cellD[0]-cellD[6]) +
+                   std::abs(cellD[1]-cellD[7]) +
+                   std::abs(cellD[2]-cellD[8]) +
+                   std::abs(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
+                   std::abs(cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad +
+                   std::abs(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad)*Scaledist;
 		}
 		else if (algorithm == 2)
 		{
-			return(std::sqrt((cellD[0]*cellD[0]) + (cellD[1]*cellD[1]) + (cellD[2]*cellD[2]) +
-			(cellD[3]*cellD[3]) + (cellD[4]*cellD[4]) + cellD[5]*cellD[5]));
+			return (std::sqrt((cellD[0]-cellD[6])*(cellD[0]-cellD[6]) +
+                    (cellD[1]-cellD[7])*(cellD[1]-cellD[7]) +
+                    (cellD[2]-cellD[8])*(cellD[2]-cellD[8]) +
+			        (cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad*(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
+                    (cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad*(cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad +
+                    (cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad*(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad))*Scaledist;
 		}
 		else if (algorithm == 3)
 		{
@@ -158,7 +153,7 @@ public:
                 dgv1[ii] = gv1[ii];
                 dgv2[ii] = gv2[ii];
             }
-            return std::sqrt(NCDist(dgv1,dgv2));            
+            return std::sqrt(NCDist(dgv1,dgv2))*Scaledist;
 		}
 		else if (algorithm == 4)
 		{
@@ -169,7 +164,7 @@ public:
             
 			//V7 dist
             
-			return (gv1-gv2).Norm();
+			return ((gv1-gv2).Norm())*Scaledist;
 		}
 		return 0;
 	}

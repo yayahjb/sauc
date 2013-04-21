@@ -2554,6 +2554,41 @@ public:
             return( lFound );
         }
     }  //  FindK_NearestNeighbors
+    template<typename OutputContainerType>
+    long FindK_NearestNeighbors ( const size_t k, const DistanceType& radius,
+                                 OutputContainerType& tClosest,
+                                 std::vector<size_t>& tIndices,
+                                 std::vector<DistanceType>& tDistances,
+                                 const T& t )
+    {
+        // clear the contents of the return vector so that things don't accidentally accumulate
+        tClosest.clear( );
+        tIndices.clear( );
+        tDistances.clear( );
+        const_cast<CNearTree*>(this)->CompleteDelayedInsert( );
+        
+        if( this->empty( ) )
+        {
+            return( 0L );
+        }
+        else
+        {
+            std::vector<triple<DistanceType, T, size_t> > K_Storage;
+            DistanceType dRadius = radius;
+            const long lFound = (this->m_BaseNode).K_Near( k, dRadius, K_Storage, t
+#ifdef CNEARTREE_INSTRUMENTED
+                                                          , m_NodeVisits
+#endif
+                                                          );
+            for( unsigned int i=0; i<K_Storage.size( ); ++i )
+            {
+                tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
+                tIndices.insert( tIndices.end( ), K_Storage[i].GetThird() );
+                tDistances.insert( tDistances.end(),K_Storage[i].GetFirst() );
+            }
+            return( lFound );
+        }
+    }  //  FindK_NearestNeighbors
     
     //=======================================================================
     //  long FindK_NearestNeighbors(  const size_t k, const DistanceType& dRadius, OutputContainerType& tClosest, const T& t ) const

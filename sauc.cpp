@@ -88,6 +88,7 @@ int zArray[NUM_ROWS][1];
 double probeArray[6];
 arma::vec6 primredprobe;
 string probelattice;
+double avglen=1.;
 
 int nearest = 0, numRow = 0;
 int quitAlgorithm = 0, quitSimilar = 0, quitContinue = 0, endProgram = 0, choiceAlgorithm = 0, choiceSimilar = 0, choiceContinue = 0, goBack = 0,
@@ -231,6 +232,7 @@ void makeDatabase(string filename)
 		getline (infile, valueDump, 'r');
 		//cout << valueDump << std::endl;
 	}
+    avglen = 0.;
 	for (int i = 0; i < NUM_ROWS; i++)
 	{
 		string value;
@@ -266,6 +268,7 @@ void makeDatabase(string filename)
 		value = string(value, 1, value.length()-2);
 		//cout << value << std::endl;
 		cellDArray[i][0] = convertToDouble(value);
+        avglen += cellDArray[i][0];
 		//cout << cellDArray[i][0] << std::endl;
 
 		getline (infile, value, ',');
@@ -273,6 +276,7 @@ void makeDatabase(string filename)
 		value = string(value, 1, value.length()-2);
 		//cout << value << std::endl;
 		cellDArray[i][1] = convertToDouble(value);
+        avglen += cellDArray[i][1];
 		//cout << cellDArray[i][1] << std::endl;
 
 		getline (infile, value, ',');
@@ -280,6 +284,7 @@ void makeDatabase(string filename)
 		value = string(value, 1, value.length()-2);
 		//cout << value << std::endl;
 		cellDArray[i][2] = convertToDouble(value);
+        avglen += cellDArray[i][2];
 		//cout << cellDArray[i][2] << std::endl;
 
 		getline (infile, value, ',');
@@ -297,6 +302,7 @@ void makeDatabase(string filename)
 
 		//cout << "-----------------------------------------------" << std::endl;
 	}
+    avglen /= double(3*NUM_ROWS);
 	infile.close();
 }
 
@@ -955,13 +961,17 @@ void findSphere()
         "Beta: " << primredprobe[4] << " " <<
         "Gamma: " << primredprobe[5]  <<  std::endl;
 	vector <unitcell> myvector;
-	long sphereData = cellTree[choiceAlgorithm-1]->FindInSphere(sphereRange, myvector, unknownCell);
+    vector <size_t> myindices;
+    vector <double> mydistances;
+	long sphereData = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(100000,sphereRange, myvector,
+                                                                          myindices,mydistances,unknownCell);
 
 	cout << "\nSphere Results" << std::endl;
-	for (vector <unitcell>::iterator cell = myvector.begin(); cell != myvector.end(); ++cell)
-	{
+    for (size_t ind=0; ind < myvector.size(); ind++) {
+        unitcell * cell = & myvector[ind];
 		numRow = (int)(*cell).getRow();
 		cout << "PDBID: " << idArray[numRow][0] << " " <<
+        "distance: " << mydistances[ind] << " " <<
         "A: " << cellDArray[numRow][0] << " " <<
         "B: " << cellDArray[numRow][1] << " " <<
         "C: " << cellDArray[numRow][2] << " " <<
@@ -970,7 +980,7 @@ void findSphere()
         "Gamma: " << cellDArray[numRow][5] << " " <<
         "Space Group: " << spaceArray[numRow][0] << " " <<
         "Z: " << zArray[numRow][0] << std::endl;
-		cout << "As Primitive Reduced\n"<<
+		cout << "          As Primitive Reduced: "<<
 		"A: " << (*cell).getData(0) << " " <<
         "B: " << (*cell).getData(1) << " " <<
         "C: " << (*cell).getData(2) << " " <<
@@ -1061,6 +1071,7 @@ int main ()
 			{
 				cell.changeOperator(1);
 				cell.changeAlgorithm(1);
+                cell.changeScaledist(1./std::sqrt(6));
 				quitAlgorithm = 1;
 				//Build Tree
 				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
@@ -1069,6 +1080,7 @@ int main ()
 			{
 				cell.changeOperator(1);
 				cell.changeAlgorithm(2);
+                cell.changeScaledist(1.);
 				quitAlgorithm = 1;
 				//Build Tree
 				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
@@ -1077,6 +1089,7 @@ int main ()
 			{
 				cell.changeOperator(2);
 				cell.changeAlgorithm(3);
+                cell.changeScaledist(std::sqrt(std::sqrt(6.))/std::sqrt(avglen));
 				quitAlgorithm = 1;
 				//Build Tree
 				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
@@ -1085,6 +1098,7 @@ int main ()
 			{
 				cell.changeOperator(2);
 				cell.changeAlgorithm(4);
+                cell.changeScaledist(std::sqrt(6./7.));
 				quitAlgorithm = 1;
 				//Build Tree
 				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
