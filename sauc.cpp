@@ -1071,7 +1071,7 @@ int main ()
 			{
 				cell.changeOperator(1);
 				cell.changeAlgorithm(1);
-                cell.changeScaledist(1./std::sqrt(6));
+                cell.changeScaledist(1./std::sqrt(6.));
 				quitAlgorithm = 1;
 				//Build Tree
 				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
