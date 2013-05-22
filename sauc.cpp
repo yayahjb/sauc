@@ -366,6 +366,7 @@ bool makeprimredprobe(void)
       primredprobe[3]<<" "<<
       primredprobe[4]<<" "<<
       primredprobe[5] << std::endl;
+	cout << std::endl;
     return ret;
 }
 
@@ -929,7 +930,7 @@ void findNearest()
         "Gamma: " << cellDArray[numRow][5] << " " <<
         "Space Group: " << spaceArray[numRow][0] << " " <<
         "Z: " << zArray[numRow][0] << std::endl;
-    cout << "As Primitive Reduced\n"<<
+    cout << "As Primitive\n"<<
 		"A: " << nearestData.getData(0) << " " <<
         "B: " << nearestData.getData(1) << " " <<
         "C: " << nearestData.getData(2) << " " <<
@@ -971,7 +972,7 @@ void findSphere()
         unitcell * cell = & myvector[ind];
 		numRow = (int)(*cell).getRow();
 		cout << "PDBID: " << idArray[numRow][0] << " " <<
-        "distance: " << mydistances[ind] << " " <<
+        "Distance: " << mydistances[ind] << " " <<
         "A: " << cellDArray[numRow][0] << " " <<
         "B: " << cellDArray[numRow][1] << " " <<
         "C: " << cellDArray[numRow][2] << " " <<
@@ -980,7 +981,7 @@ void findSphere()
         "Gamma: " << cellDArray[numRow][5] << " " <<
         "Space Group: " << spaceArray[numRow][0] << " " <<
         "Z: " << zArray[numRow][0] << std::endl;
-		cout << "          As Primitive Reduced: "<<
+		cout << "As Primitive\n"<<
 		"A: " << (*cell).getData(0) << " " <<
         "B: " << (*cell).getData(1) << " " <<
         "C: " << (*cell).getData(2) << " " <<
@@ -993,7 +994,7 @@ void findSphere()
 void findRange()
 {
 	cout << std::endl;
-	cout << "Unknown Cell\n" << "A: " << probeArray[0] << " " << "B: " << probeArray[1] << " " << "C: " << probeArray[2] << " " <<
+	cout << "Raw Unknown Cell\n" << "A: " << probeArray[0] << " " << "B: " << probeArray[1] << " " << "C: " << probeArray[2] << " " <<
 		"Alpha: " <<probeArray[3] << " " << "Beta: " << probeArray[4] << " " << "Gamma: " << probeArray[5] << std::endl;
 	cout << "\nRange Results\n";
 	for (int i = 0; i < NUM_ROWS; i++)
@@ -1051,7 +1052,6 @@ int main ()
 			cin >> probeArray[4];
 			cout << "Gamma: ";
 			cin >> probeArray[5];
-			cout << std::endl;
             makeprimredprobe();
 		}
 
