@@ -11,6 +11,7 @@ static double torad = pi/180.;
 
 int algorithm, operatorCheck;
 double Scaledist = 1.;
+
 class unitcell
 {
 	double numRow;
@@ -35,7 +36,10 @@ public:
 
 		
 	}
-	unitcell(double val0, double val1, double val2, double val3, double val4, double val5, double val6, double val7, double val8, double val9, double val10, double val11, double val12)
+	unitcell(const double val0, const double val1, const double val2, const double val3, 
+                 const double val4, const double val5, const double val6, const double val7, 
+                 const double val8, const double val9, const double val10, const double val11, 
+                 const double val12)
 	{
 		cellD[0] = val0;
 		cellD[1] = val1;
@@ -51,7 +55,7 @@ public:
 		cellD[11] = val11;
 		numRow = val12;
 	}
-	unitcell(double val[6], double row)
+	unitcell(const double val[6], const double row)
 	{
 		cellD[0] = val[0];
 		cellD[1] = val[1];
@@ -76,27 +80,27 @@ public:
         *row = numRow;
     }
 
-	double getData(int index)
+	double getData(const int index) const
 	{
 		return cellD[index];
 	}
 
-	double getRow()
+	double getRow() const
 	{
 		return numRow;
 	}
 
-	void changeAlgorithm(int numAlg)
+	void changeAlgorithm(int numAlg) const
 	{
 		algorithm = numAlg;
 	}
 
-	void changeOperator(int numOper)
+	void changeOperator(int numOper) const
 	{
 		operatorCheck = numOper;
 	}
 
-	void changeScaledist(double scaledist)
+	void changeScaledist(double scaledist) const
 	{
 		Scaledist = scaledist;
 	}
