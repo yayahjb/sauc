@@ -775,7 +775,7 @@ void buildNearTree( void )
             }
             
             serialin >> NodeVisits; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted NodeVisits << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted NodeVisits" << std::endl;
                 break;
             }
 #endif
