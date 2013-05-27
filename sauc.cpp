@@ -3,6 +3,7 @@
  
    rev 27 Mar 2013 -- HJB
    rev 26 May 2013 -- LCA
+   rev 27 May 2013 -- HJB
 
       *******************************************************
           You may redistribute this program under the terms
@@ -311,7 +312,7 @@ void makeDatabase(string filename)
 }
 
 //*****************************************************************************
-bool makeprimredprobe(void)
+bool makeprimredprobe( void )
 {
     string latsym;
     char clatsym;
@@ -320,6 +321,8 @@ bool makeprimredprobe(void)
     arma::mat66 mc;
     arma::mat66 m;
     arma::vec6 primcell;
+    arma::vec6 recipcell;
+    arma::vec6 reducedBase;
     Cell rawcell(probeArray[0],probeArray[1],probeArray[2],
                  probeArray[3],probeArray[4],probeArray[5]);
     int ii;
@@ -355,6 +358,7 @@ bool makeprimredprobe(void)
             for (ii=0; ii< 6; ii++) {
                 primcell[ii] = probeArray[ii];
             }
+            break;
         default:
             cerr << "Unrecognized lattice symbol "<< probelattice<<" treated as P" << std::endl;
             latsym = "P";
@@ -365,12 +369,51 @@ bool makeprimredprobe(void)
     ret = Reducer::Reduce(primcell,m,redprimcell,0.0);
     primredprobe = Cell(redprimcell).CellWithDegrees();
     std::cout << "Primitive Reduced Probe Cell: " <<
-      primredprobe[0]<<" "<<
-      primredprobe[1]<<" "<<
-      primredprobe[2]<<" "<<
-      primredprobe[3]<<" "<<
-      primredprobe[4]<<" "<<
-      primredprobe[5] << std::endl;
+    primredprobe[0]<<" "<<
+    primredprobe[1]<<" "<<
+    primredprobe[2]<<" "<<
+    primredprobe[3]<<" "<<
+    primredprobe[4]<<" "<<
+    primredprobe[5] << std::endl;
+    std::cout << "Volume :" << Cell(redprimcell).Volume() << std::endl;
+    Reducer::Reduce((Cell(redprimcell).Inverse()).Cell2V6(),m,reducedBase,0.0);
+    recipcell = (Cell(redprimcell).Inverse()).CellWithDegrees();
+    
+    std::cout << "Reciprocal of Primitive Probe Cell: " <<
+    recipcell[0]<<" "<<
+    recipcell[1]<<" "<<
+    recipcell[2]<<" "<<
+    recipcell[3]<<" "<<
+    recipcell[4]<<" "<<
+    recipcell[5]<< std::endl;
+    std::cout << "Volume of Reciprocal Cell: " <<
+    (Cell(redprimcell).Inverse()).Volume() << std::endl;
+    std::cout << "V7 linearized and scaled: "
+    << primredprobe[0]*std::sqrt(6./7.)<<" "
+    << primredprobe[1]*std::sqrt(6./7.)<<" "
+    << primredprobe[2]*std::sqrt(6./7.)<<" "
+    << std::sqrt(1./reducedBase[0])*std::sqrt(6./7.)<<" "
+    << std::sqrt(1./reducedBase[1])*std::sqrt(6./7.)<<" "
+    << std::sqrt(1./reducedBase[2])*std::sqrt(6./7.)<<" "
+    << " "<<
+    pow(Cell(redprimcell).Volume(),1./3.)*std::sqrt(6./7.)<<std::endl;
+    if (latsym[0] == 'V' || latsym[0] == 'v') {
+        std::cout << "raw G6 vector: "
+        << primcell[0]<<" "
+        << primcell[1]<<" "
+        << primcell[2]<<" "
+        << primcell[3]<<" "
+        << primcell[4]<<" "
+        << primcell[5]<<std::endl;
+    } else {
+        std::cout << "raw G6 vector: "
+        << primredprobe[0]*primredprobe[0]<<" "
+        << primredprobe[1]*primredprobe[1]<<" "
+        << primredprobe[2]*primredprobe[2]<<" "
+        << 2.*primredprobe[1]*primredprobe[2]*cos(primredprobe[3]*std::atan(1.0)/45.)<<" "
+        << 2.*primredprobe[0]*primredprobe[2]*cos(primredprobe[4]*std::atan(1.0)/45.)<<" "
+        << 2.*primredprobe[0]*primredprobe[1]*cos(primredprobe[5]*std::atan(1.0)/45.)<<std::endl;
+    }
 	std::cout << std::endl;
     return ret;
 }
@@ -384,7 +427,7 @@ bool makeprimredprobe(void)
 
 
 //*****************************************************************************
-void buildNearTree(void)
+void buildNearTree( void )
 {
     arma::mat66 m;
     arma::mat66 mc;
@@ -927,13 +970,13 @@ void NearestInputReport( std::ostream& out, const arma::vec6& probeArray, const 
     "C: " << probeArray[2] << " " <<
     "Alpha: " << probeArray[3] << " " <<
     "Beta: " << probeArray[4] << " " <<
-    "Gamma: " << probeArray[5] <<
-    " Lattice: "<< probelattice <<  std::endl;
+    "Gamma: " << probeArray[5] << " " <<
+    "Lattice: "<< probelattice <<  std::endl;
     out << "Reduced Primitive Cell\n" <<
     "A: " << primredprobe[0] << " " <<
     "B: " << primredprobe[1] << " " <<
     "C: " << primredprobe[2] << " " <<
-        "Alpha: " << primredprobe[3] << " " <<
+    "Alpha: " << primredprobe[3] << " " <<
     "Beta: " << primredprobe[4] << " " <<
     "Gamma: " << primredprobe[5]  <<  std::endl;
 }
@@ -955,12 +998,11 @@ void findNearest( void )
         std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
         NearestResult( std::cout, idArray[numRow], nearestData );
         
-        std::cin.clear();
         std::cout << "File name if you want the output saved" << std::endl;
         
         std::string s;
-        std::getline( std::cin, s ); // consume the leftover line feed
         std::getline( std::cin, s );
+        std::cin.clear();
         if ( ! s.empty() )
         {
             std::string filename;
@@ -984,11 +1026,11 @@ void SphereResults( std::ostream& out,
                     const std::vector<double>&    mydistances,
                     const unitcell&               unknownCell)
 {
-    out << "\nSphere Results" << std::endl;
+    out << "\nSphere Results " << myvector.size() << " Cells" <<std::endl;
     for (size_t ind=0; ind < myvector.size(); ind++) {
         const unitcell * const cell = & myvector[ind];
         numRow = (int)(*cell).getRow();
-        out << "PDBID: " << idArray[numRow][0] << " " <<
+        out << ind+1<<". PDBID: " << idArray[numRow][0] << " " <<
             "distance: " << mydistances[ind] << " " <<
         "A: " << cellDArray[numRow][0] << " " <<
         "B: " << cellDArray[numRow][1] << " " <<
@@ -998,7 +1040,7 @@ void SphereResults( std::ostream& out,
         "Gamma: " << cellDArray[numRow][5] << " " <<
         "Space Group: " << spaceArray[numRow][0] << " " <<
         "Z: " << zArray[numRow][0] << std::endl;
-        out << "          As Primitive Reduced: "<<
+        out << "    As Primitive Reduced: "<<
             "A: "     << (*cell).getData(0) << " " <<
             "B: "     << (*cell).getData(1) << " " <<
             "C: "     << (*cell).getData(2) << " " <<
@@ -1011,7 +1053,7 @@ void SphereResults( std::ostream& out,
 //*****************************************************************************
 void SphereInputReport( std::ostream& out )
 {
-    out << "Raw Unknown Cell\n" <<
+    out << "Raw Unknown Cell         \n" <<
         "A: " << probeArray[0] << " " <<
         "B: " << probeArray[1] << " " <<
         "C: " << probeArray[2] << " " <<
@@ -1019,7 +1061,7 @@ void SphereInputReport( std::ostream& out )
         "Beta: " << probeArray[4] << " " <<
         "Gamma: " << probeArray[5] <<
         " Lattice: "<< probelattice <<  std::endl;
-    out << "Reduced Primitive Cell\n" <<
+    out << "As Primitive Reduced Cell\n" <<
         "A: " << primredprobe[0] << " " <<
         "B: " << primredprobe[1] << " " <<
         "C: " << primredprobe[2] << " " <<
@@ -1043,12 +1085,11 @@ void findSphere( void )
     
     SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
     
-    std::cin.clear();
-    std::cout << "file name if you want the output saved" << std::endl;
+    std::cout << "File name if you want the output saved" << std::endl;
     
     std::string s;
-    std::getline( std::cin, s ); // consume the leftover line feed
     std::getline( std::cin, s );
+    std::cin.clear();
     if ( ! s.empty() )
     {
         std::string filename;
@@ -1107,7 +1148,7 @@ int main ()
     filenames[3] = "PDBcellneartreeNCDist.dmp";
     filenames[4] = "PDBcellneartreeV7.dmp";
 	makeDatabase(filenames[0]);
-
+    
 	unitcell cell;
     
     std::cout << "sauc Copyright (C) Keith McGill 2013" << std::endl;
@@ -1115,193 +1156,227 @@ int main ()
     std::cout << "This is free software, and you are welcome to" << std::endl;
     std::cout << "redistribute it under the GPL" << std::endl;
     std::cout << "See the program documentation for details" << std::endl;
-
+    
 	while (endProgram != 1)
 	{
 		if (goBack != 1)
 		{
+            int ii;
+            double edgemax;
+            for (ii=0; ii < 6; ii++) probeArray[ii] = 0;
 			std::cout << "Search of Alternate Unit Cells\n";
 			std::cout << "\nPlease Input Your Data\n";
             std::cout << "Lattice Centering (P, A, B, C, F, I, R, H, V): ";
-            std::cin >> probelattice;
+            std::cin >> probelattice; std::cin.clear();
 			std::cout << "A: ";
-			std::cin >> probeArray[0];
+			std::cin >> probeArray[0]; std::cin.clear();
 			std::cout << "B: ";
-			std::cin >> probeArray[1];
+			std::cin >> probeArray[1]; std::cin.clear();
 			std::cout << "C: ";
-			std::cin >> probeArray[2];
+			std::cin >> probeArray[2]; std::cin.clear();
 			std::cout << "Alpha: ";
-			std::cin >> probeArray[3];
+			std::cin >> probeArray[3]; std::cin.clear();
 			std::cout << "Beta: ";
-			std::cin >> probeArray[4];
+			std::cin >> probeArray[4]; std::cin.clear();
 			std::cout << "Gamma: ";
-			std::cin >> probeArray[5];
+			std::cin >> probeArray[5]; std::cin.clear();
             std::cout << std::endl;
-            makeprimredprobe();
-		}
-
-		while (quitAlgorithm != 1 && endProgram != 1)
-		{
-			goBack = 0;
-			std::cout << "1. L1";
-			std::cout << "\n2. L2";
-			std::cout << "\n3. NCDist";
-			std::cout << "\n4. V7";
-			std::cout << "\n5. Quit";
-			std::cout << "\nChoose An Algorithm: ";
-            priorAlgorithm = choiceAlgorithm;
-			std::cin >> choiceAlgorithm;
+            edgemax = 0;
+            for (ii=0; ii < 6; ii++) {
+                if (ii<3 && probeArray[ii] > edgemax)edgemax = probeArray[ii];
+                if (probelattice.size() > 0
+                    && (probelattice[0]=='V' || probelattice[0]=='v')) {
+                    if ((ii<3 && probeArray[ii] <= 1.)
+                        || (ii > 2
+                            && std::abs(probeArray[ii]) > edgemax*1.01)) {
+                            std::cout << "Invalid G6 cell "
+                            << probeArray[0] << " "
+                            << probeArray[1] << " "
+                            << probeArray[2] << " "
+                            << probeArray[3] << " "
+                            << probeArray[4] << " "
+                            << probeArray[5] << " "
+                            << std::endl;
+                            continue;
+                        }
+                } else if ((ii< 3 && probeArray[ii]<=1.)
+                           ||( ii >2 && std::abs(probeArray[ii]-90.)> 75)) {
+                    std::cout << "Invalid "<<probelattice<<" cell "
+                    << probeArray << std::endl;
+                    continue;
+                }
+            }
+        }
+        makeprimredprobe();
         
-			if (choiceAlgorithm == 1 && priorAlgorithm!= 1)
-			{
-				cell.changeOperator(1);
-				cell.changeAlgorithm(1);
+        while (quitAlgorithm != 1 && endProgram != 1)
+        {
+            goBack = 0;
+            std::cout << "1. L1";
+            std::cout << "\n2. L2";
+            std::cout << "\n3. NCDist";
+            std::cout << "\n4. V7";
+            std::cout << "\n5. Quit";
+            std::cout << "\nChoose An Algorithm: ";
+            priorAlgorithm = choiceAlgorithm;
+            std::cin >> choiceAlgorithm; std::cin.clear();
+            std::cin.ignore(100000,'\n');
+            
+            if (choiceAlgorithm == 1 && priorAlgorithm!= 1)
+            {
+                cell.changeOperator(1);
+                cell.changeAlgorithm(1);
                 cell.changeScaledist(1./std::sqrt(6.));
-				quitAlgorithm = 1;
-				//Build Tree
-				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
-			}
-			else if (choiceAlgorithm == 2 && priorAlgorithm!= 2)
-			{
-				cell.changeOperator(1);
-				cell.changeAlgorithm(2);
+                quitAlgorithm = 1;
+                //Build Tree
+                if (!cellTree[choiceAlgorithm-1]) buildNearTree();
+            }
+            else if (choiceAlgorithm == 2 && priorAlgorithm!= 2)
+            {
+                cell.changeOperator(1);
+                cell.changeAlgorithm(2);
                 cell.changeScaledist(1.);
-				quitAlgorithm = 1;
-				//Build Tree
-				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
-			}
-			else if (choiceAlgorithm == 3 && priorAlgorithm!= 3)
-			{
-				cell.changeOperator(2);
-				cell.changeAlgorithm(3);
+                quitAlgorithm = 1;
+                //Build Tree
+                if (!cellTree[choiceAlgorithm-1]) buildNearTree();
+            }
+            else if (choiceAlgorithm == 3 && priorAlgorithm!= 3)
+            {
+                cell.changeOperator(2);
+                cell.changeAlgorithm(3);
                 cell.changeScaledist(std::sqrt(std::sqrt(6.))/std::sqrt(avglen));
-				quitAlgorithm = 1;
-				//Build Tree
-				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
-			}
-			else if (choiceAlgorithm == 4 && priorAlgorithm!= 4)
-			{
-				cell.changeOperator(2);
-				cell.changeAlgorithm(4);
+                quitAlgorithm = 1;
+                //Build Tree
+                if (!cellTree[choiceAlgorithm-1]) buildNearTree();
+            }
+            else if (choiceAlgorithm == 4 && priorAlgorithm!= 4)
+            {
+                cell.changeOperator(2);
+                cell.changeAlgorithm(4);
                 cell.changeScaledist(std::sqrt(6./7.));
-				quitAlgorithm = 1;
-				//Build Tree
-				if (!cellTree[choiceAlgorithm-1]) buildNearTree();
-			}
-			else if (choiceAlgorithm == 5 && priorAlgorithm!= 5)
-			{
-				quitAlgorithm = 1;
-				endProgram = 1;
-				quitContinue = 1;
-			}
-			else if (choiceAlgorithm < 1 || choiceAlgorithm > 5)
-			{
-				std::cout << "Incorrect Choice. Please Choose Again.\n";
+                quitAlgorithm = 1;
+                //Build Tree
+                if (!cellTree[choiceAlgorithm-1]) buildNearTree();
+            }
+            else if (choiceAlgorithm == 5 && priorAlgorithm!= 5)
+            {
+                quitAlgorithm = 1;
+                endProgram = 1;
+                quitContinue = 1;
+            }
+            else if (choiceAlgorithm < 1 || choiceAlgorithm > 5)
+            {
+                std::cout << "Incorrect Choice. Please Choose Again.\n";
                 choiceAlgorithm = priorAlgorithm;
-			}
+            }
             else
             {
                 quitAlgorithm = 1;
             }
-			std::cout << std::endl;
-		}
-		quitAlgorithm = 0;
-
-		while (quitSimilar != 1 && endProgram != 1)
-		{
-			std::cout << "1. Nearest";
-			std::cout << "\n2. Sphere";
-			std::cout << "\n3. Range(Does not use any Algorithms)";
-			std::cout << "\n4. Back";
-			std::cout << "\n5. Quit";
-			std::cout << "\nChoose A Similarity: ";
-			std::cin >> choiceSimilar;
-			if (choiceSimilar == 1)
-			{
-				findNearest();
-				quitSimilar = 1;
-			}
-			else if (choiceSimilar == 2)
-			{
-				std::cout << "\nPlease Input Your Sphere's Range: ";
-				std::cin >> sphereRange;
-				findSphere();
-				quitSimilar = 1;
-			}
-			else if (choiceSimilar == 3)
-			{
-				std::cout << "\nPlease Input Your Ranges\n";
-				std::cout << "A: ";
-				std::cin >> numRangeA;
-				std::cout << "B: ";
-				std::cin >> numRangeB;
-				std::cout << "C: ";
-				std::cin >> numRangeC;
-				std::cout << "Alpha: ";
-				std::cin >> numRangeAlpha;
-				std::cout << "Beta: ";
-				std::cin >> numRangeBeta;
-				std::cout << "Gamma: ";
-				std::cin >> numRangeGamma;
-				findRange();
-				quitSimilar = 1;
-			}
-			else if (choiceSimilar == 4)
-			{
-				quitSimilar = 1;
-				goBack = 1;
-			}
-			else if (choiceSimilar == 5)
-			{
-				quitSimilar = 1;
-				endProgram = 1;
-				quitContinue = 1;
-			}
-			else
-			{
-				std::cout << "Inncorrect Choice. Please Choose Again.\n";
-			}
-			std::cout << std::endl;
-		}
-		quitSimilar = 0;
-
-		while (quitContinue == 0)
-		{
-			std::cout << "1. Input New Values";
-			std::cout << "\n2. Choose a New Algorithm";
-			std::cout << "\n3. Choose a New Similarity";
-			std::cout << "\n4. Quit";
-			std::cout << "\nChoice: ";
-			std::cin >> choiceContinue;
-			if (choiceContinue == 1)
-			{
+            std::cout << std::endl;
+        }
+        quitAlgorithm = 0;
+        
+        while (quitSimilar != 1 && endProgram != 1)
+        {
+            std::cout << "1. Nearest";
+            std::cout << "\n2. Sphere";
+            std::cout << "\n3. Range(Does not use any Algorithms)";
+            std::cout << "\n4. Back";
+            std::cout << "\n5. Quit";
+            std::cout << "\nChoose A Similarity: ";
+            std::cin >> choiceSimilar;
+            std::cin.clear(); std::cin.ignore(10000,'\n');
+            if (choiceSimilar == 1)
+            {
+                findNearest();
+                quitSimilar = 1;
+            }
+            else if (choiceSimilar == 2)
+            {
+                std::cout << "\nPlease Input Your Sphere's Range: ";
+                std::cin >> sphereRange; std::cin.clear();
+                std::cin.ignore(100000,'\n');
+                findSphere();
+                quitSimilar = 1;
+            }
+            else if (choiceSimilar == 3)
+            {
+                std::cout << "\nPlease Input Your Ranges\n";
+                std::cout << "A: ";
+                std::cin >> numRangeA; std::cin.clear();
+                std::cout << "B: ";
+                std::cin >> numRangeB; std::cin.clear();
+                std::cout << "C: ";
+                std::cin >> numRangeC; std::cin.clear();
+                std::cout << "Alpha: ";
+                std::cin >> numRangeAlpha; std::cin.clear();
+                std::cout << "Beta: ";
+                std::cin >> numRangeBeta; std::cin.clear();
+                std::cout << "Gamma: ";
+                std::cin >> numRangeGamma; std::cin.clear();
+                std::cin.clear();
+                std::cin.ignore(100000,'\n');
+                findRange();
+                quitSimilar = 1;
+            }
+            else if (choiceSimilar == 4)
+            {
+                quitSimilar = 1;
+                goBack = 1;
+            }
+            else if (choiceSimilar == 5)
+            {
+                quitSimilar = 1;
+                endProgram = 1;
+                quitContinue = 1;
+            }
+            else
+            {
+                std::cout << "Inncorrect Choice. Please Choose Again.\n";
+            }
+            std::cout << std::endl;
+        }
+        quitSimilar = 0;
+        
+        while (quitContinue == 0)
+        {
+            std::cout << "1. Input New Values";
+            std::cout << "\n2. Choose a New Algorithm";
+            std::cout << "\n3. Choose a New Similarity";
+            std::cout << "\n4. Quit";
+            std::cout << "\nChoice: ";
+            std::cin >> choiceContinue; std::cin.clear();
+            std::cin.ignore(100000,'\n');
+            if (choiceContinue == 1)
+            {
                 goBack = 0; //Added so that it would loop back to main menu
-				quitContinue = 1;
-			}
-			else if (choiceContinue == 2)
-			{
-				goBack = 1;
-				quitContinue = 1;
-			}
-			else if (choiceContinue == 3)
-			{
-				goBack = 1;
-				quitAlgorithm = 1;
-				quitContinue = 1;
-			}
-			else if (choiceContinue == 4)
-			{
-				endProgram = 1;
-				quitContinue = 1;
-			}
-			else
-			{
-				std::cout << "Inncorrect Choice. Please Choose Again.\n";
-			}
-			std::cout << std::endl;
-		}
-		quitContinue = 0;
-	}
-
+                quitContinue = 1;
+            }
+            else if (choiceContinue == 2)
+            {
+                goBack = 1;
+                quitContinue = 1;
+            }
+            else if (choiceContinue == 3)
+            {
+                goBack = 1;
+                quitAlgorithm = 1;
+                quitContinue = 1;
+            }
+            else if (choiceContinue == 4)
+            {
+                endProgram = 1;
+                quitContinue = 1;
+            }
+            else
+            {
+                std::cout << "Inncorrect Choice. Please Choose Again.\n";
+            }
+            std::cout << std::endl;
+        }
+        quitContinue = 0;
+    }
+    
 	return 0;
 }
