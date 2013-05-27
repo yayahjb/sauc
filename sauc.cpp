@@ -2,6 +2,7 @@
    (C) Copyright Keith McGill 2013
  
    rev 27 Mar 2013 -- HJB
+   rev 26 May 2013 -- LCA
 
       *******************************************************
           You may redistribute this program under the terms
@@ -51,8 +52,8 @@
  
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+//#include <stdio.h>
+//#include <stdlib.h>
 #include <limits.h>
 #include <time.h>
 #include <iostream>
@@ -97,6 +98,7 @@ double result0 = 0, result1 = 0, result2 = 0, result3 = 0, result4 = 0, result5 
 double numRangeA, numRangeB, numRangeC, numRangeAlpha, numRangeBeta, numRangeGamma, sphereRange;
 string valueDump;
 
+//*****************************************************************************
 double convertToDouble(string value)
 {
 	int numDot = 0, numDotCount = 0;
@@ -166,6 +168,7 @@ double convertToDouble(string value)
 	return(numTotal);
 }
 
+//*****************************************************************************
 int convertToInt(string zvalue)
 {
 	int number = 0, numTotal = 0;
@@ -221,6 +224,7 @@ int convertToInt(string zvalue)
 	return(numTotal);
 }
 
+//*****************************************************************************
 void makeDatabase(string filename)
 {
 	string format;
@@ -230,7 +234,7 @@ void makeDatabase(string filename)
 	for (int i = 0; i < NUM_DUMP; i++)
 	{
 		getline (infile, valueDump, 'r');
-		//cout << valueDump << std::endl;
+		//std::cout << valueDump << std::endl;
 	}
     avglen = 0.;
 	for (int i = 0; i < NUM_ROWS; i++)
@@ -238,74 +242,75 @@ void makeDatabase(string filename)
 		string value;
 
 		getline (infile, value, ',');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		idArray[i][0] = string(value, 2, value.length()-3);
-		//cout << idArray[i][0] << std::endl;
+		//std::cout << idArray[i][0] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		cellDArray[i][3] = convertToDouble(value);
-		//cout << cellDArray[i][3] << std::endl;
+		//std::cout << cellDArray[i][3] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		cellDArray[i][4] = convertToDouble(value);
-		//cout << cellDArray[i][4] << std::endl;
+		//std::cout << cellDArray[i][4] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		cellDArray[i][5] = convertToDouble(value);
-		//cout << cellDArray[i][5] << std::endl;
+		//std::cout << cellDArray[i][5] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		cellDArray[i][0] = convertToDouble(value);
         avglen += cellDArray[i][0];
-		//cout << cellDArray[i][0] << std::endl;
+		//std::cout << cellDArray[i][0] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		cellDArray[i][1] = convertToDouble(value);
         avglen += cellDArray[i][1];
-		//cout << cellDArray[i][1] << std::endl;
+		//std::cout << cellDArray[i][1] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		value = string(value, 1, value.length()-2);
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		cellDArray[i][2] = convertToDouble(value);
         avglen += cellDArray[i][2];
-		//cout << cellDArray[i][2] << std::endl;
+		//std::cout << cellDArray[i][2] << std::endl;
 
 		getline (infile, value, ',');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		spaceArray[i][0] = string(value, 1, value.length()-2);
-		//cout << spaceArray[i][0] << std::endl;
+		//std::cout << spaceArray[i][0] << std::endl;
 
 		getline (infile, valueDump, '"');
 		getline (infile, value, '"');
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		value = string(value, 0, value.length());
-		//cout << value << std::endl;
+		//std::cout << value << std::endl;
 		zArray[i][0] = convertToInt(value);
-		//cout << zArray[i][0] << std::endl;
+		//std::cout << zArray[i][0] << std::endl;
 
-		//cout << "-----------------------------------------------" << std::endl;
+		//std::cout << "-----------------------------------------------" << std::endl;
 	}
     avglen /= double(3*NUM_ROWS);
 	infile.close();
 }
 
+//*****************************************************************************
 bool makeprimredprobe(void)
 {
     string latsym;
@@ -359,14 +364,14 @@ bool makeprimredprobe(void)
     }
     ret = Reducer::Reduce(primcell,m,redprimcell,0.0);
     primredprobe = Cell(redprimcell).CellWithDegrees();
-    cout << "Primitive Reduced Probe Cell: " <<
+    std::cout << "Primitive Reduced Probe Cell: " <<
       primredprobe[0]<<" "<<
       primredprobe[1]<<" "<<
       primredprobe[2]<<" "<<
       primredprobe[3]<<" "<<
       primredprobe[4]<<" "<<
       primredprobe[5] << std::endl;
-	cout << std::endl;
+	std::cout << std::endl;
     return ret;
 }
 
@@ -378,6 +383,7 @@ bool makeprimredprobe(void)
     } \
 
 
+//*****************************************************************************
 void buildNearTree(void)
 {
     arma::mat66 m;
@@ -418,25 +424,24 @@ void buildNearTree(void)
     while (true) {
         string token;
         int Algorithm = 0;
-        int itoken;
         if (serialin.is_open()) {
-            cout << "Reading database " << filenames[choiceAlgorithm] << endl;
+            std::cout << "Reading database " << filenames[choiceAlgorithm] << std::endl;
             serialin >> token; if (!serialin.good() || token != string("Algorithm:")) {
-                cout << filenames[choiceAlgorithm] << "badly formatted, no 'Algorithm:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << "badly formatted, no 'Algorithm:' token" << std::endl;
                 break;
             }
             serialin >> Algorithm;
             if (!serialin.good() || algorithm != choiceAlgorithm) {
-                cout << filenames[choiceAlgorithm] << "badly formatted, algorithm value wrong" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << "badly formatted, algorithm value wrong" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DelayedIndices:")) {
-                cout << filenames[choiceAlgorithm] << "badly formatted, no 'DelayedIndices:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << "badly formatted, no 'DelayedIndices:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                cout << filenames[choiceAlgorithm] << "badly formatted, no DelayedIndices '{' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << "badly formatted, no DelayedIndices '{' token" << std::endl;
                 break;
             }
             DelayedIndices = new std::vector<long>();
@@ -447,16 +452,16 @@ void buildNearTree(void)
                 DelayedIndices->push_back(atol(token.c_str()));
             }
             if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << "badly formatted DelayedIndices" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << "badly formatted DelayedIndices" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("ObjectStore:")) {
-                cout << filenames[choiceAlgorithm] << "badly formatted, no 'ObjectStore:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << "badly formatted, no 'ObjectStore:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                cout << filenames[choiceAlgorithm] << "badly formatted, no ObjectStore '{' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << "badly formatted, no ObjectStore '{' token" << std::endl;
                 break;
             }
             ObjectStore = new std::vector<unitcell>();
@@ -466,32 +471,32 @@ void buildNearTree(void)
                 serialin >> token;
                 if (token == string("}")) break;
                 if (!serialin.good() || token != string("{")) {
-                    cout << filenames[choiceAlgorithm] << "badly formatted, missing ObjectStore '{' token" << std::endl;
+                    std::cout << filenames[choiceAlgorithm] << "badly formatted, missing ObjectStore '{' token" << std::endl;
                     break;
                 }
                 serialin >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5] >> row;
                 if (!serialin.good()) {
-                    cout << filenames[choiceAlgorithm] << "badly formatted, bad object" << std::endl;
+                    std::cout << filenames[choiceAlgorithm] << "badly formatted, bad object" << std::endl;
                     break;
                 }
                 ObjectStore->push_back(unitcell(cell,row));
                 serialin >> token; if (!serialin.good() || token != string("}")) {
-                    cout << filenames[choiceAlgorithm] << "badly formatted, missing ObjectStore '}' token" << std::endl;
+                    std::cout << filenames[choiceAlgorithm] << "badly formatted, missing ObjectStore '}' token" << std::endl;
                     break;
                 }
                 
             }
             if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << "badly formatted ObjectStore" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << "badly formatted ObjectStore" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("ObjectCollide:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'ObjectCollide:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'ObjectCollide:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no ObjectCollide '{' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no ObjectCollide '{' token" << std::endl;
                 break;
             }
             ObjectCollide = new std::vector<size_t>();
@@ -508,26 +513,26 @@ void buildNearTree(void)
                 }
             }
             if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted ObjectCollide" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted ObjectCollide" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DeepestDepth:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'DeepestDepth:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DeepestDepth:' token" << std::endl;
                 break;
             }
             
             serialin >> DeepestDepth; if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted DeepestDepth" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted DeepestDepth" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("NearTreeNodes:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'NearTreeNodes:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'NearTreeNodes:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNodes '{' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNodes '{' token" << std::endl;
                 break;
             }
             NearTreeNodes = new std::vector< CNearTree<unitcell>::NearTreeNode<unitcell> * >;
@@ -553,7 +558,7 @@ void buildNearTree(void)
                 if (token == string("}")) break;
                 
                 if (token != string("{")) {
-                    cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNode '{' token " << token << std::endl;
+                    std::cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNode '{' token " << token << std::endl;
                     break;
                 }
                 
@@ -634,7 +639,7 @@ void buildNearTree(void)
                 }
 #endif
                 serialin >> token; if (!serialin.good() || token != string("}")) {
-                    cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNode '}' token: " << token <<std::endl;
+                    std::cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNode '}' token: " << token <<std::endl;
                     break;
                 }
                 
@@ -656,78 +661,78 @@ void buildNearTree(void)
                 
             }
             if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted NearTreeNodes" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted NearTreeNodes" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("Flags:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'Flags:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'Flags:' token" << std::endl;
                 break;
             }
             
             serialin >> Flags; if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted Flags" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted Flags" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DiamEstimate:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'DiamEstimate:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DiamEstimate:' token" << std::endl;
                 break;
             }
             
             serialin >> DiamEstimate; if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted DiamEstimate" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted DiamEstimate" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("SumSpacings:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'SumSpacings:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'SumSpacings:' token" << std::endl;
                 break;
             }
             
             serialin >> SumSpacings; if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted SumSpacings" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted SumSpacings" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("SumSpacingsSq:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'SumSpacingsSq:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'SumSpacingsSq:' token" << std::endl;
                 break;
             }
             
             serialin >> SumSpacingsSq; if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted SumSpacings" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted SumSpacings" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DimEstimate:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'DimEstimate:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DimEstimate:' token" << std::endl;
                 break;
             }
             
             serialin >> DimEstimate; if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted DimEstimate" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted DimEstimate" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DimEstimateEsd:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'DimEstimateEsd:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DimEstimateEsd:' token" << std::endl;
                 break;
             }
             
             serialin >> DimEstimateEsd; if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted DimEstimateEsd" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted DimEstimateEsd" << std::endl;
                 break;
             }
             
 #ifdef CNEARTREE_INSTRUMENTED
             serialin >> token; if (!serialin.good() || token != string("NodeVisits:")) {
-                cout << filenames[choiceAlgorithm] << " badly formatted, no 'NodeVisits:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'NodeVisits:' token" << std::endl;
                 break;
             }
             
             serialin >> NodeVisits; if (!serialin.good()) {
-                cout << filenames[choiceAlgorithm] << " badly formatted NodeVisits << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted NodeVisits << std::endl;
                 break;
             }
 #endif
@@ -761,7 +766,7 @@ void buildNearTree(void)
         mc = rawcell.LatSymMat66((spaceArray[i][0]).substr(0,1));
         primcell = mc*(rawcell.Cell2V6());
         if (!Reducer::Reduce(primcell,m,redprimcell,0.0)){
-            cout << "Reduction failed for "<<idArray[i][0]<<" "<<
+            std::cout << "Reduction failed for "<<idArray[i][0]<<" "<<
             cellDArray[i][3]<<" "<<
             cellDArray[i][4]<<" "<<
             cellDArray[i][5]<<" "<<
@@ -769,7 +774,7 @@ void buildNearTree(void)
             cellDArray[i][1]<<" "<<
             cellDArray[i][2]<<" "<<
             spaceArray[i][0] << std::endl;
-            cout << "Primitive G6 " << primcell[0]<<" "<<
+            std::cout << "Primitive G6 " << primcell[0]<<" "<<
             primcell[1]<<" "<<
             primcell[2]<<" "<<
             primcell[3]<<" "<<
@@ -888,40 +893,103 @@ void buildNearTree(void)
         delete BaseNode;
         
     } else {
-        cout << "unable to save database checkpoint file "<<filenames[choiceAlgorithm] << endl;
+        std::cout << "unable to save database checkpoint file "<<filenames[choiceAlgorithm] << std::endl;
     }
 }
 
-void findNearest()
+//*****************************************************************************
+void NearestResult( std::ostream& out, const std::string cellDArray[], const unitcell& nearestData )
+{
+    out << "\nNearest Results\n" << "PDBID: " << idArray[numRow][0] << " " <<
+        "A: "     << cellDArray[0] << " " <<
+        "B: "     << cellDArray[1] << " " <<
+        "C: "     << cellDArray[2] << " " <<
+        "Alpha: " << cellDArray[3] << " " <<
+        "Beta: "  << cellDArray[4] << " " <<
+        "Gamma: " << cellDArray[5] << " " <<
+        "Space Group: " << spaceArray[numRow][0] << " " <<
+        "Z: " << zArray[numRow][0] << std::endl;
+    out << "As Primitive Reduced\n"<<
+        "A: "     << nearestData.getData(0) << " " <<
+        "B: "     << nearestData.getData(1) << " " <<
+        "C: "     << nearestData.getData(2) << " " <<
+        "Alpha: " << nearestData.getData(3) << " " <<
+        "Beta: "  << nearestData.getData(4) << " " <<
+        "Gamma: " << nearestData.getData(5) << std::endl;
+}
+
+//*****************************************************************************
+void NearestInputReport( std::ostream& out, const arma::vec6& probeArray, const arma::vec6& primredprobe )
+{
+    out << "Raw Unknown Cell\n" <<
+    "A: " << probeArray[0] << " " <<
+    "B: " << probeArray[1] << " " <<
+    "C: " << probeArray[2] << " " <<
+    "Alpha: " << probeArray[3] << " " <<
+    "Beta: " << probeArray[4] << " " <<
+    "Gamma: " << probeArray[5] <<
+    " Lattice: "<< probelattice <<  std::endl;
+    out << "Reduced Primitive Cell\n" <<
+    "A: " << primredprobe[0] << " " <<
+    "B: " << primredprobe[1] << " " <<
+    "C: " << primredprobe[2] << " " <<
+        "Alpha: " << primredprobe[3] << " " <<
+    "Beta: " << primredprobe[4] << " " <<
+    "Gamma: " << primredprobe[5]  <<  std::endl;
+}
+
+//*****************************************************************************
+void findNearest( void )
 {
     CNearTree <unitcell>::iterator nnresult;
-	cout << std::endl;
+	std::cout << std::endl;
 	// unitcell unknownCell = unitcell(probeArray[0], probeArray[1], probeArray[2], probeArray[3], probeArray[4], probeArray[5], 0, 0, 0, 0, 0, 0, 0);
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
-	cout << "Raw Unknown Cell\n" <<
-        "A: " << probeArray[0] << " " <<
-        "B: " << probeArray[1] << " " <<
-        "C: " << probeArray[2] << " " <<
-		"Alpha: " <<probeArray[3] << " " <<
-        "Beta: " << probeArray[4] << " " <<
-        "Gamma: " << probeArray[5] <<
-        " Lattice: "<< probelattice <<  std::endl;
-	cout << "Reduced Primitive Cell\n" <<
-        "A: " << primredprobe[0] << " " <<
-        "B: " << primredprobe[1] << " " <<
-        "C: " << primredprobe[2] << " " <<
-        "Alpha: " <<primredprobe[3] << " " <<
-        "Beta: " << primredprobe[4] << " " <<
-        "Gamma: " << primredprobe[5]  <<  std::endl;
+    NearestInputReport( std::cout, probeArray, primredprobe );
     nnresult = cellTree[choiceAlgorithm-1]->NearestNeighbor(1.e38, unknownCell);
     if (nnresult != cellTree_itend[choiceAlgorithm-1]) {
-	unitcell nearestData = *nnresult;
+        unitcell nearestData = *nnresult;
+        
+        numRow = (int)nearestData.getRow();
+        
+        std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
+        NearestResult( std::cout, idArray[numRow], nearestData );
+        
+        std::cin.clear();
+        std::cout << "File name if you want the output saved" << std::endl;
+        
+        std::string s;
+        std::getline( std::cin, s ); // consume the leftover line feed
+        std::getline( std::cin, s );
+        if ( ! s.empty() )
+        {
+            std::string filename;
+            std::stringstream ss(s);
+            if ( ss >> filename )
+            {
+                std::cout << " ";
+                std::ofstream output( filename.c_str() );
+                NearestInputReport( output, probeArray, primredprobe );
+                NearestResult( output, idArray[numRow], nearestData );
+            }
+        }
+    }
     
-    cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
+}
 
-	
-	numRow = (int)nearestData.getRow();
-	cout << "\nNearest Results\n" << "PDBID: " << idArray[numRow][0] << " " <<
+//*****************************************************************************
+void SphereResults( std::ostream& out,
+                    const std::vector<unitcell>&  myvector,
+                    const std::vector<size_t>&    myindices,
+                    const std::vector<double>&    mydistances,
+                    const unitcell&               unknownCell)
+{
+    out << "\nSphere Results" << std::endl;
+    for (size_t ind=0; ind < myvector.size(); ind++) {
+        const unitcell * const cell = & myvector[ind];
+        numRow = (int)(*cell).getRow();
+        out << "PDBID: " << idArray[numRow][0] << " " <<
+            "distance: " << mydistances[ind] << " " <<
         "A: " << cellDArray[numRow][0] << " " <<
         "B: " << cellDArray[numRow][1] << " " <<
         "C: " << cellDArray[numRow][2] << " " <<
@@ -930,90 +998,106 @@ void findNearest()
         "Gamma: " << cellDArray[numRow][5] << " " <<
         "Space Group: " << spaceArray[numRow][0] << " " <<
         "Z: " << zArray[numRow][0] << std::endl;
-    cout << "As Primitive\n"<<
-		"A: " << nearestData.getData(0) << " " <<
-        "B: " << nearestData.getData(1) << " " <<
-        "C: " << nearestData.getData(2) << " " <<
-		"Alpha: " << nearestData.getData(3) << " " <<
-        "Beta: " << nearestData.getData(4) << " " <<
-        "Gamma: " << nearestData.getData(5) << std::endl;
+        out << "          As Primitive Reduced: "<<
+            "A: "     << (*cell).getData(0) << " " <<
+            "B: "     << (*cell).getData(1) << " " <<
+            "C: "     << (*cell).getData(2) << " " <<
+            "Alpha: " << (*cell).getData(3) << " " <<
+            "Beta: "  << (*cell).getData(4) << " " <<
+            "Gamma: " << (*cell).getData(5) << std::endl;
     }
-    	
 }
-
-void findSphere()
+    
+//*****************************************************************************
+void SphereInputReport( std::ostream& out )
 {
-	cout << std::endl;
-	// unitcell unknownCell = unitcell(probeArray[0], probeArray[1], probeArray[2], probeArray[3], probeArray[4], probeArray[5], 0, 0, 0, 0, 0, 0, 0);
-    unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
-	cout << "Raw Unknown Cell\n" <<
+    out << "Raw Unknown Cell\n" <<
         "A: " << probeArray[0] << " " <<
         "B: " << probeArray[1] << " " <<
         "C: " << probeArray[2] << " " <<
-		"Alpha: " <<probeArray[3] << " " <<
+        "Alpha: " << probeArray[3] << " " <<
         "Beta: " << probeArray[4] << " " <<
         "Gamma: " << probeArray[5] <<
         " Lattice: "<< probelattice <<  std::endl;
-	cout << "Reduced Primitive Cell\n" <<
+    out << "Reduced Primitive Cell\n" <<
         "A: " << primredprobe[0] << " " <<
         "B: " << primredprobe[1] << " " <<
         "C: " << primredprobe[2] << " " <<
-        "Alpha: " <<primredprobe[3] << " " <<
+        "Alpha: " << primredprobe[3] << " " <<
         "Beta: " << primredprobe[4] << " " <<
         "Gamma: " << primredprobe[5]  <<  std::endl;
+}
+
+//*****************************************************************************
+void findSphere( void )
+{
+    unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
+    
+	std::cout << std::endl;
+    SphereInputReport( std::cout );
 	vector <unitcell> myvector;
     vector <size_t> myindices;
     vector <double> mydistances;
-	long sphereData = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(100000,sphereRange, myvector,
-                                                                          myindices,mydistances,unknownCell);
-
-	cout << "\nSphere Results" << std::endl;
-    for (size_t ind=0; ind < myvector.size(); ind++) {
-        unitcell * cell = & myvector[ind];
-		numRow = (int)(*cell).getRow();
-		cout << "PDBID: " << idArray[numRow][0] << " " <<
-        "Distance: " << mydistances[ind] << " " <<
-        "A: " << cellDArray[numRow][0] << " " <<
-        "B: " << cellDArray[numRow][1] << " " <<
-        "C: " << cellDArray[numRow][2] << " " <<
-        "Alpha: " << cellDArray[numRow][3] << " " <<
-        "Beta: "  << cellDArray[numRow][4] << " " <<
-        "Gamma: " << cellDArray[numRow][5] << " " <<
-        "Space Group: " << spaceArray[numRow][0] << " " <<
-        "Z: " << zArray[numRow][0] << std::endl;
-		cout << "As Primitive\n"<<
-		"A: " << (*cell).getData(0) << " " <<
-        "B: " << (*cell).getData(1) << " " <<
-        "C: " << (*cell).getData(2) << " " <<
-		"Alpha: " << (*cell).getData(3) << " " <<
-        "Beta: " << (*cell).getData(4) << " " <<
-        "Gamma: " << (*cell).getData(5) << std::endl;
-	}
+	const long sphereData = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(100000,sphereRange, myvector,
+                                                                                myindices,mydistances,unknownCell);
+    
+    SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
+    
+    std::cin.clear();
+    std::cout << "file name if you want the output saved" << std::endl;
+    
+    std::string s;
+    std::getline( std::cin, s ); // consume the leftover line feed
+    std::getline( std::cin, s );
+    if ( ! s.empty() )
+    {
+        std::string filename;
+        std::stringstream ss(s);
+        if ( ss >> filename )
+        {
+            std::cout << " ";
+            std::ofstream output( filename.c_str() );
+            SphereInputReport( output );
+            SphereResults( output, myvector, myindices, mydistances, unknownCell);
+        }
+    }
 }
 
-void findRange()
+//*****************************************************************************
+void findRange( void )
 {
-	cout << std::endl;
-	cout << "Raw Unknown Cell\n" << "A: " << probeArray[0] << " " << "B: " << probeArray[1] << " " << "C: " << probeArray[2] << " " <<
-		"Alpha: " <<probeArray[3] << " " << "Beta: " << probeArray[4] << " " << "Gamma: " << probeArray[5] << std::endl;
-	cout << "\nRange Results\n";
+	std::cout << std::endl;
+	std::cout << "Unknown Cell\n" <<
+        "A: "     << probeArray[0] << " " <<
+        "B: "     << probeArray[1] << " " <<
+        "C: "     << probeArray[2] << " " <<
+		"Alpha: " << probeArray[3] << " " <<
+        "Beta: "  << probeArray[4] << " " <<
+        "Gamma: " << probeArray[5] << std::endl;
+	std::cout << "\nRange Results\n";
 	for (int i = 0; i < NUM_ROWS; i++)
 	{
-		if ((probeArray[0] + numRangeA) >= cellDArray[i][0] && (probeArray[0] - numRangeA) <= cellDArray[i][0] &&
-			(probeArray[1] + numRangeB) >= cellDArray[i][1] && (probeArray[1] - numRangeB) <= cellDArray[i][1] &&
-			(probeArray[2] + numRangeC) >= cellDArray[i][2] && (probeArray[2] - numRangeC) <= cellDArray[i][2] &&
+		if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
+			(probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
+			(probeArray[2] + numRangeC    ) >= cellDArray[i][2] && (probeArray[2] - numRangeC    ) <= cellDArray[i][2] &&
 			(probeArray[3] + numRangeAlpha) >= cellDArray[i][3] && (probeArray[3] - numRangeAlpha) <= cellDArray[i][3] &&
-			(probeArray[4] + numRangeBeta) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta) <= cellDArray[i][4] &&
+			(probeArray[4] + numRangeBeta ) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta ) <= cellDArray[i][4] &&
 			(probeArray[5] + numRangeGamma) >= cellDArray[i][5] && (probeArray[5] - numRangeGamma) <= cellDArray[i][5])
 		{
-			cout << "PDBID: " << idArray[i][0] << " " << 
-				"A: " << cellDArray[i][0] << " " << "B: " << cellDArray[i][1] << " " << "C: " << cellDArray[i][2] << " " <<
-				"Alpha: " << cellDArray[i][3] << " " << "Beta: " << cellDArray[i][4] << " " << "Gamma: " << cellDArray[i][5] << " " << 
-				"Space Group: " << spaceArray[i][0] << " " << "Z: " << zArray[i][0] << std::endl;
+			std::cout << "PDBID: " << idArray[i][0] << " " << 
+				"A: "     << cellDArray[i][0] << " " <<
+                "B: "     << cellDArray[i][1] << " " <<
+                "C: "     << cellDArray[i][2] << " " <<
+				"Alpha: " << cellDArray[i][3] << " " <<
+                "Beta: "  << cellDArray[i][4] << " " <<
+                "Gamma: " << cellDArray[i][5] << " " <<
+				"Space Group: " << spaceArray[i][0] << " " <<
+                "Z: " << zArray[i][0] << std::endl;
 		}
 	}
 }
 
+//*****************************************************************************
 int main ()
 {
 	//Create Database
@@ -1026,46 +1110,47 @@ int main ()
 
 	unitcell cell;
     
-    cout << "sauc Copyright (C) Keith McGill 2013" << std::endl;
-    cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
-    cout << "This is free software, and you are welcome to" << std::endl;
-    cout << "redistribute it under the GPL" << std::endl;
-    cout << "See the program documentation for details" << std::endl;
+    std::cout << "sauc Copyright (C) Keith McGill 2013" << std::endl;
+    std::cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
+    std::cout << "This is free software, and you are welcome to" << std::endl;
+    std::cout << "redistribute it under the GPL" << std::endl;
+    std::cout << "See the program documentation for details" << std::endl;
 
 	while (endProgram != 1)
 	{
 		if (goBack != 1)
 		{
-			cout << "Search of Alternate Unit Cells\n";
-			cout << "\nPlease Input Your Data\n";
-            cout << "Lattice Centering (P, A, B, C, F, I, R, H, V): ";
-            cin >> probelattice;
-			cout << "A: ";
-			cin >> probeArray[0];
-			cout << "B: ";
-			cin >> probeArray[1];
-			cout << "C: ";
-			cin >> probeArray[2];
-			cout << "Alpha: ";
-			cin >> probeArray[3];
-			cout << "Beta: ";
-			cin >> probeArray[4];
-			cout << "Gamma: ";
-			cin >> probeArray[5];
+			std::cout << "Search of Alternate Unit Cells\n";
+			std::cout << "\nPlease Input Your Data\n";
+            std::cout << "Lattice Centering (P, A, B, C, F, I, R, H, V): ";
+            std::cin >> probelattice;
+			std::cout << "A: ";
+			std::cin >> probeArray[0];
+			std::cout << "B: ";
+			std::cin >> probeArray[1];
+			std::cout << "C: ";
+			std::cin >> probeArray[2];
+			std::cout << "Alpha: ";
+			std::cin >> probeArray[3];
+			std::cout << "Beta: ";
+			std::cin >> probeArray[4];
+			std::cout << "Gamma: ";
+			std::cin >> probeArray[5];
+            std::cout << std::endl;
             makeprimredprobe();
 		}
 
 		while (quitAlgorithm != 1 && endProgram != 1)
 		{
 			goBack = 0;
-			cout << "1. L1";
-			cout << "\n2. L2";
-			cout << "\n3. NCDist";
-			cout << "\n4. V7";
-			cout << "\n5. Quit";
-			cout << "\nChoose An Algorithm: ";
+			std::cout << "1. L1";
+			std::cout << "\n2. L2";
+			std::cout << "\n3. NCDist";
+			std::cout << "\n4. V7";
+			std::cout << "\n5. Quit";
+			std::cout << "\nChoose An Algorithm: ";
             priorAlgorithm = choiceAlgorithm;
-			cin >> choiceAlgorithm;
+			std::cin >> choiceAlgorithm;
         
 			if (choiceAlgorithm == 1 && priorAlgorithm!= 1)
 			{
@@ -1111,26 +1196,26 @@ int main ()
 			}
 			else if (choiceAlgorithm < 1 || choiceAlgorithm > 5)
 			{
-				cout << "Incorrect Choice. Please Choose Again.\n";
+				std::cout << "Incorrect Choice. Please Choose Again.\n";
                 choiceAlgorithm = priorAlgorithm;
 			}
             else
             {
                 quitAlgorithm = 1;
             }
-			cout << std::endl;
+			std::cout << std::endl;
 		}
 		quitAlgorithm = 0;
 
 		while (quitSimilar != 1 && endProgram != 1)
 		{
-			cout << "1. Nearest";
-			cout << "\n2. Sphere";
-			cout << "\n3. Range(Does not use any Algorithms)";
-			cout << "\n4. Back";
-			cout << "\n5. Quit";
-			cout << "\nChoose A Similarity: ";
-			cin >> choiceSimilar;
+			std::cout << "1. Nearest";
+			std::cout << "\n2. Sphere";
+			std::cout << "\n3. Range(Does not use any Algorithms)";
+			std::cout << "\n4. Back";
+			std::cout << "\n5. Quit";
+			std::cout << "\nChoose A Similarity: ";
+			std::cin >> choiceSimilar;
 			if (choiceSimilar == 1)
 			{
 				findNearest();
@@ -1138,26 +1223,26 @@ int main ()
 			}
 			else if (choiceSimilar == 2)
 			{
-				cout << "\nPlease Input Your Sphere's Range: ";
-				cin >> sphereRange;
+				std::cout << "\nPlease Input Your Sphere's Range: ";
+				std::cin >> sphereRange;
 				findSphere();
 				quitSimilar = 1;
 			}
 			else if (choiceSimilar == 3)
 			{
-				cout << "\nPlease Input Your Ranges\n";
-				cout << "A: ";
-				cin >> numRangeA;
-				cout << "B: ";
-				cin >> numRangeB;
-				cout << "C: ";
-				cin >> numRangeC;
-				cout << "Alpha: ";
-				cin >> numRangeAlpha;
-				cout << "Beta: ";
-				cin >> numRangeBeta;
-				cout << "Gamma: ";
-				cin >> numRangeGamma;
+				std::cout << "\nPlease Input Your Ranges\n";
+				std::cout << "A: ";
+				std::cin >> numRangeA;
+				std::cout << "B: ";
+				std::cin >> numRangeB;
+				std::cout << "C: ";
+				std::cin >> numRangeC;
+				std::cout << "Alpha: ";
+				std::cin >> numRangeAlpha;
+				std::cout << "Beta: ";
+				std::cin >> numRangeBeta;
+				std::cout << "Gamma: ";
+				std::cin >> numRangeGamma;
 				findRange();
 				quitSimilar = 1;
 			}
@@ -1174,20 +1259,20 @@ int main ()
 			}
 			else
 			{
-				cout << "Inncorrect Choice. Please Choose Again.\n";
+				std::cout << "Inncorrect Choice. Please Choose Again.\n";
 			}
-			cout << std::endl;
+			std::cout << std::endl;
 		}
 		quitSimilar = 0;
 
 		while (quitContinue == 0)
 		{
-			cout << "1. Input New Values";
-			cout << "\n2. Choose a New Algorithm";
-			cout << "\n3. Choose a New Similarity";
-			cout << "\n4. Quit";
-			cout << "\nChoice: ";
-			cin >> choiceContinue;
+			std::cout << "1. Input New Values";
+			std::cout << "\n2. Choose a New Algorithm";
+			std::cout << "\n3. Choose a New Similarity";
+			std::cout << "\n4. Quit";
+			std::cout << "\nChoice: ";
+			std::cin >> choiceContinue;
 			if (choiceContinue == 1)
 			{
                 goBack = 0; //Added so that it would loop back to main menu
@@ -1211,9 +1296,9 @@ int main ()
 			}
 			else
 			{
-				cout << "Inncorrect Choice. Please Choose Again.\n";
+				std::cout << "Inncorrect Choice. Please Choose Again.\n";
 			}
-			cout << std::endl;
+			std::cout << std::endl;
 		}
 		quitContinue = 0;
 	}
