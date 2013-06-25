@@ -4,6 +4,7 @@
    rev 27 Mar 2013 -- HJB
    rev 26 May 2013 -- LCA
    rev 27 May 2013 -- HJB
+   rev 24 Jun 2013 -- HJB
 
       *******************************************************
           You may redistribute this program under the terms
@@ -98,6 +99,7 @@ int quitAlgorithm = 0, quitSimilar = 0, quitContinue = 0, endProgram = 0, choice
 double result0 = 0, result1 = 0, result2 = 0, result3 = 0, result4 = 0, result5 = 0, resultSumTemp = 0, resultSum = 0, numRange = 0;
 double numRangeA, numRangeB, numRangeC, numRangeAlpha, numRangeBeta, numRangeGamma, sphereRange;
 string valueDump;
+int sauc_batch_mode = 0;
 
 //*****************************************************************************
 double convertToDouble(string value)
@@ -108,63 +110,63 @@ double convertToDouble(string value)
 
 	for (int i = 0; i < (int)value.length(); i++)
 	{
-		charValue = value.at(i);
+        charValue = value.at(i);
 
-		switch(charValue)
-		{
-		case '0':
-			number = 0;
-			break;
-		case '1':
-			number = 1;
-			break;
-		case '2':
-			number = 2;
-			break;
-		case '3':
-			number = 3;
-			break;
-		case '4':
-			number = 4;
-			break;
-		case '5':
-			number = 5;
-			break;
-		case '6':
-			number = 6;
-			break;
-		case '7':
-			number = 7;
-			break;
-		case '8':
-			number = 8;
-			break;
-		case '9':
-			number = 9;
-			break;
-		case '.':
-			numDot = 1;
-			break;
-		}
-			
-		if (numDot != 1 && i == 0)
-		{
-			numTotal = number;
-		}
-		else if (numDot != 1)
-		{
-			numTotal = (numTotal * 10) + number;
-		}
-		else if (numDot == 1 && numDotCount == 1)
-		{
-			numDec = number / countDec;
-			numTotal = numTotal + numDec;
-			countDec *= 10;
-		}
-		if (numDot == 1 && numDotCount == 0)
-		{
-			numDotCount++;
-		}
+        switch(charValue)
+        {
+        case '0':
+        	number = 0;
+        	break;
+        case '1':
+        	number = 1;
+        	break;
+        case '2':
+        	number = 2;
+        	break;
+        case '3':
+        	number = 3;
+        	break;
+        case '4':
+        	number = 4;
+        	break;
+        case '5':
+        	number = 5;
+        	break;
+        case '6':
+        	number = 6;
+        	break;
+        case '7':
+        	number = 7;
+        	break;
+        case '8':
+        	number = 8;
+        	break;
+        case '9':
+        	number = 9;
+        	break;
+        case '.':
+        	numDot = 1;
+        	break;
+        }
+        	
+        if (numDot != 1 && i == 0)
+        {
+        	numTotal = number;
+        }
+        else if (numDot != 1)
+        {
+        	numTotal = (numTotal * 10) + number;
+        }
+        else if (numDot == 1 && numDotCount == 1)
+        {
+        	numDec = number / countDec;
+        	numTotal = numTotal + numDec;
+        	countDec *= 10;
+        }
+        if (numDot == 1 && numDotCount == 0)
+        {
+        	numDotCount++;
+        }
 	}
 	return(numTotal);
 }
@@ -177,50 +179,50 @@ int convertToInt(string zvalue)
 
 	for (int i = 0; i < (int)zvalue.length(); i++)
 	{
-		charValue = zvalue.at(i);
+        charValue = zvalue.at(i);
 
-		switch(charValue)
-		{
-		case '0':
-			number = 0;
-			break;
-		case '1':
-			number = 1;
-			break;
-		case '2':
-			number = 2;
-			break;
-		case '3':
-			number = 3;
-			break;
-		case '4':
-			number = 4;
-			break;
-		case '5':
-			number = 5;
-			break;
-		case '6':
-			number = 6;
-			break;
-		case '7':
-			number = 7;
-			break;
-		case '8':
-			number = 8;
-			break;
-		case '9':
-			number = 9;
-			break;
-		}
-			
-		if (i == 0)
-		{
-			numTotal = number;
-		}
-		else
-		{
-			numTotal = (numTotal * 10) + number;
-		}
+        switch(charValue)
+        {
+        case '0':
+        	number = 0;
+        	break;
+        case '1':
+        	number = 1;
+        	break;
+        case '2':
+        	number = 2;
+        	break;
+        case '3':
+        	number = 3;
+        	break;
+        case '4':
+        	number = 4;
+        	break;
+        case '5':
+        	number = 5;
+        	break;
+        case '6':
+        	number = 6;
+        	break;
+        case '7':
+        	number = 7;
+        	break;
+        case '8':
+        	number = 8;
+        	break;
+        case '9':
+        	number = 9;
+        	break;
+        }
+        	
+        if (i == 0)
+        {
+        	numTotal = number;
+        }
+        else
+        {
+        	numTotal = (numTotal * 10) + number;
+        }
 	}
 	return(numTotal);
 }
@@ -234,78 +236,78 @@ void makeDatabase(string filename)
 	infile.open(filename.c_str());
 	for (int i = 0; i < NUM_DUMP; i++)
 	{
-		getline (infile, valueDump, 'r');
-		//std::cout << valueDump << std::endl;
+        getline (infile, valueDump, 'r');
+        //std::cout << valueDump << std::endl;
 	}
     avglen = 0.;
 	for (int i = 0; i < NUM_ROWS; i++)
 	{
-		string value;
+        string value;
 
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		idArray[i][0] = string(value, 2, value.length()-3);
-		//std::cout << idArray[i][0] << std::endl;
+        getline (infile, value, ',');
+        //std::cout << value << std::endl;
+        idArray[i][0] = string(value, 2, value.length()-3);
+        //std::cout << idArray[i][0] << std::endl;
 
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][3] = convertToDouble(value);
-		//std::cout << cellDArray[i][3] << std::endl;
+        getline (infile, value, ',');
+        //std::cout << value << std::endl;
+        value = string(value, 1, value.length()-2);
+        //std::cout << value << std::endl;
+        cellDArray[i][3] = convertToDouble(value);
+        //std::cout << cellDArray[i][3] << std::endl;
 
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][4] = convertToDouble(value);
-		//std::cout << cellDArray[i][4] << std::endl;
+        getline (infile, value, ',');
+        //std::cout << value << std::endl;
+        value = string(value, 1, value.length()-2);
+        //std::cout << value << std::endl;
+        cellDArray[i][4] = convertToDouble(value);
+        //std::cout << cellDArray[i][4] << std::endl;
 
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][5] = convertToDouble(value);
-		//std::cout << cellDArray[i][5] << std::endl;
+        getline (infile, value, ',');
+        //std::cout << value << std::endl;
+        value = string(value, 1, value.length()-2);
+        //std::cout << value << std::endl;
+        cellDArray[i][5] = convertToDouble(value);
+        //std::cout << cellDArray[i][5] << std::endl;
 
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][0] = convertToDouble(value);
+        getline (infile, value, ',');
+        //std::cout << value << std::endl;
+        value = string(value, 1, value.length()-2);
+        //std::cout << value << std::endl;
+        cellDArray[i][0] = convertToDouble(value);
         avglen += cellDArray[i][0];
-		//std::cout << cellDArray[i][0] << std::endl;
+        //std::cout << cellDArray[i][0] << std::endl;
 
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][1] = convertToDouble(value);
+        getline (infile, value, ',');
+        //std::cout << value << std::endl;
+        value = string(value, 1, value.length()-2);
+        //std::cout << value << std::endl;
+        cellDArray[i][1] = convertToDouble(value);
         avglen += cellDArray[i][1];
-		//std::cout << cellDArray[i][1] << std::endl;
+        //std::cout << cellDArray[i][1] << std::endl;
 
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][2] = convertToDouble(value);
+        getline (infile, value, ',');
+        //std::cout << value << std::endl;
+        value = string(value, 1, value.length()-2);
+        //std::cout << value << std::endl;
+        cellDArray[i][2] = convertToDouble(value);
         avglen += cellDArray[i][2];
-		//std::cout << cellDArray[i][2] << std::endl;
+        //std::cout << cellDArray[i][2] << std::endl;
 
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		spaceArray[i][0] = string(value, 1, value.length()-2);
-		//std::cout << spaceArray[i][0] << std::endl;
+        getline (infile, value, ',');
+        //std::cout << value << std::endl;
+        spaceArray[i][0] = string(value, 1, value.length()-2);
+        //std::cout << spaceArray[i][0] << std::endl;
 
-		getline (infile, valueDump, '"');
-		getline (infile, value, '"');
-		//std::cout << value << std::endl;
-		value = string(value, 0, value.length());
-		//std::cout << value << std::endl;
-		zArray[i][0] = convertToInt(value);
-		//std::cout << zArray[i][0] << std::endl;
+        getline (infile, valueDump, '"');
+        getline (infile, value, '"');
+        //std::cout << value << std::endl;
+        value = string(value, 0, value.length());
+        //std::cout << value << std::endl;
+        zArray[i][0] = convertToInt(value);
+        //std::cout << zArray[i][0] << std::endl;
 
-		//std::cout << "-----------------------------------------------" << std::endl;
+        //std::cout << "-----------------------------------------------" << std::endl;
 	}
     avglen /= double(3*NUM_ROWS);
 	infile.close();
@@ -998,7 +1000,7 @@ void findNearest( void )
         std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
         NearestResult( std::cout, idArray[numRow], nearestData );
         
-        std::cout << "File name if you want the output saved" << std::endl;
+        if (!sauc_batch_mode) std::cout << "File name if you want the output saved" << std::endl;
         
         std::string s;
         std::getline( std::cin, s );
@@ -1071,7 +1073,7 @@ void SphereInputReport( std::ostream& out )
 }
 
 //*****************************************************************************
-void findSphere( void )
+void findSphere( int limit )
 {
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
     
@@ -1080,7 +1082,7 @@ void findSphere( void )
 	vector <unitcell> myvector;
     vector <size_t> myindices;
     vector <double> mydistances;
-	const long sphereData = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(100000,sphereRange, myvector,
+	const long sphereData = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(limit,sphereRange, myvector,
                                                                                 myindices,mydistances,unknownCell);
     
     SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
@@ -1112,36 +1114,44 @@ void findRange( void )
         "A: "     << probeArray[0] << " " <<
         "B: "     << probeArray[1] << " " <<
         "C: "     << probeArray[2] << " " <<
-		"Alpha: " << probeArray[3] << " " <<
+        "Alpha: " << probeArray[3] << " " <<
         "Beta: "  << probeArray[4] << " " <<
         "Gamma: " << probeArray[5] << std::endl;
 	std::cout << "\nRange Results\n";
 	for (int i = 0; i < NUM_ROWS; i++)
 	{
-		if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
-			(probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
-			(probeArray[2] + numRangeC    ) >= cellDArray[i][2] && (probeArray[2] - numRangeC    ) <= cellDArray[i][2] &&
-			(probeArray[3] + numRangeAlpha) >= cellDArray[i][3] && (probeArray[3] - numRangeAlpha) <= cellDArray[i][3] &&
-			(probeArray[4] + numRangeBeta ) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta ) <= cellDArray[i][4] &&
-			(probeArray[5] + numRangeGamma) >= cellDArray[i][5] && (probeArray[5] - numRangeGamma) <= cellDArray[i][5])
-		{
-			std::cout << "PDBID: " << idArray[i][0] << " " << 
-				"A: "     << cellDArray[i][0] << " " <<
+        if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
+        	(probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
+        	(probeArray[2] + numRangeC    ) >= cellDArray[i][2] && (probeArray[2] - numRangeC    ) <= cellDArray[i][2] &&
+        	(probeArray[3] + numRangeAlpha) >= cellDArray[i][3] && (probeArray[3] - numRangeAlpha) <= cellDArray[i][3] &&
+        	(probeArray[4] + numRangeBeta ) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta ) <= cellDArray[i][4] &&
+        	(probeArray[5] + numRangeGamma) >= cellDArray[i][5] && (probeArray[5] - numRangeGamma) <= cellDArray[i][5])
+        {
+        	std::cout << "PDBID: " << idArray[i][0] << " " << 
+        		"A: "     << cellDArray[i][0] << " " <<
                 "B: "     << cellDArray[i][1] << " " <<
                 "C: "     << cellDArray[i][2] << " " <<
-				"Alpha: " << cellDArray[i][3] << " " <<
+        		"Alpha: " << cellDArray[i][3] << " " <<
                 "Beta: "  << cellDArray[i][4] << " " <<
                 "Gamma: " << cellDArray[i][5] << " " <<
-				"Space Group: " << spaceArray[i][0] << " " <<
+        		"Space Group: " << spaceArray[i][0] << " " <<
                 "Z: " << zArray[i][0] << std::endl;
-		}
+        }
 	}
 }
 
 //*****************************************************************************
 int main ()
 {
-	//Create Database
+
+    // Check for sauc html run
+
+    if (std::getenv("SAUC_BATCH_MODE")) {
+      sauc_batch_mode = 1;
+    }
+
+    //Create Database
+
     filenames[0] = "PDBcelldatabase.csv";
     filenames[1] = "PDBcellneartreeL1.dmp";
     filenames[2] = "PDBcellneartreeL2.dmp";
@@ -1154,33 +1164,42 @@ int main ()
     std::cout << "sauc Copyright (C) Keith McGill 2013" << std::endl;
     std::cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
     std::cout << "This is free software, and you are welcome to" << std::endl;
-    std::cout << "redistribute it under the GPL" << std::endl;
+    std::cout << "redistribute it under the GPL or LGPL" << std::endl;
     std::cout << "See the program documentation for details" << std::endl;
     
 	while (endProgram != 1)
 	{
-		if (goBack != 1)
-		{
+        if (goBack != 1)
+        {
             int ii;
             double edgemax;
             for (ii=0; ii < 6; ii++) probeArray[ii] = 0;
-			std::cout << "Search of Alternate Unit Cells\n";
-			std::cout << "\nPlease Input Your Data\n";
-            std::cout << "Lattice Centering (P, A, B, C, F, I, R, H, V): ";
+        	std::cout << "Search of Alternate Unit Cells\n";
+            if (!sauc_batch_mode) std::cout << "\nPlease Input Your Data\n";
+            if (!sauc_batch_mode) std::cout << "Lattice Centering (P, A, B, C, F, I, R, H, V): ";
             std::cin >> probelattice; std::cin.clear();
-			std::cout << "A: ";
-			std::cin >> probeArray[0]; std::cin.clear();
-			std::cout << "B: ";
-			std::cin >> probeArray[1]; std::cin.clear();
-			std::cout << "C: ";
-			std::cin >> probeArray[2]; std::cin.clear();
-			std::cout << "Alpha: ";
-			std::cin >> probeArray[3]; std::cin.clear();
-			std::cout << "Beta: ";
-			std::cin >> probeArray[4]; std::cin.clear();
-			std::cout << "Gamma: ";
-			std::cin >> probeArray[5]; std::cin.clear();
+	    if (!sauc_batch_mode) std::cout << "A: ";
+        	std::cin >> probeArray[0]; std::cin.clear();
+	    if (!sauc_batch_mode) std::cout << "B: ";
+        	std::cin >> probeArray[1]; std::cin.clear();
+	    if (!sauc_batch_mode) std::cout << "C: ";
+        	std::cin >> probeArray[2]; std::cin.clear();
+	    if (!sauc_batch_mode) std::cout << "Alpha: ";
+        	std::cin >> probeArray[3]; std::cin.clear();
+	    if (!sauc_batch_mode) std::cout << "Beta: ";
+        	std::cin >> probeArray[4]; std::cin.clear();
+	    if (!sauc_batch_mode) std::cout << "Gamma: ";
+        	std::cin >> probeArray[5]; std::cin.clear();
             std::cout << std::endl;
+            if (sauc_batch_mode) {
+              std::cout << "Centering and Probe cell :"<<  probelattice << " "
+              << probeArray[0] << " "
+              << probeArray[1] << " "
+              << probeArray[2] << " "
+              << probeArray[3] << " "
+              << probeArray[4] << " "
+              << probeArray[5] << std::endl;
+            }
             edgemax = 0;
             for (ii=0; ii < 6; ii++) {
                 if (ii<3 && probeArray[ii] > edgemax)edgemax = probeArray[ii];
@@ -1212,15 +1231,24 @@ int main ()
         while (quitAlgorithm != 1 && endProgram != 1)
         {
             goBack = 0;
-            std::cout << "1. L1";
-            std::cout << "\n2. L2";
-            std::cout << "\n3. NCDist";
-            std::cout << "\n4. V7";
-            std::cout << "\n5. Quit";
-            std::cout << "\nChoose An Algorithm: ";
+            if (!sauc_batch_mode) std::cout << "1. L1";
+            if (!sauc_batch_mode) std::cout << "\n2. L2";
+            if (!sauc_batch_mode) std::cout << "\n3. NCDist";
+            if (!sauc_batch_mode) std::cout << "\n4. V7";
+            if (!sauc_batch_mode) std::cout << "\n5. Quit";
+            if (!sauc_batch_mode) std::cout << "\nChoose An Algorithm: ";
             priorAlgorithm = choiceAlgorithm;
             std::cin >> choiceAlgorithm; std::cin.clear();
             std::cin.ignore(100000,'\n');
+
+            if (sauc_batch_mode && choiceAlgorithm > 0 && choiceAlgorithm < 5 ) {
+              switch (choiceAlgorithm) {
+                case 1: std::cout << "L1 search algorithm" << std::endl; break;
+                case 2: std::cout << "L2 search algorithm" << std::endl; break;
+                case 3: std::cout << "NCDist search algorithm" << std::endl; break;
+                case 4: std::cout << "V7 search algorithm" << std::endl; break;
+              }
+            }
             
             if (choiceAlgorithm == 1 && priorAlgorithm!= 1)
             {
@@ -1279,14 +1307,21 @@ int main ()
         
         while (quitSimilar != 1 && endProgram != 1)
         {
-            std::cout << "1. Nearest";
-            std::cout << "\n2. Sphere";
-            std::cout << "\n3. Range(Does not use any Algorithms)";
-            std::cout << "\n4. Back";
-            std::cout << "\n5. Quit";
-            std::cout << "\nChoose A Similarity: ";
+            if (!sauc_batch_mode) std::cout << "1. Nearest";
+            if (!sauc_batch_mode) std::cout << "\n2. Sphere";
+            if (!sauc_batch_mode) std::cout << "\n3. Range(Does not use any Algorithms)";
+            if (!sauc_batch_mode) std::cout << "\n4. Back";
+            if (!sauc_batch_mode) std::cout << "\n5. Quit";
+            if (!sauc_batch_mode) std::cout << "\nChoose A Similarity: ";
             std::cin >> choiceSimilar;
             std::cin.clear(); std::cin.ignore(10000,'\n');
+            if (sauc_batch_mode && choiceSimilar > 0 && choiceSimilar < 5) {
+              switch(choiceSimilar) {
+                case 1:  std::cout << "Finding Nearest Cell" << std::endl; break;
+                case 2:  std::cout << "Searching in a Sphere" << std::endl; break;
+                case 3:  std::cout << "Brute Force Range Search" << std::endl; break;
+              }
+            }
             if (choiceSimilar == 1)
             {
                 findNearest();
@@ -1294,29 +1329,41 @@ int main ()
             }
             else if (choiceSimilar == 2)
             {
-                std::cout << "\nPlease Input Your Sphere's Range: ";
+                if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Range: ";
                 std::cin >> sphereRange; std::cin.clear();
                 std::cin.ignore(100000,'\n');
-                findSphere();
+                if (sauc_batch_mode) {
+                  std::cout << "Sphere Radius: "<< sphereRange << std::endl;
+                }
+                findSphere(100000);
                 quitSimilar = 1;
             }
             else if (choiceSimilar == 3)
             {
-                std::cout << "\nPlease Input Your Ranges\n";
-                std::cout << "A: ";
+                if (!sauc_batch_mode) std::cout << "\nPlease Input Your Ranges\n";
+                if (!sauc_batch_mode) std::cout << "A: ";
                 std::cin >> numRangeA; std::cin.clear();
-                std::cout << "B: ";
+                if (!sauc_batch_mode) std::cout << "B: ";
                 std::cin >> numRangeB; std::cin.clear();
-                std::cout << "C: ";
+                if (!sauc_batch_mode) std::cout << "C: ";
                 std::cin >> numRangeC; std::cin.clear();
-                std::cout << "Alpha: ";
+                if (!sauc_batch_mode) std::cout << "Alpha: ";
                 std::cin >> numRangeAlpha; std::cin.clear();
-                std::cout << "Beta: ";
+                if (!sauc_batch_mode) std::cout << "Beta: ";
                 std::cin >> numRangeBeta; std::cin.clear();
-                std::cout << "Gamma: ";
+                if (!sauc_batch_mode) std::cout << "Gamma: ";
                 std::cin >> numRangeGamma; std::cin.clear();
                 std::cin.clear();
                 std::cin.ignore(100000,'\n');
+                if (sauc_batch_mode) {
+                  std::cout << "A, B, C, Alpha, Beta, Gamma ranges: " 
+                    << numRangeA << ", "
+                    << numRangeB << ", "
+                    << numRangeC << ", "
+                    << numRangeAlpha << ", "
+                    << numRangeBeta << ", "
+                    << numRangeGamma << std::endl;
+                }
                 findRange();
                 quitSimilar = 1;
             }
@@ -1333,7 +1380,13 @@ int main ()
             }
             else
             {
-                std::cout << "Inncorrect Choice. Please Choose Again.\n";
+                if (sauc_batch_mode) {
+                  quitSimilar = 1;
+                  endProgram = 1;
+                  quitContinue = 1;
+                } else {
+                  std::cout << "Inncorrect Choice. Please Choose Again.\n";
+                }
             }
             std::cout << std::endl;
         }
@@ -1341,11 +1394,11 @@ int main ()
         
         while (quitContinue == 0)
         {
-            std::cout << "1. Input New Values";
-            std::cout << "\n2. Choose a New Algorithm";
-            std::cout << "\n3. Choose a New Similarity";
-            std::cout << "\n4. Quit";
-            std::cout << "\nChoice: ";
+            if (!sauc_batch_mode) std::cout << "1. Input New Values";
+            if (!sauc_batch_mode) std::cout << "\n2. Choose a New Algorithm";
+            if (!sauc_batch_mode) std::cout << "\n3. Choose a New Similarity";
+            if (!sauc_batch_mode) std::cout << "\n4. Quit";
+            if (!sauc_batch_mode) std::cout << "\nChoice: ";
             std::cin >> choiceContinue; std::cin.clear();
             std::cin.ignore(100000,'\n');
             if (choiceContinue == 1)
@@ -1371,7 +1424,12 @@ int main ()
             }
             else
             {
-                std::cout << "Inncorrect Choice. Please Choose Again.\n";
+                if (sauc_batch_mode) {
+                    endProgram = 1;
+                    quitContinue = 1;
+                } else {
+                    std::cout << "Inncorrect Choice. Please Choose Again.\n";
+                }
             }
             std::cout << std::endl;
         }
