@@ -5,7 +5,7 @@
 #  Lawrence C. Andrews, Micro Encoder Inc.
 #
 #  1 July 2012
-#  Rev 5 November 2012
+#  Rev 6 July 2013
 #
 #  Modify the following definitions for your system
 #
@@ -43,11 +43,16 @@ HTDOCS		?=	$(HOME)/public_html/sauc
 #  HTML document sauc.html
 HTDOCSEXT   ?=   /sauc
 #
+#  PDBCELLINDEXURL is the URL from which to retrieve the
+#  fixed-field PDB cell index
+PDBCELLINDEXURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
 #
 #  Default compile flag definition to select debug mode under unix
 CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
 CXX	?=	g++
 #
+#  Fortran compile (needed for database updates)
+FC	=	gfortran
 #
 #
 #  You should not have to edit below this line
@@ -79,6 +84,9 @@ HTFLAGS 	=	-DCGIBIN=$(CGIPATH) \
 		-DSAUCZIPURL=$(SAUCZIPURL) \
 		-DHTDOCS=$(HTDOCS)
 
+SAVEDB		=	./save
+NEWDB		=	./newdb
+		
 #
 #
 edit:	
@@ -167,9 +175,40 @@ sauc: \
 
 
 $(MATHSCRIBETARBALL):
-		wget http://downloads.sf.net/iterate/$(MATHSCRIBETARBALL)
+	wget http://downloads.sf.net/iterate/$(MATHSCRIBETARBALL)
 
 $(MATHSCRIBEPATH): $(MATHSCRIBETARBALL)
-		gunzip < $(MATHSCRIBETARBALL) | tar xvf -
-		chmod -R 755 $(MATHSCRIBEPATH)
-		touch $(MATHSCRIBEPATH)
+	gunzip < $(MATHSCRIBETARBALL) | tar xvf -
+	chmod -R 755 $(MATHSCRIBEPATH)
+	touch $(MATHSCRIBEPATH)
+	    
+idx2csv:    idx2csv.f
+	$(FC) -o idx2csv idx2csv.f
+
+$(NEWDB)/crystal.idx: $(NEWDB)
+	(cd $(NEWDB); wget -N $(PDBCELLINDEXURL) )
+	    
+updatedb:   $(NEWDB)/crystal.idx idx2csv $(SAVEDB) $(NEWDB) sauc
+	-cp PDBcelldatabase.csv $(SAVEDB)/
+	-cp *.dmp $(SAVEDB)/
+	-(cd $(NEWDB);rm -f *.dmp result*)
+	(cd $(NEWDB);../idx2csv < crystal.idx > PDBcelldatabase.csv)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../sauc < ../rebuild.inp)
+	(cd $(NEWDB);grep "1O51" resultL1)
+	(cd $(NEWDB);grep "1O51" resultL2)
+	(cd $(NEWDB);grep "1O51" resultNCDist)
+	(cd $(NEWDB);grep "1O51" resultV7)
+	(cd $(NEWDB);date > last_update) 
+	touch updatedb
+
+last_update:	$(NEWDB)/last_update updatedb
+	cp $(NEWDB)/*.dmp .
+	cp $(NEWDB)/*.csv .
+	cp $(NEWDB)/last_update .
+
+
+$(SAVEDB):
+	mkdir $(SAVEDB)
+
+$(NEWDB):
+	mkdir $(NEWDB)

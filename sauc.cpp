@@ -1,56 +1,57 @@
 /* sauc.cpp  -- Search of Alternate Unit Cells
-   (C) Copyright Keith McGill 2013
+ (C) Copyright Keith McGill 2013
  
    rev 27 Mar 2013 -- HJB
    rev 26 May 2013 -- LCA
    rev 27 May 2013 -- HJB
    rev 24 Jun 2013 -- HJB
-
-      *******************************************************
-          You may redistribute this program under the terms
-          of the GPL.
+   rev  6 Jul 2013 -- HJB
  
-          Alternatively you may redistribute this functions
-          and subroutines of this program as an API under the
-          terms of the LGPL
-      *******************************************************
-  *************************** GPL NOTICES ******************************
-  *                                                                    *
-  * This program is free software; you can redistribute it and/or      *
-  * modify it under the terms of the GNU General Public License as     *
-  * published by the Free Software Foundation; either version 2 of     *
-  * (the License, or (at your option) any later version.               *
-  *                                                                    *
-  * This program is distributed in the hope that it will be useful,    *
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      *
-  * GNU General Public License for more details.                       *
-  *                                                                    *
-  * You should have received a copy of the GNU General Public License  *
-  * along with this program; if not, write to the Free Software        *
-  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA           *
-  * 02111-1307  USA                                                    *
-  *                                                                    *
-  **********************************************************************
-
-  ************************* LGPL NOTICES *******************************
-  *                                                                    *
-  * This library is free software; you can redistribute it and/or      *
-  * modify it under the terms of the GNU Lesser General Public         *
-  * License as published by the Free Software Foundation; either       *
-  * version 2.1 of the License, or (at your option) any later version. *
-  *                                                                    *
-  * This library is distributed in the hope that it will be useful,    *
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  *
-  * Lesser General Public License for more details.                    *
-  *                                                                    *
-  * You should have received a copy of the GNU Lesser General Public   *
-  * License along with this library; if not, write to the Free         *
-  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,    *
-  * MA  02110-1301  USA                                                *
-  *                                                                    *
-  **********************************************************************
+     *******************************************************
+         You may redistribute this program under the terms
+         of the GPL.
+         
+         Alternatively you may redistribute this functions
+         and subroutines of this program as an API under the
+         terms of the LGPL
+     *******************************************************
+ *************************** GPL NOTICES ******************************
+ *                                                                    *
+ * This program is free software; you can redistribute it and/or      *
+ * modify it under the terms of the GNU General Public License as     *
+ * published by the Free Software Foundation; either version 2 of     *
+ * (the License, or (at your option) any later version.               *
+ *                                                                    *
+ * This program is distributed in the hope that it will be useful,    *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the      *
+ * GNU General Public License for more details.                       *
+ *                                                                    *
+ * You should have received a copy of the GNU General Public License  *
+ * along with this program; if not, write to the Free Software        *
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA           *
+ * 02111-1307  USA                                                    *
+ *                                                                    *
+ **********************************************************************
+ 
+ ************************* LGPL NOTICES *******************************
+ *                                                                    *
+ * This library is free software; you can redistribute it and/or      *
+ * modify it under the terms of the GNU Lesser General Public         *
+ * License as published by the Free Software Foundation; either       *
+ * version 2.1 of the License, or (at your option) any later version. *
+ *                                                                    *
+ * This library is distributed in the hope that it will be useful,    *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU  *
+ * Lesser General Public License for more details.                    *
+ *                                                                    *
+ * You should have received a copy of the GNU Lesser General Public   *
+ * License along with this library; if not, write to the Free         *
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,    *
+ * MA  02110-1301  USA                                                *
+ *                                                                    *
+ **********************************************************************
  
  */
 
@@ -80,7 +81,7 @@ CNearTree <unitcell> * cellTree[4] = {NULL,NULL,NULL,NULL};
 CNearTree <unitcell>::iterator cellTree_itend[4];
 string filenames[5];
 
-const int NUM_COLUMNS = 9, NUM_ROWS = 75325, NUM_DUMP = 2;
+const int NUM_COLUMNS = 9, NUM_ROWS = 200000, NUM_DUMP = 2;
 //const int NUM_COLUMNS = 9, NUM_ROWS = 10000, NUM_DUMP = 2;
 //const int NUM_ROWS = 100;
 
@@ -92,10 +93,11 @@ double probeArray[6];
 arma::vec6 primredprobe;
 string probelattice;
 double avglen=1.;
+size_t num_rows=1;
 
 int nearest = 0, numRow = 0;
 int quitAlgorithm = 0, quitSimilar = 0, quitContinue = 0, endProgram = 0, choiceAlgorithm = 0, choiceSimilar = 0, choiceContinue = 0, goBack = 0,
-    priorAlgorithm = -1;
+priorAlgorithm = -1;
 double result0 = 0, result1 = 0, result2 = 0, result3 = 0, result4 = 0, result5 = 0, resultSumTemp = 0, resultSum = 0, numRange = 0;
 double numRangeA, numRangeB, numRangeC, numRangeAlpha, numRangeBeta, numRangeGamma, sphereRange;
 string valueDump;
@@ -104,212 +106,118 @@ int sauc_batch_mode = 0;
 //*****************************************************************************
 double convertToDouble(string value)
 {
-	int numDot = 0, numDotCount = 0;
-	double number = 0, numTotal = 0, numDec = 0, countDec = 10;
-	char charValue;
-
-	for (int i = 0; i < (int)value.length(); i++)
-	{
-        charValue = value.at(i);
-
-        switch(charValue)
-        {
-        case '0':
-        	number = 0;
-        	break;
-        case '1':
-        	number = 1;
-        	break;
-        case '2':
-        	number = 2;
-        	break;
-        case '3':
-        	number = 3;
-        	break;
-        case '4':
-        	number = 4;
-        	break;
-        case '5':
-        	number = 5;
-        	break;
-        case '6':
-        	number = 6;
-        	break;
-        case '7':
-        	number = 7;
-        	break;
-        case '8':
-        	number = 8;
-        	break;
-        case '9':
-        	number = 9;
-        	break;
-        case '.':
-        	numDot = 1;
-        	break;
-        }
-        	
-        if (numDot != 1 && i == 0)
-        {
-        	numTotal = number;
-        }
-        else if (numDot != 1)
-        {
-        	numTotal = (numTotal * 10) + number;
-        }
-        else if (numDot == 1 && numDotCount == 1)
-        {
-        	numDec = number / countDec;
-        	numTotal = numTotal + numDec;
-        	countDec *= 10;
-        }
-        if (numDot == 1 && numDotCount == 0)
-        {
-        	numDotCount++;
-        }
-	}
-	return(numTotal);
+    double number;
+    istringstream issvalue(value);
+    if (!(issvalue >> number)) number = 0;
+    return number;
 }
 
 //*****************************************************************************
 int convertToInt(string zvalue)
 {
-	int number = 0, numTotal = 0;
-	char charValue;
-
-	for (int i = 0; i < (int)zvalue.length(); i++)
-	{
-        charValue = zvalue.at(i);
-
-        switch(charValue)
-        {
-        case '0':
-        	number = 0;
-        	break;
-        case '1':
-        	number = 1;
-        	break;
-        case '2':
-        	number = 2;
-        	break;
-        case '3':
-        	number = 3;
-        	break;
-        case '4':
-        	number = 4;
-        	break;
-        case '5':
-        	number = 5;
-        	break;
-        case '6':
-        	number = 6;
-        	break;
-        case '7':
-        	number = 7;
-        	break;
-        case '8':
-        	number = 8;
-        	break;
-        case '9':
-        	number = 9;
-        	break;
-        }
-        	
-        if (i == 0)
-        {
-        	numTotal = number;
-        }
-        else
-        {
-        	numTotal = (numTotal * 10) + number;
-        }
-	}
-	return(numTotal);
+	int number = 0;
+    istringstream issvalue(zvalue);
+    if (!(issvalue >> number)) number = 0;
+    return number;
 }
 
 //*****************************************************************************
 void makeDatabase(string filename)
 {
 	string format;
-	
+	int i;
 	ifstream infile;
 	infile.open(filename.c_str());
 	for (int i = 0; i < NUM_DUMP; i++)
 	{
-        getline (infile, valueDump, 'r');
-        //std::cout << valueDump << std::endl;
+		getline (infile, valueDump, 'r');
+		//std::cout << valueDump << std::endl;
 	}
     avglen = 0.;
-	for (int i = 0; i < NUM_ROWS; i++)
+	for (i = 0; i < NUM_ROWS; i++)
 	{
-        string value;
-
-        getline (infile, value, ',');
-        //std::cout << value << std::endl;
-        idArray[i][0] = string(value, 2, value.length()-3);
-        //std::cout << idArray[i][0] << std::endl;
-
-        getline (infile, value, ',');
-        //std::cout << value << std::endl;
-        value = string(value, 1, value.length()-2);
-        //std::cout << value << std::endl;
-        cellDArray[i][3] = convertToDouble(value);
-        //std::cout << cellDArray[i][3] << std::endl;
-
-        getline (infile, value, ',');
-        //std::cout << value << std::endl;
-        value = string(value, 1, value.length()-2);
-        //std::cout << value << std::endl;
-        cellDArray[i][4] = convertToDouble(value);
-        //std::cout << cellDArray[i][4] << std::endl;
-
-        getline (infile, value, ',');
-        //std::cout << value << std::endl;
-        value = string(value, 1, value.length()-2);
-        //std::cout << value << std::endl;
-        cellDArray[i][5] = convertToDouble(value);
-        //std::cout << cellDArray[i][5] << std::endl;
-
-        getline (infile, value, ',');
-        //std::cout << value << std::endl;
-        value = string(value, 1, value.length()-2);
-        //std::cout << value << std::endl;
-        cellDArray[i][0] = convertToDouble(value);
+		string value;
+        
+        //if (i%100 == 0) std::cout << i << std::endl;
+        if (!infile.good()) break;
+		getline (infile, value, ',');
+        if (value.length()<3) break;
+		//std::cout << value << std::endl;
+		idArray[i][0] = string(value, 2, value.length()-3);
+		//std::cout << idArray[i][0] << std::endl;
+        
+        if (!infile.good()) break;
+		getline (infile, value, ',');
+		//std::cout << value << std::endl;
+		value = string(value, 1, value.length()-2);
+		//std::cout << value << std::endl;
+		cellDArray[i][3] = convertToDouble(value);
+		//std::cout << cellDArray[i][3] << std::endl;
+        
+        if (!infile.good()) break;
+		getline (infile, value, ',');
+		//std::cout << value << std::endl;
+		value = string(value, 1, value.length()-2);
+		//std::cout << value << std::endl;
+		cellDArray[i][4] = convertToDouble(value);
+		//std::cout << cellDArray[i][4] << std::endl;
+        
+        if (!infile.good()) break;
+		getline (infile, value, ',');
+		//std::cout << value << std::endl;
+		value = string(value, 1, value.length()-2);
+		//std::cout << value << std::endl;
+		cellDArray[i][5] = convertToDouble(value);
+		//std::cout << cellDArray[i][5] << std::endl;
+        
+        if (!infile.good()) break;
+		getline (infile, value, ',');
+		//std::cout << value << std::endl;
+		value = string(value, 1, value.length()-2);
+		//std::cout << value << std::endl;
+		cellDArray[i][0] = convertToDouble(value);
         avglen += cellDArray[i][0];
-        //std::cout << cellDArray[i][0] << std::endl;
-
-        getline (infile, value, ',');
-        //std::cout << value << std::endl;
-        value = string(value, 1, value.length()-2);
-        //std::cout << value << std::endl;
-        cellDArray[i][1] = convertToDouble(value);
+		//std::cout << cellDArray[i][0] << std::endl;
+        
+        if (!infile.good()) break;
+		getline (infile, value, ',');
+		//std::cout << value << std::endl;
+		value = string(value, 1, value.length()-2);
+		//std::cout << value << std::endl;
+		cellDArray[i][1] = convertToDouble(value);
         avglen += cellDArray[i][1];
-        //std::cout << cellDArray[i][1] << std::endl;
-
-        getline (infile, value, ',');
-        //std::cout << value << std::endl;
-        value = string(value, 1, value.length()-2);
-        //std::cout << value << std::endl;
-        cellDArray[i][2] = convertToDouble(value);
+		//std::cout << cellDArray[i][1] << std::endl;
+        
+        if (!infile.good()) break;
+		getline (infile, value, ',');
+		//std::cout << value << std::endl;
+		value = string(value, 1, value.length()-2);
+		//std::cout << value << std::endl;
+		cellDArray[i][2] = convertToDouble(value);
         avglen += cellDArray[i][2];
-        //std::cout << cellDArray[i][2] << std::endl;
-
-        getline (infile, value, ',');
-        //std::cout << value << std::endl;
-        spaceArray[i][0] = string(value, 1, value.length()-2);
-        //std::cout << spaceArray[i][0] << std::endl;
-
-        getline (infile, valueDump, '"');
-        getline (infile, value, '"');
-        //std::cout << value << std::endl;
-        value = string(value, 0, value.length());
-        //std::cout << value << std::endl;
-        zArray[i][0] = convertToInt(value);
-        //std::cout << zArray[i][0] << std::endl;
-
-        //std::cout << "-----------------------------------------------" << std::endl;
+		//std::cout << cellDArray[i][2] << std::endl;
+        
+        if (!infile.good()) break;
+		getline (infile, value, ',');
+		//std::cout << value << std::endl;
+		spaceArray[i][0] = string(value, 1, value.length()-2);
+		//std::cout << spaceArray[i][0] << std::endl;
+        
+        if (!infile.good()) break;
+		getline (infile, valueDump, '"');
+        if (!infile.good()) break;
+		getline (infile, value, '"');
+		//std::cout << value << std::endl;
+		value = string(value, 0, value.length());
+		//std::cout << value << std::endl;
+		zArray[i][0] = convertToInt(value);
+		//std::cout << zArray[i][0] << std::endl;
+        
+		//std::cout << "-----------------------------------------------" << std::endl;
 	}
-    avglen /= double(3*NUM_ROWS);
+    if (i > 0)
+        avglen /= double(3*i);
+    num_rows = i;
 	infile.close();
 }
 
@@ -421,11 +329,11 @@ bool makeprimredprobe( void )
 }
 
 #define putoutst(serialout,value) \
-    if (value != ULONG_MAX) { \
-        (serialout) << (value); \
-    } else { \
-        (serialout) << "-1"; \
-    } \
+if (value != ULONG_MAX) { \
+(serialout) << (value); \
+} else { \
+(serialout) << "-1"; \
+} \
 
 
 //*****************************************************************************
@@ -448,9 +356,9 @@ void buildNearTree( void )
     std::vector<size_t>    * ObjectCollide;  // overflow chain of colliding objects
     size_t            DeepestDepth;     // maximum depth of the tree
     std::vector< CNearTree<unitcell>::NearTreeNode<unitcell> * >
-                           * NearTreeNodes;  // vector of pointers to nodes to build the tree
+    * NearTreeNodes;  // vector of pointers to nodes to build the tree
     CNearTree<unitcell>::NearTreeNode<unitcell>
-                           * BaseNode;       // the tree's data is stored down
+    * BaseNode;       // the tree's data is stored down
     // this node in m_NearTreeNodes
     long              Flags;            // flags for operational control (mainly for testing)
     double            DiamEstimate;     // estimated diameter
@@ -472,21 +380,21 @@ void buildNearTree( void )
         if (serialin.is_open()) {
             std::cout << "Reading database " << filenames[choiceAlgorithm] << std::endl;
             serialin >> token; if (!serialin.good() || token != string("Algorithm:")) {
-                std::cout << filenames[choiceAlgorithm] << "badly formatted, no 'Algorithm:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'Algorithm:' token" << std::endl;
                 break;
             }
             serialin >> Algorithm;
             if (!serialin.good() || algorithm != choiceAlgorithm) {
-                std::cout << filenames[choiceAlgorithm] << "badly formatted, algorithm value wrong" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, algorithm value wrong" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DelayedIndices:")) {
-                std::cout << filenames[choiceAlgorithm] << "badly formatted, no 'DelayedIndices:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DelayedIndices:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                std::cout << filenames[choiceAlgorithm] << "badly formatted, no DelayedIndices '{' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no DelayedIndices '{' token" << std::endl;
                 break;
             }
             DelayedIndices = new std::vector<long>();
@@ -497,16 +405,16 @@ void buildNearTree( void )
                 DelayedIndices->push_back(atol(token.c_str()));
             }
             if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << "badly formatted DelayedIndices" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted DelayedIndices" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("ObjectStore:")) {
-                std::cout << filenames[choiceAlgorithm] << "badly formatted, no 'ObjectStore:' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'ObjectStore:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                std::cout << filenames[choiceAlgorithm] << "badly formatted, no ObjectStore '{' token" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no ObjectStore '{' token" << std::endl;
                 break;
             }
             ObjectStore = new std::vector<unitcell>();
@@ -516,23 +424,23 @@ void buildNearTree( void )
                 serialin >> token;
                 if (token == string("}")) break;
                 if (!serialin.good() || token != string("{")) {
-                    std::cout << filenames[choiceAlgorithm] << "badly formatted, missing ObjectStore '{' token" << std::endl;
+                    std::cout << filenames[choiceAlgorithm] << " badly formatted, missing ObjectStore '{' token" << std::endl;
                     break;
                 }
                 serialin >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5] >> row;
                 if (!serialin.good()) {
-                    std::cout << filenames[choiceAlgorithm] << "badly formatted, bad object" << std::endl;
+                    std::cout << filenames[choiceAlgorithm] << " badly formatted, bad object" << std::endl;
                     break;
                 }
                 ObjectStore->push_back(unitcell(cell,row));
                 serialin >> token; if (!serialin.good() || token != string("}")) {
-                    std::cout << filenames[choiceAlgorithm] << "badly formatted, missing ObjectStore '}' token" << std::endl;
+                    std::cout << filenames[choiceAlgorithm] << " badly formatted, missing ObjectStore '}' token" << std::endl;
                     break;
                 }
                 
             }
             if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << "badly formatted ObjectStore" << std::endl;
+                std::cout << filenames[choiceAlgorithm] << " badly formatted ObjectStore" << std::endl;
                 break;
             }
             
@@ -805,7 +713,7 @@ void buildNearTree( void )
     
     cellTree[choiceAlgorithm-1] = new CNearTree <unitcell> ();
     
-	for (int i = 0; i < NUM_ROWS; i++)
+	for (int i = 0; i < num_rows; i++)
 	{
         Cell rawcell(cellDArray[i][0], cellDArray[i][1], cellDArray[i][2], cellDArray[i][3], cellDArray[i][4], cellDArray[i][5]);
         mc = rawcell.LatSymMat66((spaceArray[i][0]).substr(0,1));
@@ -946,21 +854,21 @@ void buildNearTree( void )
 void NearestResult( std::ostream& out, const std::string cellDArray[], const unitcell& nearestData )
 {
     out << "\nNearest Results\n" << "PDBID: " << idArray[numRow][0] << " " <<
-        "A: "     << cellDArray[0] << " " <<
-        "B: "     << cellDArray[1] << " " <<
-        "C: "     << cellDArray[2] << " " <<
-        "Alpha: " << cellDArray[3] << " " <<
-        "Beta: "  << cellDArray[4] << " " <<
-        "Gamma: " << cellDArray[5] << " " <<
-        "Space Group: " << spaceArray[numRow][0] << " " <<
-        "Z: " << zArray[numRow][0] << std::endl;
+    "A: "     << cellDArray[0] << " " <<
+    "B: "     << cellDArray[1] << " " <<
+    "C: "     << cellDArray[2] << " " <<
+    "Alpha: " << cellDArray[3] << " " <<
+    "Beta: "  << cellDArray[4] << " " <<
+    "Gamma: " << cellDArray[5] << " " <<
+    "Space Group: " << spaceArray[numRow][0] << " " <<
+    "Z: " << zArray[numRow][0] << std::endl;
     out << "As Primitive Reduced\n"<<
-        "A: "     << nearestData.getData(0) << " " <<
-        "B: "     << nearestData.getData(1) << " " <<
-        "C: "     << nearestData.getData(2) << " " <<
-        "Alpha: " << nearestData.getData(3) << " " <<
-        "Beta: "  << nearestData.getData(4) << " " <<
-        "Gamma: " << nearestData.getData(5) << std::endl;
+    "A: "     << nearestData.getData(0) << " " <<
+    "B: "     << nearestData.getData(1) << " " <<
+    "C: "     << nearestData.getData(2) << " " <<
+    "Alpha: " << nearestData.getData(3) << " " <<
+    "Beta: "  << nearestData.getData(4) << " " <<
+    "Gamma: " << nearestData.getData(5) << std::endl;
 }
 
 //*****************************************************************************
@@ -993,14 +901,30 @@ void findNearest( void )
     NearestInputReport( std::cout, probeArray, primredprobe );
     nnresult = cellTree[choiceAlgorithm-1]->NearestNeighbor(1.e38, unknownCell);
     if (nnresult != cellTree_itend[choiceAlgorithm-1]) {
+        std::string cellparams[6];
+        std::ostringstream osa, osb, osc, osalpha, osbeta, osgamma;
         unitcell nearestData = *nnresult;
         
         numRow = (int)nearestData.getRow();
         
-        std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
-        NearestResult( std::cout, idArray[numRow], nearestData );
+        osa << cellDArray[numRow][0];
+        osb << cellDArray[numRow][1];
+        osc << cellDArray[numRow][2];
+        osalpha << cellDArray[numRow][3];
+        osbeta << cellDArray[numRow][4];
+        osgamma << cellDArray[numRow][5];
         
-        if (!sauc_batch_mode) std::cout << "File name if you want the output saved" << std::endl;
+        cellparams[0] = osa.str();
+        cellparams[1] = osb.str();
+        cellparams[2] = osc.str();
+        cellparams[3] = osalpha.str();
+        cellparams[4] = osbeta.str();
+        cellparams[5] = osgamma.str();
+        
+        std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
+        NearestResult( std::cout, cellparams, nearestData );
+        
+        std::cout << "File name if you want the output saved" << std::endl;
         
         std::string s;
         std::getline( std::cin, s );
@@ -1014,7 +938,7 @@ void findNearest( void )
                 std::cout << " ";
                 std::ofstream output( filename.c_str() );
                 NearestInputReport( output, probeArray, primredprobe );
-                NearestResult( output, idArray[numRow], nearestData );
+                NearestResult( output, cellparams, nearestData );
             }
         }
     }
@@ -1023,17 +947,17 @@ void findNearest( void )
 
 //*****************************************************************************
 void SphereResults( std::ostream& out,
-                    const std::vector<unitcell>&  myvector,
-                    const std::vector<size_t>&    myindices,
-                    const std::vector<double>&    mydistances,
-                    const unitcell&               unknownCell)
+                   const std::vector<unitcell>&  myvector,
+                   const std::vector<size_t>&    myindices,
+                   const std::vector<double>&    mydistances,
+                   const unitcell&               unknownCell)
 {
     out << "\nSphere Results " << myvector.size() << " Cells" <<std::endl;
     for (size_t ind=0; ind < myvector.size(); ind++) {
         const unitcell * const cell = & myvector[ind];
         numRow = (int)(*cell).getRow();
         out << ind+1<<". PDBID: " << idArray[numRow][0] << " " <<
-            "distance: " << mydistances[ind] << " " <<
+        "distance: " << mydistances[ind] << " " <<
         "A: " << cellDArray[numRow][0] << " " <<
         "B: " << cellDArray[numRow][1] << " " <<
         "C: " << cellDArray[numRow][2] << " " <<
@@ -1043,33 +967,33 @@ void SphereResults( std::ostream& out,
         "Space Group: " << spaceArray[numRow][0] << " " <<
         "Z: " << zArray[numRow][0] << std::endl;
         out << "    As Primitive Reduced: "<<
-            "A: "     << (*cell).getData(0) << " " <<
-            "B: "     << (*cell).getData(1) << " " <<
-            "C: "     << (*cell).getData(2) << " " <<
-            "Alpha: " << (*cell).getData(3) << " " <<
-            "Beta: "  << (*cell).getData(4) << " " <<
-            "Gamma: " << (*cell).getData(5) << std::endl;
+        "A: "     << (*cell).getData(0) << " " <<
+        "B: "     << (*cell).getData(1) << " " <<
+        "C: "     << (*cell).getData(2) << " " <<
+        "Alpha: " << (*cell).getData(3) << " " <<
+        "Beta: "  << (*cell).getData(4) << " " <<
+        "Gamma: " << (*cell).getData(5) << std::endl;
     }
 }
-    
+
 //*****************************************************************************
 void SphereInputReport( std::ostream& out )
 {
     out << "Raw Unknown Cell         \n" <<
-        "A: " << probeArray[0] << " " <<
-        "B: " << probeArray[1] << " " <<
-        "C: " << probeArray[2] << " " <<
-        "Alpha: " << probeArray[3] << " " <<
-        "Beta: " << probeArray[4] << " " <<
-        "Gamma: " << probeArray[5] <<
-        " Lattice: "<< probelattice <<  std::endl;
+    "A: " << probeArray[0] << " " <<
+    "B: " << probeArray[1] << " " <<
+    "C: " << probeArray[2] << " " <<
+    "Alpha: " << probeArray[3] << " " <<
+    "Beta: " << probeArray[4] << " " <<
+    "Gamma: " << probeArray[5] <<
+    " Lattice: "<< probelattice <<  std::endl;
     out << "As Primitive Reduced Cell\n" <<
-        "A: " << primredprobe[0] << " " <<
-        "B: " << primredprobe[1] << " " <<
-        "C: " << primredprobe[2] << " " <<
-        "Alpha: " << primredprobe[3] << " " <<
-        "Beta: " << primredprobe[4] << " " <<
-        "Gamma: " << primredprobe[5]  <<  std::endl;
+    "A: " << primredprobe[0] << " " <<
+    "B: " << primredprobe[1] << " " <<
+    "C: " << primredprobe[2] << " " <<
+    "Alpha: " << primredprobe[3] << " " <<
+    "Beta: " << primredprobe[4] << " " <<
+    "Gamma: " << primredprobe[5]  <<  std::endl;
 }
 
 //*****************************************************************************
@@ -1111,47 +1035,47 @@ void findRange( void )
 {
 	std::cout << std::endl;
 	std::cout << "Unknown Cell\n" <<
-        "A: "     << probeArray[0] << " " <<
-        "B: "     << probeArray[1] << " " <<
-        "C: "     << probeArray[2] << " " <<
-        "Alpha: " << probeArray[3] << " " <<
-        "Beta: "  << probeArray[4] << " " <<
-        "Gamma: " << probeArray[5] << std::endl;
+    "A: "     << probeArray[0] << " " <<
+    "B: "     << probeArray[1] << " " <<
+    "C: "     << probeArray[2] << " " <<
+    "Alpha: " << probeArray[3] << " " <<
+    "Beta: "  << probeArray[4] << " " <<
+    "Gamma: " << probeArray[5] << std::endl;
 	std::cout << "\nRange Results\n";
-	for (int i = 0; i < NUM_ROWS; i++)
+	for (int i = 0; i < num_rows; i++)
 	{
-        if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
-        	(probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
-        	(probeArray[2] + numRangeC    ) >= cellDArray[i][2] && (probeArray[2] - numRangeC    ) <= cellDArray[i][2] &&
-        	(probeArray[3] + numRangeAlpha) >= cellDArray[i][3] && (probeArray[3] - numRangeAlpha) <= cellDArray[i][3] &&
-        	(probeArray[4] + numRangeBeta ) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta ) <= cellDArray[i][4] &&
-        	(probeArray[5] + numRangeGamma) >= cellDArray[i][5] && (probeArray[5] - numRangeGamma) <= cellDArray[i][5])
-        {
-        	std::cout << "PDBID: " << idArray[i][0] << " " << 
-        		"A: "     << cellDArray[i][0] << " " <<
-                "B: "     << cellDArray[i][1] << " " <<
-                "C: "     << cellDArray[i][2] << " " <<
-        		"Alpha: " << cellDArray[i][3] << " " <<
-                "Beta: "  << cellDArray[i][4] << " " <<
-                "Gamma: " << cellDArray[i][5] << " " <<
-        		"Space Group: " << spaceArray[i][0] << " " <<
-                "Z: " << zArray[i][0] << std::endl;
-        }
+		if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
+			(probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
+			(probeArray[2] + numRangeC    ) >= cellDArray[i][2] && (probeArray[2] - numRangeC    ) <= cellDArray[i][2] &&
+			(probeArray[3] + numRangeAlpha) >= cellDArray[i][3] && (probeArray[3] - numRangeAlpha) <= cellDArray[i][3] &&
+			(probeArray[4] + numRangeBeta ) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta ) <= cellDArray[i][4] &&
+			(probeArray[5] + numRangeGamma) >= cellDArray[i][5] && (probeArray[5] - numRangeGamma) <= cellDArray[i][5])
+		{
+			std::cout << "PDBID: " << idArray[i][0] << " " <<
+            "A: "     << cellDArray[i][0] << " " <<
+            "B: "     << cellDArray[i][1] << " " <<
+            "C: "     << cellDArray[i][2] << " " <<
+            "Alpha: " << cellDArray[i][3] << " " <<
+            "Beta: "  << cellDArray[i][4] << " " <<
+            "Gamma: " << cellDArray[i][5] << " " <<
+            "Space Group: " << spaceArray[i][0] << " " <<
+            "Z: " << zArray[i][0] << std::endl;
+		}
 	}
 }
 
 //*****************************************************************************
 int main ()
 {
-
+    
     // Check for sauc html run
-
+    
     if (std::getenv("SAUC_BATCH_MODE")) {
-      sauc_batch_mode = 1;
+        sauc_batch_mode = 1;
     }
-
+    
     //Create Database
-
+    
     filenames[0] = "PDBcelldatabase.csv";
     filenames[1] = "PDBcellneartreeL1.dmp";
     filenames[2] = "PDBcellneartreeL2.dmp";
@@ -1178,27 +1102,27 @@ int main ()
             if (!sauc_batch_mode) std::cout << "\nPlease Input Your Data\n";
             if (!sauc_batch_mode) std::cout << "Lattice Centering (P, A, B, C, F, I, R, H, V): ";
             std::cin >> probelattice; std::cin.clear();
-	    if (!sauc_batch_mode) std::cout << "A: ";
+            if (!sauc_batch_mode) std::cout << "A: ";
         	std::cin >> probeArray[0]; std::cin.clear();
-	    if (!sauc_batch_mode) std::cout << "B: ";
+            if (!sauc_batch_mode) std::cout << "B: ";
         	std::cin >> probeArray[1]; std::cin.clear();
-	    if (!sauc_batch_mode) std::cout << "C: ";
+            if (!sauc_batch_mode) std::cout << "C: ";
         	std::cin >> probeArray[2]; std::cin.clear();
-	    if (!sauc_batch_mode) std::cout << "Alpha: ";
+            if (!sauc_batch_mode) std::cout << "Alpha: ";
         	std::cin >> probeArray[3]; std::cin.clear();
-	    if (!sauc_batch_mode) std::cout << "Beta: ";
+            if (!sauc_batch_mode) std::cout << "Beta: ";
         	std::cin >> probeArray[4]; std::cin.clear();
-	    if (!sauc_batch_mode) std::cout << "Gamma: ";
+            if (!sauc_batch_mode) std::cout << "Gamma: ";
         	std::cin >> probeArray[5]; std::cin.clear();
             std::cout << std::endl;
             if (sauc_batch_mode) {
-              std::cout << "Centering and Probe cell :"<<  probelattice << " "
-              << probeArray[0] << " "
-              << probeArray[1] << " "
-              << probeArray[2] << " "
-              << probeArray[3] << " "
-              << probeArray[4] << " "
-              << probeArray[5] << std::endl;
+                std::cout << "Centering and Probe cell :"<<  probelattice << " "
+                << probeArray[0] << " "
+                << probeArray[1] << " "
+                << probeArray[2] << " "
+                << probeArray[3] << " "
+                << probeArray[4] << " "
+                << probeArray[5] << std::endl;
             }
             edgemax = 0;
             for (ii=0; ii < 6; ii++) {
@@ -1240,14 +1164,14 @@ int main ()
             priorAlgorithm = choiceAlgorithm;
             std::cin >> choiceAlgorithm; std::cin.clear();
             std::cin.ignore(100000,'\n');
-
+            
             if (sauc_batch_mode && choiceAlgorithm > 0 && choiceAlgorithm < 5 ) {
-              switch (choiceAlgorithm) {
-                case 1: std::cout << "L1 search algorithm" << std::endl; break;
-                case 2: std::cout << "L2 search algorithm" << std::endl; break;
-                case 3: std::cout << "NCDist search algorithm" << std::endl; break;
-                case 4: std::cout << "V7 search algorithm" << std::endl; break;
-              }
+                switch (choiceAlgorithm) {
+                    case 1: std::cout << "L1 search algorithm" << std::endl; break;
+                    case 2: std::cout << "L2 search algorithm" << std::endl; break;
+                    case 3: std::cout << "NCDist search algorithm" << std::endl; break;
+                    case 4: std::cout << "V7 search algorithm" << std::endl; break;
+                }
             }
             
             if (choiceAlgorithm == 1 && priorAlgorithm!= 1)
@@ -1316,11 +1240,11 @@ int main ()
             std::cin >> choiceSimilar;
             std::cin.clear(); std::cin.ignore(10000,'\n');
             if (sauc_batch_mode && choiceSimilar > 0 && choiceSimilar < 5) {
-              switch(choiceSimilar) {
-                case 1:  std::cout << "Finding Nearest Cell" << std::endl; break;
-                case 2:  std::cout << "Searching in a Sphere" << std::endl; break;
-                case 3:  std::cout << "Brute Force Range Search" << std::endl; break;
-              }
+                switch(choiceSimilar) {
+                    case 1:  std::cout << "Finding Nearest Cell" << std::endl; break;
+                    case 2:  std::cout << "Searching in a Sphere" << std::endl; break;
+                    case 3:  std::cout << "Brute Force Range Search" << std::endl; break;
+                }
             }
             if (choiceSimilar == 1)
             {
@@ -1333,7 +1257,7 @@ int main ()
                 std::cin >> sphereRange; std::cin.clear();
                 std::cin.ignore(100000,'\n');
                 if (sauc_batch_mode) {
-                  std::cout << "Sphere Radius: "<< sphereRange << std::endl;
+                    std::cout << "Sphere Radius: "<< sphereRange << std::endl;
                 }
                 findSphere(100000);
                 quitSimilar = 1;
@@ -1356,7 +1280,7 @@ int main ()
                 std::cin.clear();
                 std::cin.ignore(100000,'\n');
                 if (sauc_batch_mode) {
-                  std::cout << "A, B, C, Alpha, Beta, Gamma ranges: " 
+                    std::cout << "A, B, C, Alpha, Beta, Gamma ranges: "
                     << numRangeA << ", "
                     << numRangeB << ", "
                     << numRangeC << ", "
@@ -1381,11 +1305,11 @@ int main ()
             else
             {
                 if (sauc_batch_mode) {
-                  quitSimilar = 1;
-                  endProgram = 1;
-                  quitContinue = 1;
+                    quitSimilar = 1;
+                    endProgram = 1;
+                    quitContinue = 1;
                 } else {
-                  std::cout << "Inncorrect Choice. Please Choose Again.\n";
+                    std::cout << "Inncorrect Choice. Please Choose Again.\n";
                 }
             }
             std::cout << std::endl;
