@@ -111,7 +111,7 @@ edit:
 		@/bin/echo "*     make install                   *"
 		@/bin/echo "**************************************"
 #
-edit_done:	sauc sauc.html sauc.csh
+edit_done:	sauc sauc.html sauc.csh updatedb.csh
 		touch edit
 #
 clean:
@@ -131,6 +131,10 @@ sauc.csh:	sauc.csh.m4 Makefile
 		-DSEARCHURL=$(SEARCHURL)\
 		-DHTDOCS=$(HTDOCS)\
 		< sauc.csh.m4 > sauc.csh
+#
+updatedb.csh:	updatedb.csh.m4 Makefile
+		m4 -DSAUCDIR=$(PWD) < updatedb.csh.m4 > updatedb.csh
+		chmod 755 updatedb.csh
 #
 install:	edit_done sauc sauc.csh sauc.html \
 		$(MATHSCRIBEPATH) gpl.txt lgpl.txt
@@ -205,6 +209,7 @@ last_update:	$(NEWDB)/last_update updatedb
 	cp $(NEWDB)/*.dmp .
 	cp $(NEWDB)/*.csv .
 	cp $(NEWDB)/last_update .
+	touch last_update
 
 
 $(SAVEDB):
