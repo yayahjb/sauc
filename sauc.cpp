@@ -924,7 +924,8 @@ void findNearest( void )
         std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
         NearestResult( std::cout, cellparams, nearestData );
         
-        std::cout << "File name if you want the output saved" << std::endl;
+        if (!sauc_batch_mode)
+            std::cout << "File name if you want the output saved" << std::endl;
         
         std::string s;
         std::getline( std::cin, s );
@@ -939,6 +940,9 @@ void findNearest( void )
                 std::ofstream output( filename.c_str() );
                 NearestInputReport( output, probeArray, primredprobe );
                 NearestResult( output, cellparams, nearestData );
+                output.close();
+                if (sauc_batch_mode)
+                    std::cout << "Output saved to: " << filename << std::endl;
             }
         }
     }
@@ -1011,7 +1015,8 @@ void findSphere( int limit )
     
     SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
     
-    std::cout << "File name if you want the output saved" << std::endl;
+    if (!sauc_batch_mode)
+        std::cout << "File name if you want the output saved" << std::endl;
     
     std::string s;
     std::getline( std::cin, s );
@@ -1026,6 +1031,9 @@ void findSphere( int limit )
             std::ofstream output( filename.c_str() );
             SphereInputReport( output );
             SphereResults( output, myvector, myindices, mydistances, unknownCell);
+            output.close();
+            if (sauc_batch_mode)
+                std::cout << "Output saved to: " << filename << std::endl;
         }
     }
 }

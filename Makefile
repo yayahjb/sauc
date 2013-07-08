@@ -70,7 +70,7 @@ MATHSCRIBEURL = http://$(HTTPDSERVER)$(HTDOCSEXT)/$(MATHSCRIBEPATH)
 #
 # SAUC URLS
 #
-SAUCVERSION = 0.6
+SAUCVERSION = 0.6.2
 SAUCTARBALLURL = http://downloads.sf.net/iterate/sauc-$(SAUCVERSION).tar.gz
 SAUCZIPURL = http://downloads.sf.net/iterate/sauc-$(SAUCVERSION).zip
 

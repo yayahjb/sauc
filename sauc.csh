@@ -11,8 +11,7 @@
 #
 #
 # Set the following to the best available search URL
-set searchurl="http://arcib.dowling.edu/~mcgillk/"
-#set searchurl="http://arcib.dowling.edu/~mcgillk/"
+set searchurl="http://Herberts-MacBook-Pro.local/~yaya/sauc"
 #
 # To operate correctly, the programs tr and sed must be in the
 # default path and the /bin/echo version of echo must follow
@@ -36,18 +35,18 @@ echo '| <a href="#Results">GO TO RESULTS</a>'
 echo '| <a href="'${searchurl}'">NEW SEARCH</a> |</center><p>'
 echo "<hr />"
 echo "" >/tmp/instr$$
-echo ${Centering} >> /tmp/instr$$
+echo ${Centering} " " >> /tmp/instr$$
 echo "<P>| Lattice Centering: " $Centering 
-echo $A >>/tmp/instr$$
-echo $B >>/tmp/instr$$
-echo $C >>/tmp/instr$$
-echo $Alpha >>/tmp/instr$$
-echo $Beta >>/tmp/instr$$
-echo $Gamma >>/tmp/instr$$
+echo $A " " >>/tmp/instr$$
+echo $B " " >>/tmp/instr$$
+echo $C " " >>/tmp/instr$$
+echo $Alpha " " >>/tmp/instr$$
+echo $Beta " " >>/tmp/instr$$
+echo $Gamma " " >>/tmp/instr$$
 echo "| Cell: " A:$A B:$B C:$C Alpha:$Alpha Beta:$Beta Gamma:$Gamma
-echo ${Algorithm} >> /tmp/instr$$
+echo ${Algorithm} " "  >> /tmp/instr$$
 echo "| Algorithm: " $Algorithm
-echo ${Similarity} >> /tmp/instr$$
+echo ${Similarity} " " >> /tmp/instr$$
 echo "| Similarity: " $Similarity
 if ($Similarity == 2) then
 	echo ${RangeSphere} >> /tmp/instr$$
@@ -69,14 +68,13 @@ else
 	echo " |"
 endif
 echo "" >> /tmp/instr$$
-echo "4" >> /tmp/instr$$
+echo "4 " >> /tmp/instr$$
 echo "" >>/tmp/instr$$
 echo '<p><hr /><p><h3><a name="Results"></a>Results of SAUC Run</h3>'
-setenv ITERATE_QUERY NO
-setenv OUTPUT_STYLE $OutputStyle
+setenv SAUC_BATCH_MODE YES
 echo "<PRE>"
-cd /home/students/mcgillk/sauc/sauc-0.4.1
-/home/students/mcgillk/sauc/sauc-0.4.1/sauc < /tmp/instr$$
+cd /Users/yaya/public_html/sauc
+/Users/yaya/bin/sauc < /tmp/instr$$
 rm /tmp/instr$$
 #cat /tmp/instr$$ 
 echo "</pre>"
