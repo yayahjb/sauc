@@ -87,9 +87,11 @@ HTFLAGS 	=	-DCGIBIN=$(CGIPATH) \
 SAVEDB		=	./save
 NEWDB		=	./newdb
 
-editexit:	edit
-		@/bin/echo "forcing error exit"
-		@false
+all:		edit
+		@/bin/echo "  make edit_done   to build the kit after edits"
+		@/bin/echo "  make install     to install SAUC program and web site"
+		@/bin/echo "  make clean       to start over"
+		@/bin/echo "  make updatedb    to update the database"
 		
 #
 #
