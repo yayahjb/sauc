@@ -86,6 +86,10 @@ HTFLAGS 	=	-DCGIBIN=$(CGIPATH) \
 
 SAVEDB		=	./save
 NEWDB		=	./newdb
+
+editexit:	edit
+		@/bin/echo "forcing error exit"
+		@false
 		
 #
 #
@@ -110,6 +114,7 @@ edit:
 		@/bin/echo "*     make edit_done                 *"
 		@/bin/echo "*     make install                   *"
 		@/bin/echo "**************************************"
+
 #
 edit_done:	sauc sauc.html sauc.csh updatedb.csh
 		touch edit
@@ -125,18 +130,22 @@ clean:
 sauc.html:	sauc.html.m4 Makefile $(MATHSCRIBEPATH) gpl.txt lgpl.txt
 		m4 $(HTFLAGS) < sauc.html.m4 > sauc.html
 #
-sauc.csh:	sauc.csh.m4 Makefile
+sauc.csh:	sauc.csh.m4 Makefile edit
 		m4 -DSEARCHURL=$(SEARCHURL) \
 		-DBINPATH=$(BINPATH) \
 		-DSEARCHURL=$(SEARCHURL)\
 		-DHTDOCS=$(HTDOCS)\
 		< sauc.csh.m4 > sauc.csh
 #
-updatedb.csh:	updatedb.csh.m4 Makefile
-		m4 -DSAUCDIR=$(PWD) < updatedb.csh.m4 > updatedb.csh
+updatedb.csh:	updatedb.csh.m4 Makefile edit
+		m4 -DSAUCDIR=$(PWD) \
+		-DHTTPDSERVER=$(HTTPDSERVER) \
+                -DSEARCHURL=$(SEARCHURL)\
+                -DCGIPATH=$(CGIPATH)\
+		< updatedb.csh.m4 > updatedb.csh
 		chmod 755 updatedb.csh
 #
-install:	edit_done sauc sauc.csh sauc.html \
+install:	edit sauc sauc.csh sauc.html \
 		$(MATHSCRIBEPATH) gpl.txt lgpl.txt
 		-mkdir -p $(BINDEST)
 		-mkdir -p $(CGIBIN)

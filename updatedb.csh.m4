@@ -6,6 +6,9 @@
 #  Assumes a working sauc kit in SAUCDIR
 #
 cd 'SAUCDIR()`
+setenv HTTPDSERVER' HTTPDSERVER()`
+setenv SEARCHURL' SEARCHURL()`
+setenv CGIPATH' CGIPATH()`
 if ( -e crystal.idx ) then
   rm -f newdb/crystal.idx
   make newdb/crystal.idx
