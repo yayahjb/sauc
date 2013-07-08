@@ -169,7 +169,7 @@ void Reducer::MKnorm( const arma::vec6& vi, arma::mat66& m, arma::vec6& vout, co
       if ( (fabs(vin[0]) > fabs(vin[1])+delta) ||
            (fabs(vin[0]-vin[1])<1.e-38+1.e-12*fabs(vin[0]+vin[1])
 	    && delta<1.0E-6 && fabs(vin[3])>fabs(vin[4])+
-	    delta+1.e-13*(fabs(vin[3])+fabs(vin[4]))))
+	    delta+1.e-12*(fabs(vin[3])+fabs(vin[4]))))
       { // SP1
          mat    = sp1;
          again  = true;
@@ -178,7 +178,7 @@ void Reducer::MKnorm( const arma::vec6& vi, arma::mat66& m, arma::vec6& vout, co
       else if ( (fabs(vin[1]) > fabs(vin[2])+delta) ||
                 (fabs(vin[1]-vin[2])<1.e-38+1.e-12*fabs(vin[1]+vin[2])
                  && delta<1.0E-6 && fabs(vin[4])>fabs(vin[5])+
-                 delta+1.e-13*(fabs(vin[4])+fabs(vin[5]))))
+                 delta+1.e-12*(fabs(vin[4])+fabs(vin[5]))))
       { // SP2
          mat    = sp2;
          again  = true;
@@ -199,12 +199,10 @@ void Reducer::MKnorm( const arma::vec6& vi, arma::mat66& m, arma::vec6& vout, co
 
    // now we assure (within delta) that the vector is +++ or ---
 
-   // HJB !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   // DELTA IS NO LONGER USED HERE -- what to do?
    int bMinusPattern = 0;
-   if( vin[3] < 1.0E-10 ) bMinusPattern += 4;
-   if( vin[4] < 1.0E-10 ) bMinusPattern += 2;
-   if( vin[5] < 1.0E-10 ) bMinusPattern += 1;
+   if( vin[3] < delta+1.0E-10*(1.+fabs(vin[3])) ) bMinusPattern += 4;
+   if( vin[4] < delta+1.0E-10*(1.+fabs(vin[4])) ) bMinusPattern += 2;
+   if( vin[5] < delta+1.0E-10*(1.+fabs(vin[5])) ) bMinusPattern += 1;
    std::string sptext2( "ERROR" );;
 
    switch( bMinusPattern )
