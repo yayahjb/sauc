@@ -167,14 +167,18 @@ void Reducer::MKnorm( const arma::vec6& vi, arma::mat66& m, arma::vec6& vout, co
 
       std::string sptext;
       if ( (fabs(vin[0]) > fabs(vin[1])+delta) ||
-           (vin[0] ==vin[1] && delta<1.0E-6 && fabs(vin[3])>fabs(vin[4])+delta ) )
+           (fabs(vin[0]-vin[1])<1.e-38+1.e-12*fabs(vin[0]+vin[1])
+	    && delta<1.0E-6 && fabs(vin[3])>fabs(vin[4])+
+	    delta+1.e-13*(fabs(vin[3])+fabs(vin[4]))))
       { // SP1
          mat    = sp1;
          again  = true;
          sptext = "SP1";
       }
       else if ( (fabs(vin[1]) > fabs(vin[2])+delta) ||
-           (vin[1] ==vin[2] && delta<1.0E-6 && fabs(vin[4])>fabs(vin[5])+delta ) )
+                (fabs(vin[1]-vin[2])<1.e-38+1.e-12*fabs(vin[1]+vin[2])
+                 && delta<1.0E-6 && fabs(vin[4])>fabs(vin[5])+
+                 delta+1.e-13*(fabs(vin[4])+fabs(vin[5]))))
       { // SP2
          mat    = sp2;
          again  = true;
