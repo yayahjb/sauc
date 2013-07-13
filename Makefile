@@ -222,6 +222,8 @@ last_update:	$(NEWDB)/last_update updatedb
 	cp $(NEWDB)/last_update .
 	touch last_update
 
+$(NEWDB)/last_update:
+	touch $(NEWDB)/last_update
 
 $(SAVEDB):
 	mkdir $(SAVEDB)

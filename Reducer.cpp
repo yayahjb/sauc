@@ -166,18 +166,18 @@ void Reducer::MKnorm( const arma::vec6& vi, arma::mat66& m, arma::vec6& vout, co
       again = false;
 
       std::string sptext;
-      if ( (fabs(vin[0]) > fabs(vin[1])+delta) ||
+      if ( (fabs(vin[0]) > fabs(vin[1])+delta+1.e-12*(vin[0]+vin[1])) ||
            (fabs(vin[0]-vin[1])<1.e-38+1.e-12*fabs(vin[0]+vin[1])
-	    && delta<1.0E-6 && fabs(vin[3])>fabs(vin[4])+
+	    && delta<1.0E-12 && fabs(vin[3])>fabs(vin[4])+
 	    delta+1.e-12*(fabs(vin[3])+fabs(vin[4]))))
       { // SP1
          mat    = sp1;
          again  = true;
          sptext = "SP1";
       }
-      else if ( (fabs(vin[1]) > fabs(vin[2])+delta) ||
+      else if ( (fabs(vin[1]) > fabs(vin[2])+delta+1.e-12*(vin[1]+vin[2])) ||
                 (fabs(vin[1]-vin[2])<1.e-38+1.e-12*fabs(vin[1]+vin[2])
-                 && delta<1.0E-6 && fabs(vin[4])>fabs(vin[5])+
+                 && delta<1.0E-12 && fabs(vin[4])>fabs(vin[5])+
                  delta+1.e-12*(fabs(vin[4])+fabs(vin[5]))))
       { // SP2
          mat    = sp2;
@@ -200,54 +200,88 @@ void Reducer::MKnorm( const arma::vec6& vi, arma::mat66& m, arma::vec6& vout, co
    // now we assure (within delta) that the vector is +++ or ---
 
    int bMinusPattern = 0;
-   if( vin[3] < delta+1.0E-10*(1.+fabs(vin[3])) ) bMinusPattern += 4;
-   if( vin[4] < delta+1.0E-10*(1.+fabs(vin[4])) ) bMinusPattern += 2;
-   if( vin[5] < delta+1.0E-10*(1.+fabs(vin[5])) ) bMinusPattern += 1;
+   int bZeroPattern = 0;
+   if( vin[3] < delta+1.0E-13*(vin[1]+vin[2]) ) bMinusPattern |= 4;
+   if( vin[4] < delta+1.0E-13*(vin[0]+vin[2]) ) bMinusPattern |= 2;
+   if( vin[5] < delta+1.0E-13*(vin[0]+vin[1]) ) bMinusPattern |= 1;
+   if( fabs(vin[3]) < delta+1.0E-13*(vin[1]+vin[2]) ) bZeroPattern |= 4;
+   if( fabs(vin[4]) < delta+1.0E-13*(vin[0]+vin[2]) ) bZeroPattern |= 2;
+   if( fabs(vin[5]) < delta+1.0E-13*(vin[0]+vin[1]) ) bZeroPattern |= 1;
    std::string sptext2( "ERROR" );;
 
    switch( bMinusPattern )
    {
-   case 0:
+   case 0:  /*  +++  */
       {
          mat = spnull;
          sptext2 = "no mknorm action sp1,sp2-0";
          break;
       }
-   case 1:
+   case 1:  /* ++- -> --- */
       {
          mat = sp34a;
          sptext2 = "SP34a-1";
          break;
       }
-   case 2:
+   case 2:  /* +-+ -> --- */
       {
          mat = sp34b;
          sptext2 = "SP34b-2";
          break;
       }
-   case 3:
+   case 3:  /* +-- -> +++, but +0- -> -0- and +-0 -> --0 and +00 -> -00 */
       {
          mat = sp34c;
          sptext2 = "SP34c-3";
+         if ((bZeroPattern&2) == 2 ) {
+            mat = sp34a;
+            sptext2 = "SP34a-3";
+            break;
+         }
+         if ((bZeroPattern&1) == 1 ) {
+            mat = sp34b;
+            sptext2 = "SP34b-3";
+            break;
+         }
          break;
       }
-   case 4:
+   case 4:  /* -++ -> --- */
       {
          mat = sp34c;
          sptext2 = "SP34c-4";
          break;
       }
-   case 5:
+   case 5:  /* -+- -> +++, but 0+- -> 0-- and -+0 -> --0 and 0+0 -> 0-0 */
       {
          mat = sp34b;
          sptext2 = "SP34b-5";
+         if ((bZeroPattern&4) == 4 ) {
+            mat = sp34a;
+            sptext2 = "SP34a-5";
+            break;
+         }
+         if ((bZeroPattern&1) == 1 ) {
+            mat = sp34c;
+            sptext2 = "SP34c-5";
+            break;
+         }
          break;
       }
-   case 6:
+   case 6:  /* --+ - > +++, but 0-+ -> 0-- and -0+ - > -0- and 00+ -> 00- */
       {
          mat = sp34a;
          sptext2 = "SP34a-6";
-         break;;
+         if ((bZeroPattern&4) == 4 ) {
+            mat = sp34b;
+            sptext2 = "SP34b-5";
+            break;
+         }
+         if ((bZeroPattern&2) == 2 ) {
+            mat = sp34c;
+            sptext2 = "SP34c-5";
+            break;
+         }
+         break;
       }
    case 7:
       {
