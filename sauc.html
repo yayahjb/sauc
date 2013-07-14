@@ -128,17 +128,18 @@ Search of Alternate Unit Cells - SAUC
 <H1>SAUC</H1>
 Search of Alternate Unit Cells
 <br />Copyright Keith J McGill 2013
-<br /><br />Keith J McGill, Mojgan Asadi, Maria Toneva Karakasheva, Lawrence C. Andrews, Herbert J. Bernstein
+<br /><br />Keith J McGill, Mojgan Asadi, Maria T. Karakasheva, Lawrence C. Andrews, Herbert J. Bernstein
 <br /><br />Dowling College and Micro Encoder Inc.
 <br />Work Supported In Part By NIGMS
 <br /><br />Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
 <FORM method=POST ACTION="http://Herberts-MacBook-Pro.local/cgi-bin/cgiwrap/yaya/sauc.csh">
 </center>
+<font size="-1">
 A crystallographic cell is a representation of a lattice, but each lattice can be represented
 just as well by any of an infinite number of such unit cells. Searching
 for matches to an experimentally determined crystallographic unit cell in a large
 collection of previously determined unit cells is a useful verification step in synchrotron
-data collection and can be a screen for &quot;similar&quot; structures, but it is more
+data collection and can be a screen for &quot;similar&quot; substances, but it is more
 useful to search for a match to the lattice represented by the experimentally determined
 cell. For identification of substances with small cells, a unit cell match
 may be sufficient for unique identification. Due to experimental error and multiple
@@ -150,6 +151,7 @@ Searching is implemented by finding the distance from the probe cell to related
 cells using a topological embedding of the Niggli reduction in G<sup>6</sup>, so that all cells
 representing similar lattices will be found. Comparison of results with those from
 older cell-based search algorithms suggests significant value in the new approach.
+</font>
 <center>
 <br /><STRONG>
 Please read the <a href="#notice">NOTICE</a> below before use of this web page
@@ -345,10 +347,11 @@ FILE OR FILES AND NOT WITH AUTHORS OF THE PROGRAMS OR DOCUMENTS.
 
 <P>
 This program and related scripts are available as 
-a <a href="http://downloads.sf.net/iterate/sauc-0.6.tar.gz">tarball</a>
+a <a href="http://downloads.sf.net/iterate/sauc-0.6.2.tar.gz">tarball</a>
 or a 
-<a href="http://downloads.sf.net/iterate/sauc-0.6.zip">zip file</a>.
-<br />The following information below is available as a PDF.
+<a href="http://downloads.sf.net/iterate/sauc-0.6.2.zip">zip file</a>.
+<br />The information below is available for download from 
+<a href="http://arxiv.org/abs/1307.1811">arxiv.org/abs/1307.1811</a>.
 <p>
 
 <a name="Introduction"></a>
@@ -369,7 +372,7 @@ number of such unit cells. Searching for matches to an experimentally
 determined crystallographic unit cell in a large collection
 of previously determined unit cells is a useful verification
 step in synchrotron data collection and can be a screen for &quot;similar&quot;
-structures (Ramraj et al., 2011) (Mighell, 2002), but it is
+substances (Ramraj et al., 2011) (Mighell, 2002), but it is
 more useful to search for a match to the lattice represented by
 the experimentally determined cell, which may involve many
 more cells. For identification of substances with small cells,
@@ -426,28 +429,16 @@ is reduced as that angle nears 90 degrees.
 An effective search method must find ways to search for related
 unit cells, even when they appear to be tabulated in ways that
 make them seem different. A trivial example is:<br/>
-a = 10.0, b = 10.01, c = 20,
-<br/>
-&#945; = 65, &#946; = 75, 
-&#947; = 90
+a = 10.0, b = 10.01, c = 20, &#945; = 65, &#946; = 75, &#947; = 90
 <br/>versus<br/>
-a = 10.0, b = 10.05, c = 20,
-<br/>
-&#945; = 75, &#946; = 65, 
-&#947; = 90.
+a = 10.0, b = 10.05, c = 20, &#945; = 75, &#946; = 65,  &#947; = 90.
 <p>
 Clearly, these unit cells are almost identical, but simple tabulations
 might separate them. A somewhat more complex example
 includes the following primitive cells:<br/>
-a = 3.1457, b = 3.1457, c = 3.1541,
-<br/>
-&#945; = 60.089, &#946; = 60.0887, 
-&#947; = 60.104
+a = 3.1457, b = 3.1457, c = 3.1541, &#945; = 60.089, &#946; = 60.0887, &#947; = 60.104
 <br/>versus<br/>
-a = 3.1456, b = 3.1458, c = 3.1541,
-<br/>
-&#945; = 90.089, &#946; = 119.907, 
-&#947; = 119.898.
+a = 3.1456, b = 3.1458, c = 3.1541, &#945; = 90.089, &#946; = 119.907, &#947; = 119.898.
 <p>
 Here the relationship is not as obvious. The embedding of
 (Andrews & Bernstein, 2012) can be used to show that the
@@ -478,10 +469,12 @@ by the average to the relevant edge lengths.
 <p>
 The square root of the BGAOL Niggli cone embedding
 distance NCDist based on<br/>
-[a<sup>2</sup>, b<sup>2</sup>, c<sup>2</sup>, 2bccos(&#945;), 2accos(&#946;), 2abcos(&#947;)]<br/>
-with the distances scaled by 1/&#8730;(6) and divided by the
-reciprocal of the average length of cell edges f. The
-square root linearizes the metric to &#8491;ngstrom units.
+[a<sup>2</sup>, b<sup>2</sup>, c<sup>2</sup>, 2bc cos(&#945;), 2ac cos(&#946;), 2ab cos(&#947;)].<br/>
+
+Before taking the square root, the distances are scaled by &#8730;(6) divided by 
+the average length of the cell edges.  
+The overall square root linearizes the
+metric to &#8491;ngstrom units.
 <p>
 The V7 distances based on individual components linearized
 to &#8491;ngstrom units<br/>
@@ -498,9 +491,7 @@ cells [a, b, c,
 is also reduced.
 <p>
 In order to facilitate comparisons to older searches that just
-consider simple ranges in [a, b, c, 
-&#945;, &#946;, 
-&#947;], an option for such
+consider simple ranges in [a, b, c, &#945;, &#946;, &#947;], an option for such
 searches was also included in SAUC.
 <h3>Validity of using the square root</h3>
 The use of the square root on a metric preserves the triangle
@@ -648,22 +639,22 @@ between the + + + and - - - parts of the Niggli cone. For
 example, 1GUT (Sch&#252;ttelkopf et al., 2002) is at distances 1.2
 and 3.7 from 1UJ4 in the Nearest-Cell and linearized NCDist
 metrics, respectively, but only 0.1 in the V7 metric. The 1GUT
-cell is<br/>
+cell is<p>
 [78.961, 82.328, 57.031, 90.00, 93.44, 90.00] in C 1 2 1, Z=24,
-with a primitive cell<br/>
+with a primitive cell<p>
 [57.031, 57.0367, 57.0367, 92.3918, 92.3804, 92.3804]
-which corresponds to a G<sup>6</sup> vector<br/>
+which corresponds to a G<sup>6</sup> vector<p>
 [3252.53, 3253.18, 3253.18,-271.53,-270.208,-270.208]
-and a linearized V7 vector<br/>
+and a linearized V7 vector<p>
 [52.8004, 52.8057, 52.8057, 52.7101, 52.7101, 52.7053, 52.7569].
-The 1U4J cell is<br/>
+The 1U4J cell is<p>
 [80.36, 80.36, 99.44, 90, 90, 120] in R3, Z=18,
-with a primitive cell<br/>
+with a primitive cell<p>
 [57.02, 57.02, 57.02, 89.605, 89.605, 89.605]
-which corresponds to a G<sup>6</sup> vector<br/>
+which corresponds to a G<sup>6</sup> vector<p>
 [3251.28, 3251.28, 3251.28, 44.8265, 44.8265, 44.8265]
-and a linearized V7 vector<br/>
-[52.7902, 52.7902, 52.7902, 52.7878, 52.7878, 52.7878, 52.789]
+and a linearized V7 vector<p>
+[52.7902, 52.7902, 52.7902, 52.7878, 52.7878, 52.7878, 52.789]<p>
 This is almost identical to the 1GUT V7 vector, even though the
 corresponding primitive cells and G<sup>6</sup> cells differ significantly.
 
@@ -671,71 +662,134 @@ corresponding primitive cells and G<sup>6</sup> cells differ significantly.
 <a name="Tables"></a>
 <h2>Tables</h2>
 <p>
-Table 1
+<center>
+<table border=2>
+<caption>
+Table 1. Programs designed to perform effective searches in a unit cell database</caption>
+<tr><th>Program</th><th>Reference</th><th Method</th></tr>
+<tr><td valign="top">Cryst</td><td>Andrews et al., 1980<br />NIH/EPA, 1980</td><td valign="top">V7</td></tr>
+<tr><td>cdsearch</td><td>Toby, 1994</td><td>V7</td></tr>
+<tr><td>Quest</td><td>Allen et al., 1973</td><td>Reduced cell</td></tr>
+<tr><td>Nearest-Cell</td><td>Ramraj et al., 2011</td><td>Reduced cell</td></tr>
+<tr><td>WebCSD, Conquest</td><td>Thomas et al., 2010</td><td>G<sup>6</sup> iterative</td></tr>
+<tr><td>SAUC</td><td><i>this work</i></td><td>G<sup>6</sup>, Niggli embedding</td></tr>
+</table>
+</center>
+
 <p>
 
-Table 2
+<center>
+<table border=2>
+<caption>Comparison of search results for cell [80.36, 80.36, 99.44, 90, 90, 120] from 
+entry 1U4J in space group R3.  See  (Le Trong & Stenkamp, 2007).   
+In each case the PDB ID (Bernstein et al., 1977) (Berman et al., 2000) 
+found is shown with the distance metric for that method. In the case of Nearest-Cell
+(Ramraj et al., 2011) a second column with
+the square root of the metric is provided as well.   The results are sorted by the NCDist distance.  
+Results have been cut off at 3.5 Angstroms in the NCDist metric.  
+The three alternate cells cited by \cite{Trong2007} are marked with &quot;(*)&quot;.
+The Nearest Cell results are from the 
+<a href="http://www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi">www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi</a> 
+web site. 
+The NCDist and V7 results are from SAUC.</caption>}
+<tr><th valign="top>>PDB ID</th><th>Nearest-<br />Cell<br />metric</th>
+             <th>Sqrt of<br />Nearest-<br />Cell</th>
+             <th valign="top">Molecule</th>
+             <th valign="top">E.C. Code</th></tr>
+<tr><td><b>1U4J (*)</b></td><td>0</td><td>0</td><td>0</td><td>0</td><td>Phospholipase A2 isoform 2</td><td>3.1.1.4</td></tr>
+<tr><td>1G0Z</td><td>0</td><td>0</td><td>0</td><td>0</td><td>Phospholipase A2</td><td>3.1.1.4</td></tr>
+<tr><td><b>1G2X (*)</b></td><td>0.11</td><td>0.33</td><td>0.2</td><td>0.9</td><td>Phospholipase A2</td><td> 3.1.1.4</td></tr>
+<tr><td>2OSN</td><td></td><td></td><td>0.2</td><td>0.9</td><td>Phospholipase A2 isoform 3</td><td>3.1.1.4</td></tr>
+<tr><td>2CMP</td><td></td><td></td><td>0.7</td><td>1.5</td><td>Terminase small subunit</td><td></td></tr>
+<tr><td>3KP8</td><td>0.43</td><td>0.66</td><td>1.1</td><td>1.7</td><td>VKORC1/Thioredoxin domain protein</td><td></td></tr>
+<tr><td valign="top">3MIJ</td><td></td><td valign="top"></td><td valign="top">1.0</td><td valign="top">1.7</td><td>RNA (5'-R(*UP*AP*GP*GP*GP*UP<br />
+                                                               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*UP*AP*GP*GP*GP*U)-3')</td><td></td></tr>
+<tr><td>3E56</td><td>0.4</td><td>0.63</td><td>1.5</td><td>1.9</td><td>Putative uncharacterized protein</td></tr>
+<tr><td>1CSQ</td><td>0.49</td><td>0.7</td><td>1.8</td><td>2.0</td><td>Cold Shock Protein B (CSPB)</td></tr>
+<tr><td>3SVI</td><td>0.54</td><td>0.73</td><td>1.9</td><td>2.1</td><td>Type III effector HopAB2</td></tr>
+<tr><td>1FKF</td><td>0.83</td><td>0.91</td><td>2.7</td><td>2.4</td><td>FK506 binding protein</td><td>5.2.1.8</td></tr>
+<tr><td>1FKJ</td><td>0.83</td><td>0.91</td><td>2.7</td><td>2.4</td><td>FK506 binding protein</td><td>5.2.1.8</td></tr>
+<tr><td>1BKF</td><td>0.91</td><td>0.95</td><td>2.8</td><td>2.5</td><td>Subtilisin Carlsberg</td><td>3.4.21.62</td></tr>
+<tr><td>1FKD</td><td>0.86</td><td>0.93</td><td>2.8</td><td>2.5</td><td>FK506 binding protein</td><td>5.2.1.8</td></tr>
+<tr><td>2FKE</td><td>0.91</td><td>0.95</td><td>2.9</td><td>2.6</td><td>FK506 binding protein</td><td>5.2.1.8</td></tr>
+<tr><td>3TJY</td><td>0.88</td><td>0.94</td><td>3.0</td><td>2.6</td><td>Effector protein hopAB3</td><td></td></tr>
+<tr><td>2I5L</td><td>1.06</td><td>1.03</td><td>3.7</td><td>2.7</td><td>Cold shock protein cspB</td><td></td></tr>
+<tr><td>2WCE</td><td>1.21</td><td>1.1</td><td>3.5</td><td>3.0</td><td>Protein S100-A12</td><td></td></tr>
+<tr><td>3P63</td><td>1.28</td><td>1.13</td><td>4.0</td><td>3.0</td><td>Ferredoxin</td><td></td></tr>
+<tr><td>1F9P</td><td>1.37</td><td>1.17</td><td>4.7</td><td>3.1</td><td>Connective tissue activating peptide-III</td><td></td></tr>
+<tr><td valign="top">2CXD</td><td valign="top">1.36</td><td valign="top">1.17</td><td valign="top">4.7</td><td>3.1</td><td>Conserved hypothetical<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;protein, TTHA0068</td><td></td></tr>
+<tr><td>2SGA</td><td></td><td></td><td>4.9</td><td>3.1</td><td>Proteinase A</td><td>3.4.21.80</td></tr>
+<tr><td>2YZU</td><td></td><td></td><td>4.8</td><td>3.1</td><td>Thioredoxin</td><td></td></tr>
+<tr><td>3SGA</td><td></td><td></td><td>5.0</td><td>3.1</td><td>Proteinase A (SGPA)</td><td>3.4.21.80</td></tr>
+<tr><td>4SGA</td><td></td><td></td><td>4.8</td><td>3.1</td><td>Proteinase A (SGPA)</td><td>3.4.21.80</td></tr>
+<tr><td>5SGA</td><td></td><td></td><td>4.9</td><td>3.1</td><td>Proteinase A (SGPA)</td><td>3.4.21.80</td></tr>
+<tr><td>1GUS</td><td>1.15</td><td>1.07</td><td>0.3</td><td>3.2</td><td>Molybdate binding protein II</td></tr>
+<tr><td>1PKR</td><td>1.44</td><td>1.2</td><td>4.7</td><td>3.2</td><td>Plasminogen</td><td>3.4.21.7</td></tr>
+<tr><td>1SGC</td><td>2.45</td><td>1.57</td><td>5.2</td><td>3.2</td><td>Proteinase A</td><td>3.4.21.80</td></tr>
+<tr><td>2VRI</td><td>1.5</td><td>1.22</td><td>5.2</td><td>3.2</td><td>Non-structural protein 3</td><td>3.4.19.12</td></tr>
+<tr><td>1CDC</td><td></td><td></td><td>4.9</td><td>3.3</td><td>CD2</td><td></td></tr>
+<tr><td>1DPY</td><td>1.24</td><td>1.11</td><td>2.3</td><td>3.3</td><td>Phospholipase A2</td><td>3.1.1.4</td></tr>
+<tr><td><b>1FE5 (*)</b></td><td>1.24</td><td>1.11</td><td>2.3</td><td>3.3</td><td>Phospholipase A2</td><td>3.1.1.4</td></tr>
+<tr><td>1GUT</td><td>1.2</td><td>1.1</td><td>0.1</td><td>3.37</td><td>Molybdate binding protein II</td><td></td></tr>
+<tr><td>2C9Q</td><td>1.46</td><td>1.21</td><td>4.8</td><td>3.3</td><td>Copper resistance protein C</td><td></td></tr>
+<tr><td>2CVK</td><td></td><td></td><td>5.2</td><td>3.3</td><td>Thioredoxin</td><td></td></tr>
+<tr><td>2HE2</td><td>1.48</td><td>1.22</td><td>4.8</td><td>3.3</td><td>Discs large homolog 2</td><td></td></tr>
+<tr><td>2IT5</td><td>1.62</td><td>1.27</td><td>5.6</td><td>3.3</td><td>CD209 antigen, DCSIGN-CRD</td><td></td></tr>
+<tr><td>3SU1</td><td>1.59</td><td>1.26</td><td>5.2</td><td>3.3</td><td>Genome polyprotein</td><td></td></tr>
+<tr><td>3SU5</td><td>1.58</td><td>1.26</td><td>5.1</td><td>3.3</td><td>NS3 protease, NS4A protein</td><td></td></tr>
+<tr><td>3SU6</td><td>1.52</td><td>1.23</td><td>5.0</td><td>3.3</td><td>NS3 protease, NS4A protein</td><td></td></tr>
+<tr><td>1SL4</td><td>1.68</td><td>1.3</td><td>5.8</td><td>3.4</td><td>mDC-SIGN1B type I isoform</td><td></td></tr>
+<tr><td>2IT6</td><td>1.73</td><td>1.32</td><td>6.0</td><td>3.4</td><td>CD209 antigen</td><td></td></tr>
+<tr><td>3CYO</td><td>1.81</td><td>1.35</td><td>5.6</td><td>3.4</td><td>Transmembrane protein</td><td></td></tr>
+<tr><td>3SU2</td><td>1.6</td><td>1.26</td><td>5.2</td><td>3.4</td><td>Genome polyprotein</td><td></td></tr>
+<tr><td>3SU3</td><td>1.64</td><td>1.28</td><td>5.3</td><td>3.4</td><td>NS3 protease, NS4A protein</td><td></td></tr>
+<tr><td>1H9M</td><td>1.18</td><td>1.09</td><td>1.1</td><td>3.5</td><td>Molybdenum-binding-protein</td><td></td></tr>
+<tr><td valign="top">1X90</td><td valign="top">1.34</td><td valign="top">1.16</td><td valign="top">5.2</td><td valign="top">3.5</td><td>Invertase/pectin methylesterase<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inhibitor family protein</td><td></td></tr>
+<tr><td>2E6L</td><td>1.78</td><td>1.33</td><td>5.8</td><td>3.5</td><td>Nitric oxide synthase, inducible</td><td>1.14.13.39</td></tr>
+<tr><td>3CP1</td><td>1.98</td><td>1.41</td><td>6.1</td><td>3.5</td><td>Transmembrane protein</td><td></td></tr>
+<tr><td>3SU0</td><td>1.75</td><td>1.32</td><td>5.7</td><td>3.5</td><td>Genome polyprotein</td><td></td></tr>
+<tr><td>3SV6</td><td>1.74</td><td>1.32</td><td>5.6</td><td>3.5</td><td>NS3 protease, NS4A protein</td><td></td></tr>
+<tr><td>3SV7</td><td>1.73</td><td>1.32</td><td>5.6</td><td>3.5</td><td>NS3 protease, NS4A protein</td><td></td></tr>
+</table>
+</center>
+
 
 <p>
 <a name="References"></a>
 <h2>References</h2>
 <p>
 
-Allen, F. H., Kennard, O., Motherwell, W. D. S., Town, W. G. & Watson, D. G. (1973). Journal of Chemical Documentation, 13(3), 119 - 123.
-<br />
-Andrews, L. (2001). C/C++ Users Journal, 19, 40 - 49. http://sf.net/projects/neartree.
-<br />
-Andrews, L. C. & Bernstein, H. J. (2012). arXiv preprint arXiv:1203.5146.
-<br />
-Andrews, L. C., Bernstein, H. J. & Pelletier, G. A. (1980). Acta Crystallogr. A36, 248 - 252.
-<br />
-Berman, H. M., Westbrook, J., Feng, Z., Gilliland, G., Bhat, T. N., Weissig, H., Shindyalov, I. N. & Bourne, P. E. (2000). Nucleic Acids Res. 28,
-235 - 242.
-<br />
-Bernstein, F. C., Koetzle, T. F., Williams, G. J. B., Meyer, Jr., E. F., Brice, M. D., Rodgers, J. R., Kennard, O., Shimanouchi, T. & Tasumi, M.
-(1977). J. Mol. Biol. 112, 535 - 542.
-<br />
-Burchard, U. (1998). The Mineralogical Record, 29(6), 517 - 583.
-<br />
-Craig, P. A., Hanson, B., Westin, C., Rosa, M., Bernstein, H. J., Grier, A., Osipovitch, M., MacDonald, M., Dodge, G., Boli, P. M., Corwin, C. W.
-& Kessler, H. (submitted). B. M. C. Bioinformatics.
-<br />
-Donnay, J. D. H. (1943). The American Minerologist, 28, 313.
-<br />
-Johnson, G. G. (2013). Private Communication.
-<br />
-Knuth, D. E. (1973). Sorting and Searching (The Art of Computer Programming volume 3). Addison Wesley, Reading, MA.
-<br />
-Le Trong, I. & Stenkamp, R. E. (2007). Acta Crystallogr. D63, 548 - 549.
-<br />
-Mighell, A. D. (2001). Journal of Research - National Institute of Standards and Technology, 106(6), 983 - 996.
-<br />
-Mighell, A. D. (2002). Journal of Research - National Institute of Standards and Technology, 107(5), 425 - 430.
-<br />
-NIH/EPA (1980). User's Manual NIH-EPA Chemical Information System, chap. Users Guide to CRYST The X-Ray Crystallographic Search
-System. National Institutes of Health, Environmental Protections Agency.
-<br />
-Pearson, W. B. (1958). Handbook of Lattice Spacings and Structures of Metals and Alloys. International Series of Monographs on Metal and
-Physics and Physical Metallurgy, G. V. Raynor (ed.). Pergamon Press.
-<br />
-Ramraj, V., Esnouf, R. & Diprose, J. (2011). Nearest-Cell A fast and easy tool for locating crystal matches in the PDB. Tech. rep. Division of
-Structural Biology, University of Oxford. http://www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi.
-<br />
-Sch&#252;ttelkopf, A. W., Harrison, J. A., Boxer, D. H. & Hunter, W. N. (2002). Journal of Biological Chemistry, 277(17), 15013 - 15020.
-<br />
-Singh, G., Gourinath, S., Saravanan, K., Sharma, S., Bhanumathi, S., Betzel, C., Srinivasan, A. & Singh, T. P. (2004). Acta Crystallographica
-Section F: Structural Biology and Crystallization Communications, 61(1), 8 - 13.
-<br />
-Singh, G., Gourinath, S., Sarvanan, K., Sharma, S., Bhanumathi, S., Betzel, C., Yadav, S., Srinivasan, A. & Singh, T. P. (2005). J. Struct. Biol.
-149(3), 264 - 272.
-<br />
-Singh, G., Gourinath, S., Sharma, S., Paramasivam, M., Srinivasan, A. & Singh, T. P. (2001). Journal of molecular biology, 307(4), 1049 - 1059.
-<br />
-Thomas, I. R., Bruno, I. J., Cole, J. C., Macrae, C. F., Pidcock, E. & Wood, P. A. (2010). J. Appl. Crystallogr. 43(2), 362 - 366.
-<br />
-Toby, B. (1994). Private Communication.
-<br />
-Wyckoff, R. W. G. (1931). The structure of crystals. No. 19. The Chemical Catalog Company. inc.
+Allen, F. H., Kennard, O., Motherwell, W. D. S., Town, W. G. & Watson, D. G. (1973). Journal of Chemical Documentation, 13(3), 119–123.<br />
+Andrews, L. (2001). C/C++ Users Journal, 19, 40 – 49. http://sf.net/projects/ neartree.<br />
+Andrews, L. C. & Bernstein, H. J. (2012). arXiv preprint arXiv:1203.5146. <a href=http://arxiv.org/abs/1203.5146>arxiv.org/abs/1203.5146</a>.<br />
+Andrews, L. C. & Bernstein, H. J. (2013). arXiv preprint arXiv:1305.6561. <a href=http://arxiv.org/abs/1305.6561>arxiv.org/abs/1305.6561</a>.<br />
+Andrews, L. C., Bernstein, H. J. & Pelletier, G. A. (1980). Acta Crystallogr. A36, 248 – 252. Berman, H. M., Westbrook, J., Feng, Z., Gilliland, G., Bhat, T. N., Weissig, H., Shindyalov,
+I. N. & Bourne, P. E. (2000). Nucleic Acids Res. 28, 235 – 242.<br />
+Bernstein, F. C., Koetzle, T. F., Williams, G. J. B., Meyer, Jr., E. F., Brice, M. D., Rodgers,
+J. R., Kennard, O., Shimanouchi, T. & Tasumi, M. (1977). J. Mol. Biol. 112, 535 – 542.<br />
+Burchard, U. (1998). The Mineralogical Record, 29(6), 517 – 583.<br />
+Craig, P. A., Hanson, B., Westin, C., Rosa, M., Bernstein, H. J., Grier, A., Osipovitch, M., MacDonald, M., Dodge, G., Boli, P. M., Corwin, C. W. & Kessler, H. (submitted). B. M. C. Bioinformatics.<br />
+Donnay, J. D. H. (1943). The American Minerologist, 28, 313.<br />
+Johnson, G. G. (2013). Private Communication.<br />
+Knuth, D. E. (1973). Sorting and Searching (The Art of Computer Programming volume 3). Addison Wesley, Reading, MA.<br />
+Le Trong, I. & Stenkamp, R. E. (2007). Acta Crystallogr. D63, 548 – 549.<br />
+Mighell, A. D. (2001). Journal of Research - National Institute of Standards and Technology,
+106(6), 983–996.<br />
+Mighell, A. D. (2002). Journal of Research - National Institute of Standards and Technology,
+107(5), 425–430.<br />
+NIH/EPA (1980). User's Manual NIH-EPA Chemical Information System, chap. User's Guide to CRYST The X-Ray Crystallographic Search System. National Institutes of Health, Environmental Protections Agency.<br />
+Pearson, W. B. (1958). Handbook of Lattice Spacings and Structures of Metals and Alloys. International Series of Monographs on Metal and Physics and Physical Metallurgy, G. V. Raynor (ed.). Pergamon Press.<br />
+Ramraj, V., Esnouf, R. & Diprose, J. (2011). Nearest-Cell A fast and easy tool for locating crystal matches in the PDB. Tech. rep. Division of Structural Biology, University of Oxford. http://www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi.<br />
+Sch&uuml;ttelkopf, A. W., Harrison, J. A., Boxer, D. H. & Hunter, W. N. (2002). Journal of Bio- logical Chemistry, 277(17), 15013–15020.<br />
+Singh, G., Gourinath, S., Saravanan, K., Sharma, S., Bhanumathi, S., Betzel, C., Srinivasan, A. & Singh, T. P. (2004). Acta Crystallogr. F61(1), 8 – 13.<br />
+Singh, G., Gourinath, S., Sarvanan, K., Sharma, S., Bhanumathi, S., Betzel, C., Yadav, S., Srinivasan, A. & Singh, T. P. (2005). J. Struct. Biol. 149(3), 264 – 272.<br />
+Singh, G., Gourinath, S., Sharma, S., Paramasivam, M., Srinivasan, A. & Singh, T. P. (2001). J. Mol. Biol. 307(4), 1049 – 1059.<br />
+Thomas, I. R., Bruno, I. J., Cole, J. C., Macrae, C. F., Pidcock, E. & Wood, P. A. (2010). J. Appl. Crystallogr. 43(2), 362–366.<br />
+Toby, B. (1994). Private Communication.<br />
+Wyckoff, R. W. G. (1931). The structure of crystals. No. 19. The Chemical Catalog Company. inc.<br />
+
 
 <p>
 <hr />
@@ -754,9 +808,9 @@ Wyckoff, R. W. G. (1931). The structure of crystals. No. 19. The Chemical Catalo
 </center>
 
 <hr>
-Updated 24 June  2013.
+Updated 12 July 2013.
 </font>
 </body>
-</html>'
+</html>
 
 
