@@ -5,7 +5,7 @@
 #  Lawrence C. Andrews, Micro Encoder Inc.
 #
 #  1 July 2012
-#  Rev 6 July 2013
+#  Rev 13 July 2013
 #
 #  Modify the following definitions for your system
 #
@@ -30,6 +30,10 @@ BINDEST		?=	$(HOME)/bin
 #  CGIBIN is the installation directory for the cgi-bin script
 #  iterate.csh
 CGIBIN		?=	$(HOME)/public_html/cgi-bin
+#
+#  CGIMETHOD is either GET or POST
+#
+CGIMETHOD	?=	POST
 #
 #  CGIBINEXT is the external name of the directory for the
 #  cgi-bin script sauc.csh
@@ -82,7 +86,8 @@ HTFLAGS 	=	-DCGIBIN=$(CGIPATH) \
 		-DMATHSCRIBEURL=$(MATHSCRIBEURL) \
 		-DSAUCTARBALLURL=$(SAUCTARBALLURL) \
 		-DSAUCZIPURL=$(SAUCZIPURL) \
-		-DHTDOCS=$(HTDOCS)
+		-DHTDOCS=$(HTDOCS) \
+		-DCGIMETHOD=$(CGIMETHOD)
 
 SAVEDB		=	./save
 NEWDB		=	./newdb
@@ -108,6 +113,8 @@ edit:
 		@/bin/echo "BINDEST -------- currently:" $(BINDEST)
 		@/bin/echo "HTDOCS  -------- currently:" $(HTDOCS)
 		@/bin/echo "CGIPATH  ------- currently:" $(CGIPATH)
+		@/bin/echo "CGIBIN --------- currently:" $(CGIBIN)
+		@/bin/echo "CGIMETHOD ------ currently:" $(CGIMETHOD)
 		@/bin/echo "CXX  ----------- currently:" $(CXX)
 		@/bin/echo "CXXFLAGS  ------ currently:" $(CXXFLAGS)
 		@/bin/echo ""
@@ -137,6 +144,7 @@ sauc.csh:	sauc.csh.m4 Makefile edit
 		-DBINPATH=$(BINPATH) \
 		-DSEARCHURL=$(SEARCHURL)\
 		-DHTDOCS=$(HTDOCS)\
+		-DCGIMETHOD=$(CGIMETHOD)\
 		< sauc.csh.m4 > sauc.csh
 #
 updatedb.csh:	updatedb.csh.m4 Makefile edit
@@ -144,6 +152,11 @@ updatedb.csh:	updatedb.csh.m4 Makefile edit
 		-DHTTPDSERVER=$(HTTPDSERVER) \
                 -DSEARCHURL=$(SEARCHURL)\
                 -DCGIPATH=$(CGIPATH)\
+		-DHTDOCS=$(HTDOCS)\
+		-DCGIBIN=$(CGIBIN)\
+		-DCGIMETHOD=$(CGIMETHOD)\
+		-DBINDEST=$(BINDEST)\
+		-DPDBCELLINDEXURL=$(PDBCELLINDEXURL)\
 		< updatedb.csh.m4 > updatedb.csh
 		chmod 755 updatedb.csh
 #

@@ -11,7 +11,7 @@
 #
 #
 # Set the following to the best available search URL
-set searchurl="http://Herberts-MacBook-Pro.local/~yaya/sauc"
+set searchurl="http://arcib.dowling.edu/~yaya/sauc"
 #
 # To operate correctly, the programs tr and sed must be in the
 # default path and the /bin/echo version of echo must follow
@@ -73,8 +73,8 @@ echo "" >>/tmp/instr$$
 echo '<p><hr /><p><h3><a name="Results"></a>Results of SAUC Run</h3>'
 setenv SAUC_BATCH_MODE YES
 echo "<PRE>"
-cd /Users/yaya/public_html/sauc
-/Users/yaya/bin/sauc < /tmp/instr$$
+cd /home/yaya/public_html/sauc
+/home/yaya/bin/sauc < /tmp/instr$$
 rm /tmp/instr$$
 #cat /tmp/instr$$ 
 echo "</pre>"
