@@ -358,7 +358,7 @@ or a
 <h2>Introduction</h2> 
 <p>
 
-(Andrews & Bernstein, 2012) introduced a topological embedding
+(Andrews &amp; Bernstein, 2012) introduced a topological embedding
 of the Niggli &quot;cone&quot; of reduced cells with the goal of calculating
 a meaningful distance between unit cells. In the second
 paper of this series, the embedding was used to determine likely
@@ -441,7 +441,7 @@ a = 3.1457, b = 3.1457, c = 3.1541, &#945; = 60.089, &#946; = 60.0887, &#947; = 
 a = 3.1456, b = 3.1458, c = 3.1541, &#945; = 90.089, &#946; = 119.907, &#947; = 119.898.
 <p>
 Here the relationship is not as obvious. The embedding of
-(Andrews & Bernstein, 2012) can be used to show that the
+(Andrews &amp; Bernstein, 2012) can be used to show that the
 distance between these two cells is quite small in G<sup>6</sup> (0.004
 &#8491;ngstrom units squared in G<sup>6</sup>).
 <p>
@@ -569,11 +569,11 @@ The (Andrews et al., 1980) approach using 7 parameters
 (three reduced cell edges, three reduced reciprocal cell edges
 and the volume), &quot;V7&quot;, helps, but has difficulty distinguishing
 cells with angles near 90 degrees. The NCDist approach used
-here, derived from (Andrews & Bernstein, 2012) both fills in
+here, derived from (Andrews &amp; Bernstein, 2012) both fills in
 the gaps and handles angles near to 90 degrees.
 <P>
 Consider, for example, the unit cells of phospholipase A<sub>2</sub> discussed
-by (Le Trong & Stenkamp, 2007). They present three
+by (Le Trong &amp; Stenkamp, 2007). They present three
 alternate cells from three different PDB entries that are actually
 for the same structure:<br/>
 [57.98, 57.98, 57.98, 92.02, 92.02, 92.02] from entry 1FE5
@@ -602,7 +602,7 @@ using SAUC. We have restricted the searches to NCDist distances
 be in &#8491;<sup>2</sup>. The column with the square root of the Nearest-
 Cell metric facilitates comparison with the linearized SAUC V7
 and NCDist metrics. The searches showed consistent behavior:
-The three cells noted by (Le Trong & Stenkamp, 2007)
+The three cells noted by (Le Trong &amp; Stenkamp, 2007)
 are found in the same relative positions by all three searches.
 All cells found by Nearest-Cell are also found by both V7 and
 NCDist. Of the 42 structures found by all three metrics within
@@ -665,7 +665,7 @@ corresponding primitive cells and G<sup>6</sup> cells differ significantly.
 <center>
 <table border=2>
 <caption>
-Table 1. Programs designed to perform effective searches in a unit cell database</caption>
+<b>Table 1.</b> Programs designed to perform effective searches in a unit cell database</caption>
 <tr><th>Program</th><th>Reference</th><th Method</th></tr>
 <tr><td valign="top">Cryst</td><td>Andrews et al., 1980<br />NIH/EPA, 1980</td><td valign="top">V7</td></tr>
 <tr><td>cdsearch</td><td>Toby, 1994</td><td>V7</td></tr>
@@ -680,19 +680,20 @@ Table 1. Programs designed to perform effective searches in a unit cell database
 
 <center>
 <table border=2>
-<caption>Comparison of search results for cell [80.36, 80.36, 99.44, 90, 90, 120] from 
-entry 1U4J in space group R3.  See  (Le Trong & Stenkamp, 2007).   
+<caption>
+<b>Table 2.</b>  Comparison of search results for cell [80.36, 80.36, 99.44, 90, 90, 120] from 
+entry 1U4J in space group R3.  See  (Le Trong &amp; Stenkamp, 2007).   
 In each case the PDB ID (Bernstein et al., 1977) (Berman et al., 2000) 
 found is shown with the distance metric for that method. In the case of Nearest-Cell
 (Ramraj et al., 2011) a second column with
 the square root of the metric is provided as well.   The results are sorted by the NCDist distance.  
 Results have been cut off at 3.5 Angstroms in the NCDist metric.  
-The three alternate cells cited by \cite{Trong2007} are marked with &quot;(*)&quot;.
+The three alternate cells cited by (Le Trong &amp; Stenkamp, 2007) are marked with &quot;(*)&quot;.
 The Nearest Cell results are from the 
 <a href="http://www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi">www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi</a> 
 web site. 
 The NCDist and V7 results are from SAUC.</caption>}
-<tr><th valign="top>>PDB ID</th><th>Nearest-<br />Cell<br />metric</th>
+<tr><th valign="top">PDB ID</th><th>Nearest-<br />Cell<br />metric</th>
              <th>Sqrt of<br />Nearest-<br />Cell</th>
              <th valign="top">Molecule</th>
              <th valign="top">E.C. Code</th></tr>
@@ -761,32 +762,32 @@ The NCDist and V7 results are from SAUC.</caption>}
 <h2>References</h2>
 <p>
 
-Allen, F. H., Kennard, O., Motherwell, W. D. S., Town, W. G. & Watson, D. G. (1973). Journal of Chemical Documentation, 13(3), 119–123.<br />
+Allen, F. H., Kennard, O., Motherwell, W. D. S., Town, W. G. &amp; Watson, D. G. (1973). Journal of Chemical Documentation, 13(3), 119–123.<br />
 Andrews, L. (2001). C/C++ Users Journal, 19, 40 – 49. http://sf.net/projects/ neartree.<br />
-Andrews, L. C. & Bernstein, H. J. (2012). arXiv preprint arXiv:1203.5146. <a href=http://arxiv.org/abs/1203.5146>arxiv.org/abs/1203.5146</a>.<br />
-Andrews, L. C. & Bernstein, H. J. (2013). arXiv preprint arXiv:1305.6561. <a href=http://arxiv.org/abs/1305.6561>arxiv.org/abs/1305.6561</a>.<br />
-Andrews, L. C., Bernstein, H. J. & Pelletier, G. A. (1980). Acta Crystallogr. A36, 248 – 252. Berman, H. M., Westbrook, J., Feng, Z., Gilliland, G., Bhat, T. N., Weissig, H., Shindyalov,
-I. N. & Bourne, P. E. (2000). Nucleic Acids Res. 28, 235 – 242.<br />
+Andrews, L. C. &amp; Bernstein, H. J. (2012). arXiv preprint arXiv:1203.5146. <a href=http://arxiv.org/abs/1203.5146>arxiv.org/abs/1203.5146</a>.<br />
+Andrews, L. C. &amp; Bernstein, H. J. (2013). arXiv preprint arXiv:1305.6561. <a href=http://arxiv.org/abs/1305.6561>arxiv.org/abs/1305.6561</a>.<br />
+Andrews, L. C., Bernstein, H. J. &amp; Pelletier, G. A. (1980). Acta Crystallogr. A36, 248 – 252. Berman, H. M., Westbrook, J., Feng, Z., Gilliland, G., Bhat, T. N., Weissig, H., Shindyalov,
+I. N. &amp; Bourne, P. E. (2000). Nucleic Acids Res. 28, 235 – 242.<br />
 Bernstein, F. C., Koetzle, T. F., Williams, G. J. B., Meyer, Jr., E. F., Brice, M. D., Rodgers,
-J. R., Kennard, O., Shimanouchi, T. & Tasumi, M. (1977). J. Mol. Biol. 112, 535 – 542.<br />
+J. R., Kennard, O., Shimanouchi, T. &amp; Tasumi, M. (1977). J. Mol. Biol. 112, 535 – 542.<br />
 Burchard, U. (1998). The Mineralogical Record, 29(6), 517 – 583.<br />
-Craig, P. A., Hanson, B., Westin, C., Rosa, M., Bernstein, H. J., Grier, A., Osipovitch, M., MacDonald, M., Dodge, G., Boli, P. M., Corwin, C. W. & Kessler, H. (submitted). B. M. C. Bioinformatics.<br />
+Craig, P. A., Hanson, B., Westin, C., Rosa, M., Bernstein, H. J., Grier, A., Osipovitch, M., MacDonald, M., Dodge, G., Boli, P. M., Corwin, C. W. &amp; Kessler, H. (submitted). B. M. C. Bioinformatics.<br />
 Donnay, J. D. H. (1943). The American Minerologist, 28, 313.<br />
 Johnson, G. G. (2013). Private Communication.<br />
 Knuth, D. E. (1973). Sorting and Searching (The Art of Computer Programming volume 3). Addison Wesley, Reading, MA.<br />
-Le Trong, I. & Stenkamp, R. E. (2007). Acta Crystallogr. D63, 548 – 549.<br />
+Le Trong, I. &amp; Stenkamp, R. E. (2007). Acta Crystallogr. D63, 548 – 549.<br />
 Mighell, A. D. (2001). Journal of Research - National Institute of Standards and Technology,
 106(6), 983–996.<br />
 Mighell, A. D. (2002). Journal of Research - National Institute of Standards and Technology,
 107(5), 425–430.<br />
 NIH/EPA (1980). User''`s Manual NIH-EPA Chemical Information System, chap. User''`s Guide to CRYST The X-Ray Crystallographic Search System. National Institutes of Health, Environmental Protections Agency.<br />
 Pearson, W. B. (1958). Handbook of Lattice Spacings and Structures of Metals and Alloys. International Series of Monographs on Metal and Physics and Physical Metallurgy, G. V. Raynor (ed.). Pergamon Press.<br />
-Ramraj, V., Esnouf, R. & Diprose, J. (2011). Nearest-Cell A fast and easy tool for locating crystal matches in the PDB. Tech. rep. Division of Structural Biology, University of Oxford. http://www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi.<br />
-Sch&uuml;ttelkopf, A. W., Harrison, J. A., Boxer, D. H. & Hunter, W. N. (2002). Journal of Bio- logical Chemistry, 277(17), 15013–15020.<br />
-Singh, G., Gourinath, S., Saravanan, K., Sharma, S., Bhanumathi, S., Betzel, C., Srinivasan, A. & Singh, T. P. (2004). Acta Crystallogr. F61(1), 8 – 13.<br />
-Singh, G., Gourinath, S., Sarvanan, K., Sharma, S., Bhanumathi, S., Betzel, C., Yadav, S., Srinivasan, A. & Singh, T. P. (2005). J. Struct. Biol. 149(3), 264 – 272.<br />
-Singh, G., Gourinath, S., Sharma, S., Paramasivam, M., Srinivasan, A. & Singh, T. P. (2001). J. Mol. Biol. 307(4), 1049 – 1059.<br />
-Thomas, I. R., Bruno, I. J., Cole, J. C., Macrae, C. F., Pidcock, E. & Wood, P. A. (2010). J. Appl. Crystallogr. 43(2), 362–366.<br />
+Ramraj, V., Esnouf, R. &amp; Diprose, J. (2011). Nearest-Cell A fast and easy tool for locating crystal matches in the PDB. Tech. rep. Division of Structural Biology, University of Oxford. http://www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi.<br />
+Sch&uuml;ttelkopf, A. W., Harrison, J. A., Boxer, D. H. &amp; Hunter, W. N. (2002). Journal of Bio- logical Chemistry, 277(17), 15013–15020.<br />
+Singh, G., Gourinath, S., Saravanan, K., Sharma, S., Bhanumathi, S., Betzel, C., Srinivasan, A. &amp; Singh, T. P. (2004). Acta Crystallogr. F61(1), 8 – 13.<br />
+Singh, G., Gourinath, S., Sarvanan, K., Sharma, S., Bhanumathi, S., Betzel, C., Yadav, S., Srinivasan, A. &amp; Singh, T. P. (2005). J. Struct. Biol. 149(3), 264 – 272.<br />
+Singh, G., Gourinath, S., Sharma, S., Paramasivam, M., Srinivasan, A. &amp; Singh, T. P. (2001). J. Mol. Biol. 307(4), 1049 – 1059.<br />
+Thomas, I. R., Bruno, I. J., Cole, J. C., Macrae, C. F., Pidcock, E. &amp; Wood, P. A. (2010). J. Appl. Crystallogr. 43(2), 362–366.<br />
 Toby, B. (1994). Private Communication.<br />
 Wyckoff, R. W. G. (1931). The structure of crystals. No. 19. The Chemical Catalog Company. inc.<br />
 
