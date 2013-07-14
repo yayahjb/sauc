@@ -695,6 +695,8 @@ web site.
 The NCDist and V7 results are from SAUC.</caption>}
 <tr><th valign="top">PDB ID</th><th>Nearest-<br />Cell<br />metric</th>
              <th>Sqrt of<br />Nearest-<br />Cell</th>
+             <th valign="top">V7<br />metric</th>
+             <th valign="top">NCDist<br />metric</th>
              <th valign="top">Molecule</th>
              <th valign="top">E.C. Code</th></tr>
 <tr><td><b>1U4J (*)</b></td><td>0</td><td>0</td><td>0</td><td>0</td><td>Phospholipase A2 isoform 2</td><td>3.1.1.4</td></tr>
