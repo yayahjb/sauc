@@ -9,6 +9,11 @@ cd 'SAUCDIR()`
 setenv HTTPDSERVER' HTTPDSERVER()`
 setenv SEARCHURL' SEARCHURL()`
 setenv CGIPATH' CGIPATH()`
+setenv PDBCELLINDEXURL' PDBCELLINDEXURL()`
+setenv CGIMETHOD' CGIMETHOD()`
+setenv CGIBIN' CGIBIN()`
+setenv BINDEST' BINDEST()`
+setenv HTDOCS' HTDOCS()`
 if ( -e crystal.idx ) then
   rm -f newdb/crystal.idx
   make newdb/crystal.idx

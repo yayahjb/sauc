@@ -132,7 +132,7 @@ Search of Alternate Unit Cells
 <br /><br />Dowling College and Micro Encoder Inc.
 <br />Work Supported In Part By NIGMS
 <br /><br />Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
-<FORM method=POST ACTION="'CGIBIN()`/sauc.csh">
+<FORM method='CGIMETHOD()` ACTION="'CGIBIN()`/sauc.csh">
 </center>
 <font size="-1">
 A crystallographic cell is a representation of a lattice, but each lattice can be represented
