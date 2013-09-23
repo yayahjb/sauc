@@ -3,7 +3,7 @@
 #
 # Keith J. McGill
 #
-# June 5, 2013
+# September 23, 2013
 #
 # This is a service script for the sauc.html web page
 # It must be placed in an appropriate cgi-bin directory on
@@ -29,10 +29,15 @@ echo ''`<body><font face="Arial,Helvetica,Times">''`
 #cat /tmp/outstr$$
 source /tmp/outstr$$
 rm /tmp/outstr$$
-echo "<h3 align=center>Search of Alternate Unit Cells (SAUC)</h3>"
-echo ''`<p><center>''`
+echo ''`<center>''`
 echo ''`| <a href="#Results">GO TO RESULTS</a>''`
-echo ''`| <a href="''`${searchurl}''`">NEW SEARCH</a> |</center><p>''`
+echo ''`| <a href="''`${searchurl}''`">NEW SEARCH</a> |</center>''`
+echo ''`<hr />''`
+echo "<h1 align=center>SAUC</h1>"
+echo "<h3 align=center>Search of Alternate Unit Cells</h3>"
+echo ''`<center>''`
+echo "Copyright Keith J. McGill 2013"
+echo ''`</center>''`
 echo "<hr />"
 echo "" >/tmp/instr$$
 echo ${Centering} " " >> /tmp/instr$$
@@ -45,9 +50,25 @@ echo $Beta " " >>/tmp/instr$$
 echo $Gamma " " >>/tmp/instr$$
 echo "| Cell: " A:$A B:$B C:$C Alpha:$Alpha Beta:$Beta Gamma:$Gamma
 echo ${Algorithm} " "  >> /tmp/instr$$
-echo "| Algorithm: " $Algorithm
-echo ${Similarity} " " >> /tmp/instr$$
-echo "| Similarity: " $Similarity
+echo "| Algorithm: "
+if ($Algorithm == 1) then
+	echo "L1"
+else if ($Algorithm == 2) then
+	echo "L2"
+else if ($Algorithm == 3) then
+	echo "NCDist"
+else
+	echo "V7"
+endif
+echo ${Similarity} >> /tmp/instr$$
+echo "| Similarity: "
+if ($Similarity == 1) then
+	echo "Nearest"
+else if ($Similarity == 2) then
+	echo "Sphere"
+else
+        echo "Range"
+endif
 if ($Similarity == 2) then
 	echo ${RangeSphere} >> /tmp/instr$$
 	echo "| Range of S: " $RangeSphere " |"
@@ -70,7 +91,7 @@ endif
 echo "" >> /tmp/instr$$
 echo "4 " >> /tmp/instr$$
 echo "" >>/tmp/instr$$
-echo ''`<p><hr /><p><h3><a name="Results"></a>Results of SAUC Run</h3>''`
+echo ''`<p><hr /><p><h2><a name="Results"></a>Results of SAUC Run</h2>''`
 setenv SAUC_BATCH_MODE YES
 echo "<PRE>"
 cd' HTDOCS()`
@@ -78,9 +99,10 @@ cd' HTDOCS()`
 rm /tmp/instr$$
 #cat /tmp/instr$$ 
 echo "</pre>"
+echo ''`<p>''`
 echo "<hr />"
-echo ''`<p><center>''`
+echo ''`<center>''`
 echo ''`| <a href="#Results">GO TO RESULTS</a>''`
-echo ''`| <a href="''`${searchurl}''`">NEW SEARCH</a> |</center><p>''`
+echo ''`| <a href="''`${searchurl}''`">NEW SEARCH</a> |</center>''`
 echo "</font>"
 echo "</body>"'
