@@ -371,9 +371,11 @@ void buildNearTree( void )
 #endif
     CNearTree<unitcell>::NearTreeNode<unitcell> * curntn;
 	int count = 0;
+        int objno = 0;
     bool gotckp = false;
     
     serialin.open(filenames[choiceAlgorithm].c_str(),std::ios::in);
+    objno = 0;
     while (true) {
         string token;
         int Algorithm = 0;
@@ -428,8 +430,9 @@ void buildNearTree( void )
                     break;
                 }
                 serialin >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5] >> row;
+                objno++;
                 if (!serialin.good()) {
-                    std::cout << filenames[choiceAlgorithm] << " badly formatted, bad object" << std::endl;
+                    std::cout << filenames[choiceAlgorithm] << " badly formatted, bad object: " << objno  << std::endl;
                     break;
                 }
                 ObjectStore->push_back(unitcell(cell,row));

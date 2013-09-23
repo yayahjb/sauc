@@ -14,6 +14,7 @@
        integer endpos
        character*128 decomma
        real*8 edgetest, angtest
+       integer lineno, olineno
 
 C
 C      Write the header for the csv file
@@ -25,7 +26,12 @@ C
 C
 C      skip lines that do not have "CRYST1" in col 9--14
 C
-100    read (5,'(A128)',ERR=100,END=900) line
+       lineno = 0
+       olineno = 0
+       go to 100
+101    write(7, *)"Rejected: ",lineno, olineno,  line
+100    lineno = lineno+1
+       read (5,'(A128)',ERR=101,END=900) line
        if (line(6:11).ne."CRYST1") go to 100
 C
 C      Read the PDB ID, a, b, c, alpha, beta, gamma, sg, z
@@ -35,38 +41,44 @@ C
        curpos = 12
        call nexttoken(line,curpos,endpos)
        a = decomma(line(curpos:endpos))
-       read(a,*, err=100) edgetest
-       if (edgetest < 1.1) go to 100
+       if (a.eq." ") go to 101
+       read(a,*, err=101) edgetest
+       if (edgetest < 1.1) go to 101
        curpos = endpos+1
        call nexttoken(line,curpos,endpos)
+       if (b.eq." ") go to 101
        b = decomma(line(curpos:endpos))
-       read(b,*, err=100) edgetest
-       if (edgetest < 1.1) go to 100
+       read(b,*, err=101) edgetest
+       if (edgetest < 1.1) go to 101
        curpos = endpos+1
        call nexttoken(line,curpos,endpos)
        c = decomma(line(curpos:endpos))
-       read(c,*, err=100) edgetest
-       if (edgetest < 1.1) go to 100
+       if (c.eq." ") go to 101
+       read(c,*, err=101) edgetest
+       if (edgetest < 1.1) go to 101
        curpos = endpos+1
        call nexttoken(line,curpos,endpos)
        alpha = decomma(line(curpos:endpos))
-       read(alpha,*, err=100) angtest
-       if (angtest < 5. .or. angtest > 175.) go to 100
+       if (alpha.eq." ") go to 101
+       read(alpha,*, err=101) angtest
+       if (angtest < 5. .or. angtest > 175.) go to 101
        curpos = endpos+1
        call nexttoken(line,curpos,endpos)
        beta = decomma(line(curpos:endpos))
-       read(beta,*, err=100) angtest
-       if (angtest < 5. .or. angtest > 175.) go to 100
+       if (beta.eq." ") go to 101
+       read(beta,*, err=101) angtest
+       if (angtest < 5. .or. angtest > 175.) go to 101
        curpos = endpos+1
        call nexttoken(line,curpos,endpos)
        gamma = decomma(line(curpos:endpos))
-       read(gamma,*, err=100) angtest
-       if (angtest < 5. .or. angtest > 175.) go to 100
+       if (beta.eq." ") go to 101
+       read(gamma,*, err=101) angtest
+       if (angtest < 5. .or. angtest > 175.) go to 101
        curpos = endpos+1
        call nexttoken(line,curpos,endpos)
        read(line(curpos:len(line)),'(2a13)') sg,z
-       sg=decomma(sg)
-       if (sg .eq. " ") sg = "P 1"
+       sg = decomma(sg)
+       if (sg .eq. " ") go to 101
        if (sg .eq. "1") sg = "P 1"
        z =decomma(z)
        if (z .eq. " ") z = "1"
@@ -85,10 +97,10 @@ C      Skip 1,1,1 and 0,0,0 cells (should be none left)
 C
        if (a(as:ae).eq."1.000" .and.
      *   b(bs:be).eq."1.000" .and.
-     *   c(cs:ce).eq."1.000") go to 100
+     *   c(cs:ce).eq."1.000") go to 101
        if (a(as:ae).eq."0.000" .and.
      *   b(bs:be).eq."0.000" .and.
-     *   c(cs:ce).eq."0.000") go to 100
+     *   c(cs:ce).eq."0.000") go to 101
 
        write(6,"(9a)")
      *   '"'//pdbid(pdbids:pdbide)//'",',
@@ -100,6 +112,7 @@ C
      *   '"'//c(cs:ce)//'",',
      *   '"'//sg(sgs:sge)//'",',
      *   '"'//z(zs:ze)//'"'
+       olineno = olineno+1
        go to 100
  900   stop
        end
@@ -114,6 +127,8 @@ C
 
        j = 1
        decomma = " "
+
+       if (string .eq. "n/a") return
 
        do i = 1,len(string)
          if (string(i:i).ne.",") then
