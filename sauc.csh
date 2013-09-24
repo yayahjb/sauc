@@ -11,7 +11,7 @@
 #
 #
 # Set the following to the best available search URL
-set searchurl="http://arcib.dowling.edu/~yaya/sauc"
+set searchurl="http://iterate.sf.net/sauc"
 #
 # To operate correctly, the programs tr and sed must be in the
 # default path and the /bin/echo version of echo must follow
@@ -94,8 +94,8 @@ echo "" >>/tmp/instr$$
 echo '<p><hr /><p><h2><a name="Results"></a>Results of SAUC Run</h2>'
 setenv SAUC_BATCH_MODE YES
 echo "<PRE>"
-cd /home/yaya/public_html/sauc
-/home/yaya/bin/sauc < /tmp/instr$$
+cd /home/project-web/iterate/htdocs/sauc
+/home/project-web/iterate/cgi-bin/sauc < /tmp/instr$$
 rm /tmp/instr$$
 #cat /tmp/instr$$ 
 echo "</pre>"
