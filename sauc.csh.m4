@@ -21,7 +21,7 @@ set searchurl="'SEARCHURL()`"
 /bin/echo "Content-type: text/html"
 /bin/echo 
 echo "<head>"
-echo "<title>Search of Alternate Unit Cells (SAUC)"
+echo "<title>SAUC"
 echo "</title>"
 echo "</head>"
 echo ''`<body><font face="Arial,Helvetica,Times">''`
@@ -34,11 +34,12 @@ echo ''`| <a href="#Results">GO TO RESULTS</a>''`
 echo ''`| <a href="''`${searchurl}''`">NEW SEARCH</a> |</center>''`
 echo ''`<hr />''`
 echo "<h1 align=center>SAUC</h1>"
-echo "<h3 align=center>Search of Alternate Unit Cells</h3>"
 echo ''`<center>''`
-echo "Copyright Keith J. McGill 2013"
+echo "Search of Alternate Unit Cells"
+echo "<br />Copyright Keith J. McGill 2013"
 echo ''`</center>''`
-echo "<hr />"
+echo "<p>"
+echo "<center>"
 echo "" >/tmp/instr$$
 echo ${Centering} " " >> /tmp/instr$$
 echo "<P>| Lattice Centering: " $Centering 
@@ -48,7 +49,8 @@ echo $C " " >>/tmp/instr$$
 echo $Alpha " " >>/tmp/instr$$
 echo $Beta " " >>/tmp/instr$$
 echo $Gamma " " >>/tmp/instr$$
-echo "| Cell: " A:$A B:$B C:$C Alpha:$Alpha Beta:$Beta Gamma:$Gamma
+echo "| Cell: " A:$A B:$B C:$C Alpha:$Alpha Beta:$Beta Gamma:$Gamma "|"
+echo "<br />"
 echo ${Algorithm} " "  >> /tmp/instr$$
 echo "| Algorithm: "
 if ($Algorithm == 1) then
@@ -91,8 +93,11 @@ endif
 echo "" >> /tmp/instr$$
 echo "4 " >> /tmp/instr$$
 echo "" >>/tmp/instr$$
+echo "</center>"
 echo ''`<p><hr /><p><h2><a name="Results"></a>Results of SAUC Run</h2>''`
 setenv SAUC_BATCH_MODE YES
+setenv ITERATE_QUERY NO
+setenv OUTPUT_STYLE $OutputStyle
 echo "<PRE>"
 cd' HTDOCS()`
 'BINPATH()` < /tmp/instr$$
