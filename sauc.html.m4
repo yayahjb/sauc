@@ -692,7 +692,7 @@ The three alternate cells cited by (Le Trong &amp; Stenkamp, 2007) are marked wi
 The Nearest Cell results are from the 
 <a href="http://www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi">www.strubi.ox.ac.uk/nearest-cell/nearest-cell.cgi</a> 
 web site. 
-The NCDist and V7 results are from SAUC.</caption>}
+The NCDist and V7 results are from SAUC.</caption>
 <tr><th valign="top">PDB ID</th><th>Nearest-<br />Cell<br />metric</th>
              <th>Sqrt of<br />Nearest-<br />Cell</th>
              <th valign="top">V7<br />metric</th>
