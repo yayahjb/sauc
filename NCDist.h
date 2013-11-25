@@ -12,188 +12,301 @@
  Fortan versions */
 
 
+/* #define NCDIST_DEBUG */
+
 #include <cmath>
+#ifdef NCDIST_DEBUG
+static double oldvalue;
+static int changed=0;
+#include <cstdio>
+#define report_double(prolog,value,epilog) \
+oldvalue=value; fprintf(stderr,"%s%g%s",prolog,value,epilog);
+#define report_integer(prolog,value,epilog) \
+fprintf(stderr,"%s%d%s",prolog,value,epilog);
+#define report_double_if_changed(prolog,value,epilog) \
+changed=0; if (value!=oldvalue) {oldvalue=value; changed=1; fprintf(stderr,"%s%g%s",prolog,value,epilog);}
+#define also_if_changed_report_integer(prolog,value,epilog) \
+if(changed) {fprintf(stderr,"%s%d%s",prolog,value,epilog);}
+#define also_if_changed_report_double(prolog,value,epilog) \
+if(changed) {fprintf(stderr,"%s%g%s",prolog,value,epilog);}
+#define also_if_changed_report_double_vector(prolog,value,epilog) \
+if(changed) {fprintf(stderr,"%s[%g %g %g %g %g %g]%s",prolog,value[0],value[1],value[2],value[3],value[4],value[5],epilog);}
+#else
+#define report_double(prolog,value,epilog)
+#define report_integer(prolog,value,epilog)
+#define report_double_if_changed(prolog,value,epilog)
+#define also_if_changed_report_integer(prolog,value,epilog)
+#define also_if_changed_report_double(prolog,value,epilog)
+#define also_if_changed_report_double_vector(prolog,value,epilog)
+#endif
+static int pass=0;
+
+
+
+
 
 #define NCD_min(a,b) (a<b?a:b)
 
-static double prj[25][36]= {
-    /* 1 */
+#define P_1   0
+#define P_2   1
+#define P_3   2
+#define P_4   3
+#define P_5   4
+#define P_6   5
+#define P_7   6
+#define P_8   7
+#define P_9   8
+#define P_A   9
+#define P_B  10
+#define P_C  11
+#define P_D  12
+#define P_E  13
+#define P_F  14
+#define P_case9ABCDEX 15
+#define P_caseFX 17
+#define P_67 18
+#define P_9A 19
+#define P_CD 20
+#define P_12 21
+#define P_8F 22
+#define P_BF 23
+#define P_EF 24
+#define P_28F 25
+#define P_2BF 26
+#define P_2EF 27
+#define P_269 28
+#define P_26C 29
+#define P_2F  30
+
+
+
+static double prj[31][36]= {
+    /*prj[0]   1 */
     {0.5,0.5,0.0,0.0,0.0,0.0,
         0.5,0.5,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* 2 */
+    /*prj[P_2]   2 */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.5,0.5,0.0,0.0,0.0,
         0.0,0.5,0.5,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* 3 */
+    /*prj[P_3]   3 */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* 4 */
+    /*prj[P_4]   4 */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* 5 */
+    /*prj[P_5]   5 */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0},
-    /* 6 */
+    /*prj[P_6]   6 */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.5,0.0,0.5,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.5,0.0,0.5,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* 7 */
+    /*prj[P_7]   7 */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.5,0.0,0.5,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.5,0.0,0.5,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* 8 */
+    /*prj[P_8]  8 */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.5,0.0,-0.5,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,-0.5,0.0,0.5,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* 9 */
+    /*prj[P_9]   9 */
     {0.5,0.0,0.0,0.0,0.5,0.0,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.5,0.0,0.0,0.0,0.5,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* A */
+    /*prj[P_A]   A */
     {0.5,0.0,0.0,0.0,0.5,0.0,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.5,0.0,0.0,0.0,0.5,0.0,
         0.0,0.0,0.0,0.0,0.0,1},
-    /* B */
+    /*prj[P_B]  B */
     {0.5,0.0,0.0,0.0,-0.5,0.0,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         -0.5,0.0,0.0,0.0,0.5,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* C */
+    /*prj[P_C]  C */
     {0.5,0.0,0.0,0.0,0.0,0.5,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.5,0.0,0.0,0.0,0.0,0.5},
-    /* D */
+    /*prj[P_D]  D */
     {0.5,0.0,0.0,0.0,0.0,0.5,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.5,0.0,0.0,0.0,0.0,0.5},
-    /* E */
+    /*prj[P_E]  E */
     {0.5,0.0,0.0,0.0,0.0,-0.5,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         -0.5,0.0,0.0,0.0,0.0,0.5},
-    /* F */
+    /*prj[P_F]  F */
     {0.8,-0.2,0.0,-0.2,-0.2,-0.2,
         -0.2,0.8,0.0,-0.2,-0.2,-0.2,
         0.0,0.0,1.0,0.0,0.0,0.0,
         -0.2,-0.2,0.0,0.8,-0.2,-0.2,
         -0.2,-0.2,0.0,-0.2,0.8,-0.2,
         -0.2,-0.2,0.0,-0.2,-0.2,0.8},
-    /* case678X g2=g4=g5=g6=0  */
+    /*prj[P_case678X]  case678X g2=g4=g5=g6=0  */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0},
-    /* case9ABCDEX g1=g4=g5=g6=0 */
+    /*prj[P_case9ABCDEX]  case9ABCDEX g1=g4=g5=g6=0 */
     {0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0},
-    /* caseFX g1=g2=g4=g5=g6=0 */
+    /*prj[P_caseFX]  caseFX g1=g2=g4=g5=g6=0 */
     {0.5,-0.5,0.0,0.0,0.0,0.0,
         -0.5,0.5,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.0,0.0,0.0},
-    /* 67 */
+    /*prj[P_67]  67 */
     {1.0,0.0,0.0,0.0,0.0,0.0,
         0.0,0.5,0.0,0.5,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.5,0.0,0.5,0.0,0.0,
         0.0,0.0,0.0,0.0,0.5,0.5,
         0.0,0.0,0.0,0.0,0.5,0.5},
-    /* 9A */
+    /*prj[P_9A]  9A */
     {0.5,0.0,0.0,0.0,0.5,0.0,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.5,0.0,0.5,
         0.5,0.0,0.0,0.0,0.5,0.0,
         0.0,0.0,0.0,0.5,0.0,0.5},
-    /* CD */
+    /*prj[P_CD]  CD */
     {0.5,0.0,0.0,0.0,0.0,0.5,
         0.0,1.0,0.0,0.0,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,0.0,0.0,0.5,0.5,0.0,
         0.0,0.0,0.0,0.5,0.5,0.0,
         0.5,0.0,0.0,0.0,0.0,0.5},
-    /* 12 g1=g2=g3 */
+    /*prj[P_12]  12 g1=g2=g3 */
     {.3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,0.0,
         .3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,0.0,
         .3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,0.0,
         0.0,0.0,0.0,1.0,0.0,0.0,
         0.0,0.0,0.0,0.0,1.0,0.0,
         0.0,0.0,0.0,0.0,0.0,1.0},
-    /* 8F g4=-g2, g1+g2+g4+g5+g6 = 0 */
+    /*prj[P_8F]  8F g4=-g2, g1+g2+g4+g5+g6 = 0 */
     {.6666666666666667,0.0,0.0,0.0,-.3333333333333333,-.3333333333333333,
         0.0,0.5,0.0,-0.5,0.0,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,-0.5,0.0,0.5,0.0,0.0,
         -.3333333333333333,0.0,0.0,0.0,.6666666666666667,-.3333333333333333,
         -.3333333333333333,0.0,0.0,0.0,-.3333333333333333,.6666666666666667},
-    /* BF g5=-g1.0, g1+g2+g4+g5+g6 = 0 */
+    /*prj[P_BF]  BF g5=-g1, g1+g2+g4+g5+g6 = 0 */
     {0.5,0.0,0.0,0.0,-0.5,0.0,
         0.0,.6666666666666667,0.0,-.3333333333333333,0.0,-.3333333333333333,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,-.3333333333333333,0.0,.6666666666666667,0.0,-.3333333333333333,
         -0.5,0.0,0.0,0.0,0.5,0.0,
         0.0,-.3333333333333333,0.0,-.3333333333333333,0.0,.6666666666666667},
-    /* EF g6=-g1.0, g1+g2+g4+g5+g6 = 0 */
+    /*prj[P_EF]  EF g6=-g1, g1+g2+g4+g5+g6 = 0 */
     {0.5,0.0,0.0,0.0,0.0,-0.5,
         0.0,.6666666666666667,0.0,-.3333333333333333,-.3333333333333333,0.0,
         0.0,0.0,1.0,0.0,0.0,0.0,
         0.0,-.3333333333333333,0.0,.6666666666666667,-.3333333333333333,0.0,
-        0.0,-.3333333333333333,0.0,-.3333333333333333,.6666666666666666,0.0,
-        -0.5,0.0,0.0,0.0,0.0,0.5}
+        0.0,-.3333333333333333,0.0,-.3333333333333333,.6666666666666667,0.0,
+        -0.5,0.0,0.0,0.0,0.0,0.5},
+    /*prj[P_28F]  28F g2=g3, g4=-g2, g1+g5+g6 = 0 */
+    {.6666666666666667,0.0,0.0,0.0,-.3333333333333333,-.3333333333333333,
+        0.0,.3333333333333333,.3333333333333333,-.3333333333333333,0.0,0.0,
+        0.0,.3333333333333333,.3333333333333333,-.3333333333333333,0.0,0.0,
+        0.0,-.3333333333333333,-.3333333333333333,.3333333333333333,0.0,0.0,
+        -.3333333333333333,0.0,0.0,0.0,.6666666666666666,-.3333333333333333,
+        -.3333333333333333,0.0,0.0,0.0,-.3333333333333333,.6666666666666667},
+    /*prj[P_2BF]  2BF g2=g3, g5=-g1, g2+g4+g6 = 0 */
+    {0.5,0.0,0.0,0.0,-0.5,0.0,
+        0.0,0.4,0.4,-0.2,0.0,-0.2,
+        0.0,0.4,0.4,-0.2,0.0,-0.2,
+        0.0,-0.2,-0.2,0.6,0.0,-0.4,
+        -0.5,0.0,0.0,0.0,0.5,0.0,
+        0.0,-0.2,-0.2,-0.4,0.0,0.6},
+    /*prj[P_2EF] 2EF g2=g3, g6=-g1, g2+g4+g5=0  */
+    {0.5,0.0,0.0,0.0,0.0,-0.5,
+        0.0,0.4,0.4,-0.2,-0.2,0.0,
+        0.0,0.4,0.4,-0.2,-0.2,0.0,
+        0.0,-0.2,-0.2,0.6,-0.4,0.0,
+        0.0,-0.2,-0.2,-0.4,0.6,0.0,
+        -0.5,0.0,0.0,0.0,0.0,0.5},
+    /*prj[P_269] 269 g2=g3=g4, g1=g5  */
+    {0.5,0.0,0.0,0.0,0.5,0.0,
+        0.0,.3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,
+        0.0,.3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,
+        0.0,.3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,
+        0.5,0.0,0.0,0.0,0.5,0.0,
+        0.0,0.0,0.0,0.0,0.0,1.0},
+    /*prj[P_26C] 26C g2=g3=g4 g1=g6  */
+    {0.5,0.0,0.0,0.0,0.0,0.5,
+        0.0,.3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,
+        0.0,.3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,
+        0.0,.3333333333333333,.3333333333333333,.3333333333333333,0.0,0.0,
+        0.0,0.0,0.0,0.0,1.0,0.0,
+        0.5,0.0,0.0,0.0,0.0,0.5},
+    /*prj[P_2F] 2F g2=g3, g1+g2+g4+g5+g6 = 0 */
+    {.7777777777777778,-.1111111111111111,-.1111111111111111,
+        -.2222222222222222,-.2222222222222222,-.2222222222222222,
+        -.1111111111111111,.4444444444444444,.4444444444444444,
+        -.1111111111111111,-.1111111111111111,-.1111111111111111,
+        -.1111111111111111,.4444444444444444,.4444444444444444,
+        -.1111111111111111,-.1111111111111111,-.1111111111111111,
+        -.2222222222222222,-.1111111111111111,-.1111111111111111,
+        .7777777777777778,-.2222222222222222,-.2222222222222222,
+        -.2222222222222222,-.1111111111111111,-.1111111111111111,
+        -.2222222222222222,.7777777777777778,-.2222222222222222,
+        -.2222222222222222,-.1111111111111111,-.1111111111111111,
+        -.2222222222222222,-.2222222222222222,.7777777777777778}
 };
-static double prjperp[25][36] = {
+
+static double prjperp[31][36] = {
     /* 1 */
     {0.5,-0.5,0.0,0.0,0.0,0.0,
         -0.5,0.5,0.0,0.0,0.0,0.0,
@@ -364,12 +477,60 @@ static double prjperp[25][36] = {
         0.0,.3333333333333333,0.0,.3333333333333333,0.0,.3333333333333333},
     /* EF g6=-g1.0, g1+g2+g4+g5+g6 = 0 */
     {0.5,0.0,0.0,0.0,0.0,0.5,
-        0.0,.3333333333333334,0.0,.3333333333333333,.3333333333333333,0.0,
-        0.0,0.0,0.0,0.0,0.0,0.0,
-        0.0,.3333333333333333,0.0,.3333333333333334,.3333333333333333,0.0,
         0.0,.3333333333333333,0.0,.3333333333333333,.3333333333333333,0.0,
-        0.5,0.0,0.0,0.0,0.0,0.5}
-    
+        0.0,0.0,0.0,0.0,0.0,0.0,
+        0.0,.3333333333333333,0.0,.3333333333333333,.3333333333333333,0.0,
+        0.0,.3333333333333333,0.0,.3333333333333333,.3333333333333333,0.0,
+        0.5,0.0,0.0,0.0,0.0,0.5},
+    /*prjperp[P_28F]  28F g2=g3, g4=-g2, g1+g5+g6 = 0 */
+    {.3333333333333333,0.0,0.0,0.0,.3333333333333333,.3333333333333333,
+        0.0,.6666666666666667,-.3333333333333333,.3333333333333333,0.0,0.0,
+        0.0,-.3333333333333333,.6666666666666667,.3333333333333333,0.0,0.0,
+        0.0,.3333333333333333,.3333333333333333,.6666666666666667,0.0,0.0,
+        .3333333333333333,0.0,0.0,0.0,.3333333333333333,.3333333333333333,
+        .3333333333333333,0.0,0.0,0.0,.3333333333333333,.3333333333333333},
+    /*prjperp[P_2BF] 2BF g2=g3, g5=-g1, g2+g4+g6 = 0 */
+    {0.5,0.0,0.0,0.0,0.5,0.0,
+        0.0,0.6,-0.4,0.2,0.0,0.2,
+        0.0,-0.4,0.6,0.2,0.0,0.2,
+        0.0,0.2,0.2,0.4,0.0,0.4,
+        0.5,0.0,0.0,0.0,0.5,0.0,
+        0.0,0.2,0.2,0.4,0.0,0.4},
+    /*prjperp[P_2EF] 2EF g2=g3, g6=-g1, g2+g4+g5=0  */
+    {0.5,0.0,0.0,0.0,0.0,0.5,
+        0.0,0.6,-0.4,0.2,0.2,0.0,
+        0.0,-0.4,0.6,0.2,0.2,0.0,
+        0.0,0.2,0.2,0.4,0.4,0.0,
+        0.0,0.2,0.2,0.4,0.4,0.0,
+        0.5,0.0,0.0,0.0,0.0,0.5},
+    /*prjperp[P_269] 269 g2=g3=g4, g1=g5  */
+    {0.5,0.0,0.0,0.0,-0.5,0.0,
+        0.0,.6666666666666667,-.3333333333333333,-.3333333333333333,0.0,0.0,
+        0.0,-.3333333333333333,.6666666666666667,-.3333333333333333,0.0,0.0,
+        0.0,-.3333333333333333,-.3333333333333333,.6666666666666667,0.0,0.0,
+        -0.5,0.0,0.0,0.0,0.5,0.0,
+        0.0,0.0,0.0,0.0,0.0,0.0},
+    /*prjperp[P_26C] 26C g2=g3=g4 g1=g6  */
+    {0.5,0.0,0.0,0.0,0.0,-0.5,
+        0.0,.6666666666666666,-.3333333333333333,-.3333333333333333,0.0,0.0,
+        0.0,-.3333333333333333,.6666666666666666,-.3333333333333333,0.0,0.0,
+        0.0,-.3333333333333333,-.3333333333333333,.6666666666666666,0.0,0.0,
+        0.0,0.0,0.0,0.0,0.0,0.0,
+        -0.5,0.0,0.0,0.0,0.0,0.5},
+    /*prjperp[P_2F] 2F g2=g3, g1+g2+g4+g5+g6 = 0 */
+    {.2222222222222222,.1111111111111111,.1111111111111111,
+     .2222222222222222,.2222222222222222,.2222222222222222,
+        .1111111111111111,.5555555555555556,-.4444444444444444,
+        .1111111111111111,.1111111111111111,.1111111111111111,
+        .1111111111111111,-.4444444444444444,.5555555555555556,
+        .1111111111111111,.1111111111111111,.1111111111111111,
+        .2222222222222222,.1111111111111111,.1111111111111111,
+        .2222222222222222,.2222222222222222,.2222222222222222,
+        .2222222222222222,.1111111111111111,.1111111111111111,
+        .2222222222222222,.2222222222222222,.2222222222222222,
+        .2222222222222222,.1111111111111111,.1111111111111111,
+        .2222222222222222,.2222222222222222,.2222222222222222}
+
 };
 
 /* The following matrices are the transformation
@@ -524,6 +685,29 @@ static int MS[18][36] = {
 
 };
 
+
+#undef M_E
+#define M_1 0
+#define M_2 1
+#define M_3 2
+#define M_4 3
+#define M_5 4
+#define M_6 5
+#define M_7 6
+#define M_8 7
+#define M_9 8
+#define M_A 9
+#define M_B 10
+#define M_C 11
+#define M_D 12
+#define M_E 13
+#define M_F 14
+#define M_1_M_2 15
+#define M_2_M_1 16
+#define M_2_M_1_M_2 17
+
+
+
 static void cpyvn(int n, double src[], double dst[] ) {
     int i;
     for (i = 0; i < n; i++) {
@@ -621,21 +805,21 @@ static void bdmaps(double gvec[6],
             vecs[ii][4] = vecs[ii][5];
             vecs[ii][5] = xtemp;
         }
-        dists[0][ii] = fabs(vecs[ii][1]-vecs[ii][0])/std::sqrt(2.);
-        dists[1][ii] = fabs(vecs[ii][2]-vecs[ii][1])/std::sqrt(2.);
+        dists[0][ii] = fabs(vecs[ii][1]-vecs[ii][0])/sqrt(2.);
+        dists[1][ii] = fabs(vecs[ii][2]-vecs[ii][1])/sqrt(2.);
         dists[2][ii] = fabs(vecs[ii][3]);
         dists[3][ii] = fabs(vecs[ii][4]);
         dists[4][ii] = fabs(vecs[ii][5]);
-        dists[5][ii] = fabs(vecs[ii][1]-vecs[ii][3])/std::sqrt(2.);
-        dists[6][ii] = fabs(vecs[ii][1]-vecs[ii][3])/std::sqrt(2.);
-        dists[7][ii] = fabs(vecs[ii][1]+vecs[ii][3])/std::sqrt(2.);
-        dists[8][ii] = fabs(vecs[ii][0]-vecs[ii][4])/std::sqrt(2.);
-        dists[9][ii] = fabs(vecs[ii][0]-vecs[ii][4])/std::sqrt(2.);
-        dists[10][ii] = fabs(vecs[ii][0]+vecs[ii][4])/std::sqrt(2.);
-        dists[11][ii] = fabs(vecs[ii][0]-vecs[ii][5])/std::sqrt(2.);
-        dists[12][ii] = fabs(vecs[ii][0]-vecs[ii][5])/std::sqrt(2.);
-        dists[13][ii] = fabs(vecs[ii][0]+vecs[ii][5])/std::sqrt(2.);
-        dists[14][ii] = fabs(vecs[ii][0]+vecs[ii][1]+vecs[ii][3]+vecs[ii][4]+vecs[ii][5])/std::sqrt(5.);
+        dists[5][ii] = fabs(vecs[ii][1]-vecs[ii][3])/sqrt(2.);
+        dists[6][ii] = fabs(vecs[ii][1]-vecs[ii][3])/sqrt(2.);
+        dists[7][ii] = fabs(vecs[ii][1]+vecs[ii][3])/sqrt(2.);
+        dists[8][ii] = fabs(vecs[ii][0]-vecs[ii][4])/sqrt(2.);
+        dists[9][ii] = fabs(vecs[ii][0]-vecs[ii][4])/sqrt(2.);
+        dists[10][ii] = fabs(vecs[ii][0]+vecs[ii][4])/sqrt(2.);
+        dists[11][ii] = fabs(vecs[ii][0]-vecs[ii][5])/sqrt(2.);
+        dists[12][ii] = fabs(vecs[ii][0]-vecs[ii][5])/sqrt(2.);
+        dists[13][ii] = fabs(vecs[ii][0]+vecs[ii][5])/sqrt(2.);
+        dists[14][ii] = fabs(vecs[ii][0]+vecs[ii][1]+vecs[ii][3]+vecs[ii][4]+vecs[ii][5])/sqrt(5.);
         for (jj = 0; jj < 15; jj++ ) {
             rmv6(vecs[ii], prj[jj], pgs[jj][ii]);
             imv6(pgs[jj][ii], MS[jj], mpgs[jj][ii]);
@@ -643,91 +827,274 @@ static void bdmaps(double gvec[6],
     }
 }
 
+
+#define bdf_P_8F 0
+#define bdf_M_6_P_69 4            /* on 8F */
+
+#define bdf_P_BF 1
+#define bdf_M_9_P_69 5            /* on BF */
+
+#define bdf_P_EF 2
+#define bdf_M_C_P_6C 3            /* on EF */
+
+#define bdf_P_6C 3
+#define bdf_M_E_P_EF 2            /* on 6C */
+
+#define bdf_P_69 4
+#define bdf_M_8_P_8F 0            /* on 69 */
+#define bdf_M_B_P_BF 1            /* on 69 */
+
+#define bdf_P_269 5
+#define bdf_P_26C 6
+
+#define bdf_P_28F 7
+#define bdf_M_6_P_269 6           /* on 28F */
+#define bdf_M_2_M_6_P_269 7       /* on 28F */
+#define bdf_M_2_P_28F 8           /* on 28F */
+#define bdf_M_F_M_2_P_2EF 9       /* on 28F */
+#define bdf_M_2_M_F_M_2_P_2EF 10  /* on 28F */
+
+#define bdf_P_2BF 8
+#define bdf_M_9_P_269 11          /* on 2BF */
+#define bdf_M_F_M_2_P_28F 12      /* on 2BF */
+#define bdf_M_2_M_F_M_2_P_2BF 13  /* on 2BF */
+#define bdf_M_2_P_2EF 14          /* on 2BF */
+
+#define bdf_P_2EF 9
+#define bdf_M_2_M_9_P_269 15      /* on 2EF */
+#define bdf_M_C_P_26C 16          /* on 2EF */
+#define bdf_M_2_M_C_P_26C 17      /* on 2EF */
+#define bdf_M_2_M_F_M_2_P_28F 18  /* on 2EF */
+#define bdf_M_F_M_2_P_2BF 19      /* on 2EF */
+#define bdf_M_2_P_2BF 20          /* on 2EF */
+
+#define bdf_P_2F  10
+#define bdf_M_2_P_2F  21          /* on 2F */
+#define bdf_M_F_M_2_P_2F 22       /* on 2F */
+#define bdf_M_F_P_2F 23           /* on 2F */
+#define bdf_M_2_M_F_P_2F 24       /* on 2F */
+
 /*    
     Map a G6 vector onto the intersection of the
-    face diagonal and body diagonal boundaries.
+    face diagonal and body diagonal boundaries,
+    as well as g2=g3
 
     For a given g6 point, we need the distance
     to  8F directly or via 69 and M_6
         BF directly of via 69 and M_9
-        EF firectly or via 6C and M_C
+        EF directly or via 6C and M_C
+        2F8 directly or via 269 and M_6
+        2FB directly or via 269 and M_9
+        2FE directly or via 26C and M_C
+        2F directly
     in addition we need M_F applied to the
-    F targets
+    F targets and M_F.M_2 applied to the
+    F2 targets
 
     So the distances and pgs in order are
-    ||P_8F_perp.g||  P_8F.g  M_8.P_8F.g
-    ||P_BF_perp.g||  P_BF.g  M_B.P_BF.g
-    ||P_EF_perp.g||  P_EF.g  M_E.P_EF.g
-    ||P_6C_perp.g||  P_6C.g  M_C.P_6C.g
-    ||P_69_perp.g||  P_69.g  M_6.P_69.g
-                             M_9.P_69.g
+    ||P_8F_perp.g||  P_8F.g  M_8.P_8F.g (on 69)
+    ||P_BF_perp.g||  P_BF.g  M_B.P_BF.g (on 69)
+    ||P_EF_perp.g||  P_EF.g  M_E.P_EF.g (on 6C)
+    ||P_6C_perp.g||  P_6C.g  M_C.P_6C.g (on EF)
+    ||P_69_perp.g||  P_69.g  M_6.P_69.g (on 8F)
+                             M_9.P_69.g (on BF)
+    ||P_269_perp.g|| P_269.g      M_6.P_269.g (on 28F)
+                              M_2.M_6.P_269.g (on 28F)
+                                  M_9.P_269.g (on 2BF)
+                              M_2.M_9.P_269.g (on 2EF)
+    ||P_26C_perp.g|| P_26C.g      M_C.P_26C.g (on 2EF)
+                              M_2.M_C.P_26C.g (on 2EF)
+    ||P_28F_perp.g|| P_28F.g  M_F.M_2.P_28F.g (on 2BF)
+                          M_2.M_F.M_2.P_28F.g (on 2EF)
+                                  M_2.P_28F.g (on 28F)
+    ||P_2BF_perp.g|| P_2BF.g  M_F.M_2.P_2BF.g (on 2EF)
+                          M_2.M_F.M_2.P_2BF.g (on 2BF)
+                                  M_2.P_2BF.g (on 2EF)
+    ||P_2EF_perp.g|| P_2EF.g  M_F.M_2.P_2EF.g (on 28F)
+                          M_2.M_F.M_2.P_2EF.g (on 28F)
+                                  M_2.P_2EF.g (on 2BF)
+    ||P_2F_perp.g||  P_2F.g        M_2.P_2F.g (on 2F)
+                               M_F.M_2.P_2F.g (on 2F)
+                                   M_F.P_2F.g (on 2F)
+                               M_2.M_F.P_2F.g (on 2F)
+ 
     
-     bfmaps must be called first to generate the vecs
+     bdmaps must be called first to generate the vecs
      array.
 
      The viable pairs for a given g1 and g2 for
-     consideration are {
+     consideration are:
 
      boundary  distances
-     69:  ||P_69_perp.g1|| ||P_69_perp.g2|| P_69.g1 -- P_69.g2
-          ||P_69_perp.g1|| ||P_8F_perp.g2|| P_69.g1 -- M_8.P_8F.g2
-          ||P_69_perp.g1|| ||P_BF_perp.g2|| P_69.g1 -- M_B.P_BF.g2
+     69:  ||P_69_perp.g1|| ||P_69_perp.g2|| P_69.g1 -- P_69.g2                  pgs[4]
+          ||P_69_perp.g1|| ||P_8F_perp.g2|| P_69.g1 -- M_8.P_8F.g2              mpgs[0]
+          ||P_69_perp.g1|| ||P_BF_perp.g2|| P_69.g1 -- M_B.P_BF.g2              mpgs[1]
           and with g1 and g2 exchanged
-     6C:  ||P_6C_perp.g1|| ||P_6C_perp.g2|| P_6C.g1 -- P_6C.g2
-          ||P_6C_perp.g1|| ||P_EF_perp.g2|| P_69.g1 -- M_C.P_EF.g2
+     6C:  ||P_6C_perp.g1|| ||P_6C_perp.g2|| P_6C.g1 -- P_6C.g2                  pgs[3]
+          ||P_6C_perp.g1|| ||P_EF_perp.g2|| P_6C.g1 -- M_E.P_EF.g2              mpgs[2]
           and with g1 and g2 exchanged
-     8F:  ||P_8F_perp.g1|| ||P_8F_perp.g2|| P_8F.g1 -- P_8F.g2
-          ||P_8F_perp.g1|| ||P_69_perp.g2|| P_8F.g1 -- M_6.P_69.g
-     BF:  ||P_BF_perp.g1|| ||P_BF_perp.g2|| P_BF.g1 -- P_BF.g2
-          ||P_BF_perp.g1|| ||P_69_perp.g2|| P_BF.g1 -- M_9.P_69.g
-     EF:  ||P_EF_perp.g1|| ||P_EF_perp.g2|| P_EF.g1 -- P_EF.g2
-          ||P_EF_perp.g1|| ||P_6C_perp.g2|| P_EF.g1 -- M_C.P_6C.g
+     8F:  ||P_8F_perp.g1|| ||P_8F_perp.g2|| P_8F.g1 -- P_8F.g2                  pgs[0]
+          ||P_8F_perp.g1|| ||P_69_perp.g2|| P_8F.g1 -- M_6.P_69.g               mpgs[4]
+          and with g1 and g2 exchanged
+     BF:  ||P_BF_perp.g1|| ||P_BF_perp.g2|| P_BF.g1 -- P_BF.g2                  pgs[1]
+          ||P_BF_perp.g1|| ||P_69_perp.g2|| P_BF.g1 -- M_9.P_69.g               mpgs[5]
+          and with g1 and g2 exchanged
+     EF:  ||P_EF_perp.g1|| ||P_EF_perp.g2|| P_EF.g1 -- P_EF.g2                  pgs[2]
+          ||P_EF_perp.g1|| ||P_6C_perp.g2|| P_EF.g1 -- M_C.P_6C.g               mpgs[3]
+          and with g1 and g2 exchanged
+     269: ||P_269_perp.g1|| ||P_269_perp.g2|| P_269.g1 -- P_269.g2              pgs[5]
+          and with g1 and g2 exchanged
+     26C: ||P_26C_perp.g1|| ||P_26C_perp.g2|| P_26C.g1 -- P_26C.g2              pgs[6]
+          and with g1 and g2 exchanged
+     28F: ||P_28F_perp.g1|| ||P_28F_perp.g2|| P_28F.g1 -- P_28F.g2              pgs[7]
+          ||P_28F_perp.g1|| ||P_269_perp.g2|| P_28F.g1 -- M_6.P_269.g           mpgs[6]
+          ||P_28F_perp.g1|| ||P_269_perp.g2|| P_28F.g1 -- M_2.M_6.P_269.g       mpgs[7]
+          ||P_28F_perp.g1|| ||P_28F_perp.g2|| P_28F.g1 -- M_2.P_28F.g2          mpgs[8]
+          ||P_28F_perp.g1|| ||P_2EF_perp.g2|| P_28F.g1 -- M_F.M_2.P_2EF.g2      mpgs[9]
+          ||P_28F_perp.g1|| ||P_2EF_perp.g2|| P_28F.g1 -- M_2.M_F.M_2.P_2EF.g2  mpgs[10]
+          and with g1 and g2 exchanged
+     2BF: ||P_2BF_perp.g1|| ||P_2BF_perp.g2|| P_2BF.g1 -- P_2BF.g2              pgs[8]
+          ||P_2BF_perp.g1|| ||P_269_perp.g2|| P_2BF.g1 -- M_9.P_269.g2          mpgs[11]
+          ||P_2BF_perp.g1|| ||P_28F_perp.g2|| P_2BF.g1 -- M_F.M_2.P_28F.g2      mpgs[12]
+          ||P_2BF_perp.g1|| ||P_28F_perp.g2|| P_2BF.g1 -- M_2.M_F.M_2.P_28F.g2  mpgs[13]
+          ||P_2BF_perp.g1|| ||P_2EF_perp.g2|| P_2BF.g1 -- M_2.P_2EF.g2          mpgs[14]
+          and with g1 and g2 exchanged
+     2EF: ||P_2EF_perp.g1|| ||P_2EF_perp.g2|| P_2EF.g1 -- P_2EF.g2              pgs[9]
+          ||P_2EF_perp.g1|| ||P_269_perp.g2|| P_2EF.g1 -- M_2.M_9.P_269.g2      mpgs[15]
+          ||P_2EF_perp.g1|| ||P_26C_perp.g2|| P_2EF.g1 -- M_C.P_26C.g2          mpgs[16]
+          ||P_2EF_perp.g1|| ||P_26C_perp.g2|| P_2EF.g1 -- M_2.M_C.P_26C.g2      mpgs[17]
+          ||P_2EF_perp.g1|| ||P_28F_perp.g2|| P_2EF.g1 -- M_2.M_F.M_2.P_28F.g2  mpgs[18]
+          ||P_2EF_perp.g1|| ||P_2BF_perp.g2|| P_2EF.g1 -- M_F.M_2.P_2BF.g2      mpgs[19]
+          ||P_2EF_perp.g1|| ||P_2BF_perp.g2|| P_2EF.g1 -- M_2.P_2BF.g2          mpgs[20]
+          and with g1 and g2 exchanged
+     2F:  ||P_2F_perp.g1|| ||P_2F_perp.g2|| P_2F.g1 -- P_2F.g2                  pgs[10]
+          ||P_2F_perp.g1|| ||P_2F_perp.g2|| P_2F.g1 -- M_2.P_2F.g2              mpgs[21]
+          ||P_2F_perp.g1|| ||P_2F_perp.g2|| P_2F.g1 -- M_F.P_2.P_2F.g2          mpgs[22]
+          ||P_2F_perp.g1|| ||P_2F_perp.g2|| P_2F.g1 -- M_F.P_2F.g2              mpgs[23]
+          ||P_2F_perp.g1|| ||P_2F_perp.g2|| P_2F.g1 -- M_2.M_F.P_2F.g2          mpgs[24]
+          and with g1 and g2 exchanged
+ 
  */
 
+
 static void bdfmaps(double vecs[24][6],
-             double dists[5][24],
-             double pgs[5][24][6],
-             double mpgs[6][24][6],
-             int nmpgs[5]) {
+             double dists[11][24],
+             double pgs[11][24][6],
+             double mpgs[25][24][6],
+             int nmpgs[11]) {
       
       int ii, jj;
       
       double pgtemp[6];
       
       for (ii=0; ii < 24; ii++) {
-          dists[3][ii] = std::sqrt((vecs[ii][0]-vecs[ii][5])*(vecs[ii][0]-vecs[ii][5])
-                                   + (vecs[ii][1]-vecs[ii][3])*(vecs[ii][1]-vecs[ii][3]))/std::sqrt(2.);
-          dists[4][ii] = std::sqrt((vecs[ii][0]-vecs[ii][4])*(vecs[ii][0]-vecs[ii][4])
-                                   + (vecs[ii][1]-vecs[ii][3])*(vecs[ii][1]-vecs[ii][3]))/std::sqrt(2.);
-          dists[0][ii] = std::sqrt( 2.*(vecs[ii][5]+vecs[ii][4]+vecs[ii][0])
+          dists[bdf_P_6C][ii] = sqrt((vecs[ii][0]-vecs[ii][5])*(vecs[ii][0]-vecs[ii][5])
+                                   + (vecs[ii][1]-vecs[ii][3])*(vecs[ii][1]-vecs[ii][3]))/sqrt(2.);
+          dists[bdf_P_69][ii] = sqrt((vecs[ii][0]-vecs[ii][4])*(vecs[ii][0]-vecs[ii][4])
+                                   + (vecs[ii][1]-vecs[ii][3])*(vecs[ii][1]-vecs[ii][3]))/sqrt(2.);
+          dists[bdf_P_8F][ii] = sqrt( 2.*(vecs[ii][5]+vecs[ii][4]+vecs[ii][0])
                                    *(vecs[ii][5]+vecs[ii][4]+vecs[ii][0])
-                                   +3.*(vecs[ii][3]+vecs[ii][1])*(vecs[ii][3]+vecs[ii][1]))/std::sqrt(6.);
-          dists[1][ii] = std::sqrt( 2.*(vecs[ii][5]+vecs[ii][3]+vecs[ii][1])*(vecs[ii][5]+vecs[ii][3]+vecs[ii][1])
-                                   +3.*(vecs[ii][4]+vecs[ii][0])*(vecs[ii][4]+vecs[ii][0]))/std::sqrt(6.);
-          dists[2][ii] = std::sqrt( 2.*(vecs[ii][4]+vecs[ii][3]+vecs[ii][1])*(vecs[ii][4]+vecs[ii][3]+vecs[ii][1])
-                                   +3.*(vecs[ii][5]+vecs[ii][0])*(vecs[ii][5]+vecs[ii][0]))/std::sqrt(6.);
-          /*
-           prj[22] is P_8F
-           prj[23] is P_BF
-           prj[24] is P_EF
-           */
+                                   +3.*(vecs[ii][3]+vecs[ii][1])*(vecs[ii][3]+vecs[ii][1]))/sqrt(6.);
+          dists[bdf_P_BF][ii] = sqrt( 2.*(vecs[ii][5]+vecs[ii][3]+vecs[ii][1])*(vecs[ii][5]+vecs[ii][3]+vecs[ii][1])
+                                   +3.*(vecs[ii][4]+vecs[ii][0])*(vecs[ii][4]+vecs[ii][0]))/sqrt(6.);
+
+          dists[bdf_P_EF][ii] = sqrt( 3.*vecs[ii][5]*vecs[ii][5]+6.*vecs[ii][0]*vecs[ii][5]
+                                     +2.*vecs[ii][4]*vecs[ii][4]+4.*vecs[ii][3]*vecs[ii][4]
+                                     +4.*vecs[ii][1]*vecs[ii][4] + 2.*vecs[ii][3]*vecs[ii][3]
+                                     +4.*vecs[ii][1]*vecs[ii][3] + 2.*vecs[ii][1]*vecs[ii][1]
+                                     +3.*vecs[ii][0]*vecs[ii][0])/sqrt(6.);
+          
+          dists[bdf_P_269][ii] = sqrt(vecs[ii][4]*vecs[ii][4]/2.-vecs[ii][0]*vecs[ii][4]
+                                      +2.*vecs[ii][3]*vecs[ii][3]/3.-2.*vecs[ii][2]*vecs[ii][3]/3.
+                                      -2.*vecs[ii][1]*vecs[ii][3]/3.+2.*vecs[ii][2]*vecs[ii][2]/3.
+                                      -2.*vecs[ii][1]*vecs[ii][2]/3.+2.*vecs[ii][1]*vecs[ii][1]/3.
+                                      +vecs[ii][0]*vecs[ii][0]/2.);
+          dists[bdf_P_26C][ii] =  sqrt(vecs[ii][5]*vecs[ii][5]/2.-vecs[ii][0]*vecs[ii][5]
+                                       +2.*vecs[ii][3]*vecs[ii][3]/3.-2.*vecs[ii][2]*vecs[ii][3]/3.
+                                       -2.*vecs[ii][1]*vecs[ii][3]/3.+2.*vecs[ii][2]*vecs[ii][2]/3.
+                                       -2.*vecs[ii][1]*vecs[ii][2]/3.+2.*vecs[ii][1]*vecs[ii][1]/3.
+                                       +vecs[ii][0]*vecs[ii][0]/2.);
+          dists[bdf_P_28F][ii] = sqrt(vecs[ii][5]*vecs[ii][5]/3+2.*vecs[ii][4]*vecs[ii][5]/3.
+                                      +2.*vecs[ii][0]*vecs[ii][5]/3.+vecs[ii][4]*vecs[ii][4]/3.
+                                      +2.*vecs[ii][0]*vecs[ii][4]/3.+2.*vecs[ii][3]*vecs[ii][3]/3.
+                                      +2.*vecs[ii][2]*vecs[ii][3]/3.+2.*vecs[ii][1]*vecs[ii][3]/3.
+                                      +2.*vecs[ii][2]*vecs[ii][2]/3.-2.*vecs[ii][1]*vecs[ii][2]/3.
+                                      +2.*vecs[ii][1]*vecs[ii][1]/3.+vecs[ii][0]*vecs[ii][0]/3.);
+          dists[bdf_P_2BF][ii] = sqrt(.4*vecs[ii][5]*vecs[ii][5]+.8*vecs[ii][3]*vecs[ii][5]
+                                      +.4*vecs[ii][2]*vecs[ii][5]+0.4*vecs[ii][1]*vecs[ii][5]
+                                      +.5*vecs[ii][4]*vecs[ii][4]+1.0*vecs[ii][0]*vecs[ii][4]
+                                      +.4*vecs[ii][3]*vecs[ii][3]+0.4*vecs[ii][2]*vecs[ii][3]
+                                      +.4*vecs[ii][1]*vecs[ii][3]+.6*vecs[ii][2]*vecs[ii][2]
+                                      -.8*vecs[ii][1]*vecs[ii][2]+.6*vecs[ii][1]*vecs[ii][1]
+                                      +0.5*vecs[ii][0]*vecs[ii][0]);
+          dists[bdf_P_2EF][ii] = sqrt(0.5*vecs[ii][5]*vecs[ii][5]+1.0*vecs[ii][0]*vecs[ii][5]
+                                      +.4*vecs[ii][4]*vecs[ii][4]+.8*vecs[ii][3]*vecs[ii][4]
+                                      +.4*vecs[ii][2]*vecs[ii][4]+.4*vecs[ii][1]*vecs[ii][4]
+                                      +.4*vecs[ii][3]*vecs[ii][3]+.4*vecs[ii][2]*vecs[ii][3]
+                                      +.4*vecs[ii][1]*vecs[ii][3]+.6*vecs[ii][2]*vecs[ii][2]
+                                      -.8*vecs[ii][1]*vecs[ii][2]+.6*vecs[ii][1]*vecs[ii][1]
+                                      +.5*vecs[ii][0]*vecs[ii][0]);
+          dists[bdf_P_2F][ii] = sqrt(2.*vecs[ii][5]*vecs[ii][5]/9.+4.*vecs[ii][4]*vecs[ii][5]/9.
+                                     +4.*vecs[ii][3]*vecs[ii][5]/9.+2.*vecs[ii][2]*vecs[ii][5]/9.
+                                     +2.*vecs[ii][1]*vecs[ii][5]/9.+4.*vecs[ii][0]*vecs[ii][5]/9.
+                                     +2.*vecs[ii][4]*vecs[ii][4]/9.+4.*vecs[ii][3]*vecs[ii][4]/9.
+                                     +2.*vecs[ii][2]*vecs[ii][4]/9.+2.*vecs[ii][1]*vecs[ii][4]/9.
+                                     +4.*vecs[ii][0]*vecs[ii][4]/9.+2.*vecs[ii][3]*vecs[ii][3]/9.
+                                     +2.*vecs[ii][2]*vecs[ii][3]/9.+2.*vecs[ii][1]*vecs[ii][3]/9.
+                                     +4.*vecs[ii][0]*vecs[ii][3]/9.+5.*vecs[ii][2]*vecs[ii][2]/9.
+                                     -8.*vecs[ii][1]*vecs[ii][2]/9.+2.*vecs[ii][0]*vecs[ii][2]/9.
+                                     +5.*vecs[ii][1]*vecs[ii][1]/9.+2.*vecs[ii][0]*vecs[ii][1]/9.
+                                     +2.*vecs[ii][0]*vecs[ii][0]/9.);
+          
           for (jj = 0; jj < 3; jj++) {
               rmv6(vecs[ii], prj[22+jj], pgs[jj][ii]);
               imv6(pgs[jj][ii],MS[jj*3+7],mpgs[jj][ii]);
           }
-          rmv6(vecs[ii],prj[5],pgtemp);
-          rmv6(pgtemp,prj[11],pgs[3][ii]);
-          rmv6(pgtemp,prj[8],pgs[4][ii]);
+          rmv6(vecs[ii],prj[P_C],pgtemp);
+          rmv6(pgtemp,prj[P_C],pgs[bdf_P_6C][ii]);
+          rmv6(pgtemp,prj[P_9],pgs[bdf_P_69][ii]);
+          rmv6(vecs[ii],prj[P_269],pgs[bdf_P_269][ii]);
+          rmv6(vecs[ii],prj[P_269],pgs[bdf_P_26C][ii]);
+          rmv6(vecs[ii],prj[P_28F],pgs[bdf_P_28F][ii]);
+          rmv6(vecs[ii],prj[P_2BF],pgs[bdf_P_2BF][ii]);
+          rmv6(vecs[ii],prj[P_2EF],pgs[bdf_P_2EF][ii]);
+          rmv6(vecs[ii],prj[P_2F],pgs[bdf_P_2F][ii]);
           
-          imv6(pgs[3][ii],MS[11],mpgs[3][ii]);
-          imv6(pgs[4][ii],MS[5],mpgs[4][ii]);
-          imv6(pgs[4][ii],MS[8],mpgs[5][ii]);
+          imv6(pgs[bdf_P_69][ii],MS[M_6],mpgs[bdf_M_6_P_69][ii]);           /*4*/
+          imv6(pgs[bdf_P_69][ii],MS[M_9],mpgs[bdf_M_9_P_69][ii]);           /*5*/
+          imv6(pgs[bdf_P_269][ii],MS[M_6],mpgs[bdf_M_6_P_269][ii]);         /*6*/
+          imv6(mpgs[bdf_M_6_P_269][ii],MS[M_2],mpgs[bdf_M_2_M_6_P_269][ii]);/*7*/
+          imv6(pgs[bdf_P_28F][ii],MS[M_2],mpgs[bdf_M_2_P_28F][ii]);         /*8*/
+          imv6(pgs[bdf_P_2EF][ii],MS[M_2],pgtemp);
+          imv6(pgtemp,MS[M_F],mpgs[bdf_M_F_M_2_P_2EF][ii]);                 /*9*/
+          imv6(mpgs[bdf_M_F_M_2_P_2EF][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2EF][ii]); /*10*/
+          imv6(pgs[bdf_P_269][ii],MS[M_9],mpgs[bdf_M_9_P_269][ii]);         /*11*/
+          imv6(mpgs[bdf_M_2_P_28F][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_28F][ii]);/*12*/
+          imv6(pgs[bdf_P_2EF][ii],MS[M_2],mpgs[bdf_M_2_P_2EF][ii]); /*14*/
+          imv6(mpgs[bdf_M_9_P_269][ii],MS[M_2],mpgs[bdf_M_2_M_9_P_269][ii]);/*15*/
+          imv6(pgs[bdf_P_26C][ii],MS[M_C],mpgs[bdf_M_C_P_26C][ii]);/*16*/
+          imv6(mpgs[bdf_M_C_P_26C][ii],MS[M_2],mpgs[bdf_M_2_M_C_P_26C][ii]);/*17*/
+          imv6(mpgs[bdf_M_F_M_2_P_28F][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_28F][ii]);/*18*/
+          imv6(pgs[bdf_P_2BF][ii],MS[M_2],mpgs[bdf_M_2_P_2BF][ii]);/*20*/
+          imv6(mpgs[bdf_M_2_P_2BF][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_2BF][ii]);/*19*/
+          imv6(mpgs[bdf_M_F_M_2_P_2BF][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2BF][ii]);/*13*/
+          imv6(pgs[bdf_P_2F][ii],MS[M_2],mpgs[bdf_M_2_P_2F][ii]);/*21*/
+          imv6(mpgs[bdf_M_2_P_2F][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_2F][ii]);/*22*/
+          imv6(pgs[bdf_P_2F][ii],MS[M_F],mpgs[bdf_M_F_P_2F][ii]);/*23*/
+          imv6(mpgs[bdf_M_F_P_2F][ii],MS[M_2],mpgs[bdf_M_2_M_F_P_2F][ii]);/*24*/
+ 
       }
-      nmpgs[0] = 1;
-      nmpgs[1] = 1;
-      nmpgs[2] = 1;
-      nmpgs[3] = 1;
-      nmpgs[4] = 2;
+      nmpgs[bdf_P_8F] = 1;
+      nmpgs[bdf_P_BF] = 1;
+      nmpgs[bdf_P_EF] = 1;
+      nmpgs[bdf_P_6C] = 1;
+      nmpgs[bdf_P_69] = 2;
+      nmpgs[bdf_P_269] = 0;
+      nmpgs[bdf_P_26C] = 0;
+      nmpgs[bdf_P_28F] = 5;
+      nmpgs[bdf_P_2BF] = 4;
+      nmpgs[bdf_P_2EF] = 6;
+      nmpgs[bdf_P_2F] = 4;
   }
 
 
@@ -758,7 +1125,7 @@ static double g456distsq(double v1[6], double v2[6]){
 }
 static double g456dist(double v1[6], double v2[6]){
 
-    return std::sqrt(g456distsq(v1,v2));
+    return sqrt(g456distsq(v1,v2));
     
 }
 
@@ -782,7 +1149,7 @@ static double g456dist(double v1[6], double v2[6]){
              v1[4]*v2[4]+v1[5]*v2[5]))
 
 #define CNCM_g456dist(v1,v2) \
-    std::sqrt(CNCM_g456distsq(v1,v2))
+    sqrt(CNCM_g456distsq(v1,v2))
 
 
 /*     Compute the best distance between 2 G6 vectors
@@ -840,171 +1207,353 @@ static double g123distsq(double v1[6],double v2[6]) {
      to the 15 boundaries
  */
 
+#define NCD_check_bdry(bd1,bp1,bd2,bp2) \
+if ((fdists1[bd1][i1]+fdists2[bd2][i2])*(fdists1[bd1][i1]+fdists2[bd2][i2])< distsq) { \
+    distsq = NCD_min( distsq, \
+                     ((fdists1[bd1][i1]+fdists2[bd2][i2]) \
+                      *(fdists1[bd1][i1]+fdists2[bd2][i2]) \
+                      + CNCM_g456distsq(bp1[i1],bp2[i2]))); \
+    report_double_if_changed("used " #bd1 #bp1 #bd2 #bp2 ,sqrt(distsq)," "); \
+    also_if_changed_report_integer("pass = ",pass,"\n"); \
+    also_if_changed_report_integer("i1 = ",i1," "); \
+    also_if_changed_report_integer("i2 = ",i2," "); \
+    also_if_changed_report_integer("bd1 = ", bd1," "); \
+    also_if_changed_report_integer("bd2 = ", bd2," "); \
+    also_if_changed_report_double("fdist1 = ", fdists1[bd1][i1], " "); \
+    also_if_changed_report_double("fdist2 = ", fdists2[bd2][i2], " "); \
+    also_if_changed_report_double("dist bp1 to bp2 = ",CNCM_g456distsq(bp1[i1],bp2[i2]),"\n" );\
+    also_if_changed_report_double_vector("bp1 = ",bp1[i1]," "); \
+    also_if_changed_report_double_vector("bp2 = ",bp2[i2]," "); \
+    also_if_changed_report_double_vector("gvec1 = ",gvec1," "); \
+    also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n"); \
+}
+
+
 double NCDist(double gvec1[6],double gvec2[6]) {
     double vecs1[24][6], dists1[15][24];
     double pgs1[15][24][6], mpgs1[15][24][6];
-    double fdists1[5][24],fdists2[5][24];
-    double fpgs1[5][24][6],fpgs2[5][24][6];
-    double fmpgs1[6][24][6], fmpgs2[6][24][6];
-    int nmpgs[5];
+    double fdists1[11][24],fdists2[11][24];
+    double fpgs1[11][24][6],fpgs2[11][24][6];
+    double fmpgs1[25][24][6], fmpgs2[25][24][6];
+    int nmpgs[11];
     double vecs2[24][6], dists2[15][24];
     double pgs2[15][24][6], mpgs2[15][24][6];
     double dpg1pg2;
     double distsq;
+    double dist;
+    double mindists1[24];
+    double mindists2[24];
     int jx1, jx2, ix2;
     int jord[15] = {0,1,8,9,10,5,6,7,11,12,13,2,3,4,14},
     jord2[15] = {0,1,10,9,8,7,6,5,13,12,11,2,3,4,14};
     int i1,i2,j1,j2;
     
+    pass++;
     bdmaps(gvec1,vecs1,dists1,pgs1,mpgs1);
     bdfmaps(vecs1,fdists1,fpgs1,fmpgs1,nmpgs);
     bdmaps(gvec2,vecs2,dists2,pgs2,mpgs2);
     bdfmaps(vecs2,fdists2,fpgs2,fmpgs2,nmpgs);
     
     distsq = g123distsq(gvec1,gvec2);
+    dist = sqrt(distsq);
+    report_double("dist = ",dist,"\n");
     
-    for (i1=0; i1<24; i1++) {
-        for (ix2 = 1; ix2 < 24; ix2++) {
-            i2 = (i1+ix2)%24;
-            for (jx1 = 0; jx1 < 15; jx1++) {
-              j1 = jord[jx1];
-              if (dists1[j1][i1]*dists1[j1][i1] < distsq) {
-                jx2 = jx1;
-                j2 = jord2[jx2];
-                if (j1==j2) {
-                    if((dists1[j1][i1]+dists2[j2][i2])*(dists1[j1][i1]+dists2[j2][i2]) < distsq) {
-                        dpg1pg2 = NCD_min(NCD_min(NCD_min(CNCM_g456distsq(pgs1[j1][i1],pgs2[j2][i2]),
-                                              CNCM_g456distsq(pgs1[j1][i1],mpgs2[j2][i2])),
-                                          CNCM_g456distsq(mpgs1[j1][i1],pgs2[j2][i2])),
-                                      CNCM_g456distsq(mpgs1[j1][i1],mpgs2[j2][i2]));
-                        distsq = NCD_min(distsq,
-                                   ((dists1[j1][i1]+dists2[j2][i2])
-                                             *(dists1[j1][i1]+dists2[j2][i2])
-                                             + dpg1pg2));
-                    }
-                    else
-                        if ((dists1[j1][i1]+dists2[j1][i2])*(dists1[j1][i1]+dists2[j1][i2]) < distsq) {
-                            dpg1pg2 =  CNCM_g456distsq(pgs1[j1][i1],pgs2[j1][i2]);
-                            distsq = NCD_min(distsq,
-                                       ((dists1[j1][i1]+dists2[j1][i2])
-                                                 *(dists1[j1][i1]+dists2[j1][i2])
-                                                 + dpg1pg2));
-                        }
-                    if ((dists1[j1][i1]+dists2[j2][i2])*(dists1[j1][i1]+dists2[j2][i2]) < distsq) {
-                        dpg1pg2 =  CNCM_g456distsq(pgs1[j1][i1],mpgs2[j2][i2]);
-                        distsq = NCD_min(distsq, ((dists1[j1][i1]+dists2[j2][i2])
-                                               *(dists1[j1][i1]+dists2[j2][i2])
-                                               + dpg1pg2));
-                    }
-                }
-              }
-            }
-        }
-        /*     69 */
-        if ((fdists1[4][i1]+fdists2[4][i2])*(fdists1[4][i1]+fdists2[4][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[4][i1]+fdists2[4][i2])*(fdists1[4][i1]+fdists2[4][i2])
-                                 + CNCM_g456distsq(fpgs1[4][i1],fpgs2[4][i2])));
-        }
-        if ((fdists1[4][i1]+fdists2[0][i2])*(fdists1[4][i1]+fdists2[0][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[4][i1]+fdists2[0][i2])
-                                 *(fdists1[4][i1]+fdists2[0][i2])
-                                 + CNCM_g456distsq(fpgs1[4][i1],fmpgs2[0][i2])));
-        }
-        if ((fdists1[4][i1]+fdists2[1][i2])*(fdists1[4][i1]+fdists2[1][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[4][i1]+fdists2[1][i2])
-                                 *(fdists1[4][i1]+fdists2[1][i2])
-                                 + CNCM_g456distsq(fpgs1[4][i1],fmpgs2[1][i2])));
-        }
-        if ((fdists1[0][i1]+fdists2[4][i2])*(fdists1[0][i1]+fdists2[4][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[0][i1]+fdists2[4][i2])
-                                 *(fdists1[0][i1]+fdists2[4][i2])
-                                 + CNCM_g456distsq(fmpgs1[0][i1],fpgs2[4][i2])));
-        }
-        if ((fdists1[1][i1]+fdists2[4][i2])*(fdists1[1][i1]+fdists2[4][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[1][i1]+fdists2[4][i2])
-                                 *(fdists1[1][i1]+fdists2[4][i2])
-                                 + CNCM_g456distsq(fmpgs1[1][i1],fpgs2[4][i2])));
-        }
-        /*     6C */
-        if ((fdists1[3][i1]+fdists2[3][i2])*(fdists1[3][i1]+fdists2[3][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[3][i1]+fdists2[3][i2])
-                                 *(fdists1[3][i1]+fdists2[3][i2])
-                                 + CNCM_g456distsq(fpgs1[3][i1],fpgs2[3][i2])));
-        }
-        if ((fdists1[3][i1]+fdists2[2][i2])*(fdists1[3][i1]+fdists2[2][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[3][i1]+fdists2[2][i2])
-                                 *(fdists1[3][i1]+fdists2[2][i2])
-                                 + CNCM_g456distsq(fpgs1[3][i1],fmpgs2[2][i1])));
-        }
-        if ((fdists1[2][i1]+fdists2[3][i2])*(fdists1[2][i1]+fdists2[3][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[2][i1]+fdists2[3][i2])
-                                 *(fdists1[2][i1]+fdists2[3][i2])
-                                 + CNCM_g456distsq(fmpgs1[2][i1],fpgs2[3][i2])));
-        }
-        /*     8F */
-        if ((fdists1[0][i1]+fdists2[0][i2])*(fdists1[0][i1]+fdists2[0][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[0][i1]+fdists2[0][i2])
-                                 *(fdists1[0][i1]+fdists2[0][i2])
-                                 + CNCM_g456distsq(fpgs1[0][i1],fpgs2[0][i2])));
-        }
-        if ((fdists1[0][i1]+fdists2[4][i2])*(fdists1[0][i1]+fdists2[4][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[0][i1]+fdists2[4][i2])
-                                 *(fdists1[0][i1]+fdists2[4][i2])
-                                 + CNCM_g456distsq(fpgs1[0][i1],fmpgs2[4][i2])));
-        }
-        if ((fdists1[4][i1]+fdists2[0][i2])*(fdists1[4][i1]+fdists2[0][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[4][i1]+fdists2[0][i2])
-                                 *(fdists1[4][i1]+fdists2[0][i2])
-                                 + CNCM_g456distsq(fmpgs1[4][i1],fpgs2[0][i2])));
-        }
-        /*     BF */
-        if ((fdists1[1][i1]+fdists2[1][i2])*(fdists1[1][i1]+fdists2[1][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[0][i1]+fdists2[0][i2])
-                                 *(fdists1[0][i1]+fdists2[0][i2])
-                                 + CNCM_g456distsq(fpgs1[0][i1],fpgs2[0][i2])));
-        }
-        if ((fdists1[1][i1]+fdists2[4][i2])*(fdists1[1][i1]+fdists2[4][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[1][i1]+fdists2[4][i2])
-                                 *(fdists1[1][i1]+fdists2[4][i2])
-                                 + CNCM_g456distsq(fpgs1[1][i1],fmpgs2[5][i2])));
-        }
-        if ((fdists1[4][i1]+fdists2[1][i2])*(fdists1[4][i1]+fdists2[1][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[4][i1]+fdists2[1][i2])
-                                 *(fdists1[4][i1]+fdists2[1][i2])
-                                 + CNCM_g456distsq(fmpgs1[5][i1],fpgs2[1][i2])));
-        }
-        /*     EF */
-        if ((fdists1[2][i1]+fdists2[2][i2])*(fdists1[2][i1]+fdists2[2][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[2][i1]+fdists2[2][i2])
-                                 *(fdists1[2][i1]+fdists2[2][i2])
-                                 + CNCM_g456distsq(fpgs1[2][i1],fpgs2[2][i1])));
-        }
-        if ((fdists1[2][i1]+fdists2[3][i2])*(fdists1[2][i1]+fdists2[3][i2])< distsq) {
-            distsq = NCD_min( distsq,
-                       ((fdists1[2][i1]+fdists2[3][i2])
-                                 *(fdists1[2][i1]+fdists2[3][i2])
-                                 + CNCM_g456distsq(fpgs1[2][i1],fmpgs2[3][i2])));
-        }
-        if ((fdists1[3][i1]+fdists2[2][i2])*(fdists1[3][i1]+fdists2[2][i2])< distsq) {
-            distsq = NCD_min( distsq,((fdists1[3][i1]+fdists2[2][i2])
-                                       *(fdists1[3][i1]+fdists2[2][i2])
-                                       + CNCM_g456distsq(fmpgs1[3][i1],fpgs2[2][i1])));
+    for (i1=0; i1 < 24; i1++) {
+        mindists1[i1] = dists1[0][i1];
+        mindists2[i1] = dists2[0][i1];
+        for (j1=1; j1< 15; j1++) {
+            mindists1[i1] = NCD_min(dists1[j1][i1],mindists1[i1]);
+            mindists2[i1] = NCD_min(dists2[j1][i1],mindists2[i1]);
         }
     }
-    return std::sqrt(distsq);
+    
+    
+    for (i1=0; i1<24; i1++) {
+        for (ix2 = 0; ix2 < 24; ix2++) {
+            i2 = (i1+ix2)%24;
+            if (mindists1[i1]+mindists2[i2] < dist) {
+                for (jx1 = 0; jx1 < 15; jx1++) {
+                    j1 = jord[jx1];
+                    if (dists1[j1][i1]*dists1[j1][i1] < distsq) {
+                        jx2 = jx1;
+                        j2 = jord2[jx2];
+                        if (j1==j2) {
+                            if((dists1[j1][i1]+dists2[j2][i2])*(dists1[j1][i1]+dists2[j2][i2]) < distsq) {
+                                dpg1pg2 = NCD_min(NCD_min(NCD_min(CNCM_g456distsq(pgs1[j1][i1],pgs2[j2][i2]),
+                                                                  CNCM_g456distsq(pgs1[j1][i1],mpgs2[j2][i2])),
+                                                          CNCM_g456distsq(mpgs1[j1][i1],pgs2[j2][i2])),
+                                                  CNCM_g456distsq(mpgs1[j1][i1],mpgs2[j2][i2]));
+                                distsq = NCD_min(distsq,
+                                                 ((dists1[j1][i1]+dists2[j2][i2])
+                                                  *(dists1[j1][i1]+dists2[j2][i2])
+                                                  + dpg1pg2));
+                                report_double_if_changed("used dpg1pg2 ",sqrt(distsq)," ");
+                                also_if_changed_report_integer("pass = ",pass,"\n"); \
+                                also_if_changed_report_integer("i1 = ",i1," ");
+                                also_if_changed_report_integer("j1 = ",j1," ");
+                                also_if_changed_report_integer("i2 = ",i2," ");
+                                also_if_changed_report_integer("j2 = ",j2," ");
+                                also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                                also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                            }
+                            else
+                                if ((dists1[j1][i1]+dists2[j1][i2])*(dists1[j1][i1]+dists2[j1][i2]) < distsq) {
+                                    dpg1pg2 =  CNCM_g456distsq(pgs1[j1][i1],pgs2[j1][i2]);
+                                    distsq = NCD_min(distsq,
+                                                     ((dists1[j1][i1]+dists2[j1][i2])
+                                                      *(dists1[j1][i1]+dists2[j1][i2])
+                                                      + dpg1pg2));
+                                    report_double_if_changed("used j1i1j1i2 dpg1pg2 ",sqrt(distsq)," ");
+                                    also_if_changed_report_integer("pass = ",pass,"\n"); \
+                                    also_if_changed_report_integer("i1 = ",i1," ");
+                                    also_if_changed_report_integer("j1 = ",j1," ");
+                                    also_if_changed_report_integer("i2 = ",i2," ");
+                                    also_if_changed_report_integer("j2 = ",j2," ");
+                                    also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                                    also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                                }
+                            if ((dists1[j1][i1]+dists2[j2][i2])*(dists1[j1][i1]+dists2[j2][i2]) < distsq) {
+                                dpg1pg2 =  CNCM_g456distsq(pgs1[j1][i1],mpgs2[j2][i2]);
+                                distsq = NCD_min(distsq, ((dists1[j1][i1]+dists2[j2][i2])
+                                                          *(dists1[j1][i1]+dists2[j2][i2])
+                                                          + dpg1pg2));
+                                report_double_if_changed("used j1i1j2i2 dpg1pg2 ",sqrt(distsq),"\n");
+                                also_if_changed_report_integer("i1 = ",i1," ");
+                                also_if_changed_report_integer("j1 = ",j1," ");
+                                also_if_changed_report_integer("i2 = ",i2," ");
+                                also_if_changed_report_integer("j2 = ",j2," ");
+                                also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                                also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                            }
+                        }
+                    }
+                }
+                
+                
+                /*     69 */
+                
+                NCD_check_bdry(bdf_P_69,fpgs1[bdf_P_69],bdf_P_69,fpgs2[bdf_P_69]);
+                NCD_check_bdry(bdf_P_69,fpgs1[bdf_P_69],bdf_P_8F,fmpgs2[bdf_M_8_P_8F]);
+                NCD_check_bdry(bdf_P_69,fpgs1[bdf_P_69],bdf_P_BF,fmpgs2[bdf_M_B_P_BF]);
+                
+                NCD_check_bdry(bdf_P_8F,fmpgs1[bdf_M_8_P_8F],bdf_P_69,fpgs2[bdf_P_69]);
+                NCD_check_bdry(bdf_P_8F,fmpgs1[bdf_M_8_P_8F],bdf_P_8F,fmpgs2[bdf_M_8_P_8F]);
+                NCD_check_bdry(bdf_P_8F,fmpgs1[bdf_M_8_P_8F],bdf_P_BF,fmpgs2[bdf_M_B_P_BF]);
+                
+                NCD_check_bdry(bdf_P_BF,fmpgs1[bdf_M_B_P_BF],bdf_P_69,fpgs2[bdf_P_69]);
+                NCD_check_bdry(bdf_P_BF,fmpgs1[bdf_M_B_P_BF],bdf_P_8F,fmpgs2[bdf_M_8_P_8F]);
+                NCD_check_bdry(bdf_P_BF,fmpgs1[bdf_M_B_P_BF],bdf_P_BF,fmpgs2[bdf_M_B_P_BF]);
+                
+                /*     6C */
+                
+                NCD_check_bdry(bdf_P_6C,fpgs1[bdf_P_6C],bdf_P_6C,fpgs2[bdf_P_6C]);
+                NCD_check_bdry(bdf_P_6C,fpgs1[bdf_P_6C],bdf_P_EF,fmpgs2[bdf_M_E_P_EF]);
+                
+                NCD_check_bdry(bdf_P_EF,fmpgs1[bdf_M_E_P_EF],bdf_P_6C,fpgs2[bdf_P_6C]);
+                NCD_check_bdry(bdf_P_EF,fmpgs1[bdf_M_E_P_EF],bdf_P_EF,fmpgs2[bdf_M_E_P_EF]);
+                
+                /*     8F */
+                
+                NCD_check_bdry(bdf_P_8F,fpgs1[bdf_P_8F],bdf_P_8F,fpgs2[bdf_P_8F]);
+                NCD_check_bdry(bdf_P_8F,fpgs1[bdf_P_BF],bdf_P_69,fmpgs2[bdf_M_6_P_69]);
+                
+                NCD_check_bdry(bdf_P_69,fmpgs1[bdf_M_6_P_69],bdf_P_8F,fpgs2[bdf_P_8F]);
+                NCD_check_bdry(bdf_P_69,fmpgs1[bdf_M_6_P_69],bdf_P_69,fmpgs2[bdf_M_6_P_69]);
+                
+                
+                /*     BF */
+                
+                NCD_check_bdry(bdf_P_BF,fpgs1[bdf_P_BF],bdf_P_BF,fpgs2[bdf_P_BF]);
+                NCD_check_bdry(bdf_P_BF,fpgs1[bdf_P_BF],bdf_P_69,fmpgs2[bdf_M_9_P_69]);
+                
+                NCD_check_bdry(bdf_P_69,fmpgs1[bdf_M_9_P_69],bdf_P_BF,fpgs2[bdf_P_BF]);
+                NCD_check_bdry(bdf_P_69,fmpgs1[bdf_M_9_P_69],bdf_P_69,fmpgs2[bdf_M_9_P_69]);
+                
+                
+                /*     EF */
+                
+                NCD_check_bdry(bdf_P_EF,fpgs1[bdf_P_EF],bdf_P_EF,fpgs2[bdf_P_EF]);
+                NCD_check_bdry(bdf_P_EF,fpgs1[bdf_P_EF],bdf_P_6C,fmpgs2[bdf_M_C_P_6C]);
+                
+                NCD_check_bdry(bdf_P_6C,fmpgs1[bdf_M_C_P_6C],bdf_P_EF,fpgs2[bdf_P_EF]);
+                NCD_check_bdry(bdf_P_6C,fmpgs1[bdf_M_C_P_6C],bdf_P_6C,fmpgs2[bdf_M_C_P_6C]);
+                
+                /*     2F */
+                
+                NCD_check_bdry(bdf_P_2F,fpgs1[bdf_P_2F],bdf_P_2F,fpgs2[bdf_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fpgs1[bdf_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fpgs1[bdf_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fpgs1[bdf_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fpgs1[bdf_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_M_F_P_2F]);
+                
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_P_2F],bdf_P_2F,fpgs2[bdf_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_M_F_P_2F]);
+                
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_M_2_P_2F],bdf_P_2F,fpgs2[bdf_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_M_2_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_M_2_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_M_2_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_M_2_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_M_F_P_2F]);
+                
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_P_2F],bdf_P_2F,fpgs2[bdf_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_F_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_M_F_P_2F]);
+                
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_M_F_P_2F],bdf_P_2F,fpgs2[bdf_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_M_F_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_M_F_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_M_2_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_M_F_P_2F],bdf_P_2F,fmpgs2[bdf_M_F_P_2F]);
+                NCD_check_bdry(bdf_P_2F,fmpgs1[bdf_M_2_M_F_P_2F],bdf_P_2F,fmpgs2[bdf_M_2_M_F_P_2F]);
+                
+                
+                /*    269 */
+                
+                NCD_check_bdry(bdf_P_269,fpgs1[bdf_P_269],bdf_P_269,fpgs2[bdf_P_269]);
+                
+                /*    26C */
+                
+                NCD_check_bdry(bdf_P_26C,fpgs1[bdf_P_26C],bdf_P_26C,fpgs2[bdf_P_26C]);
+                
+                /*    28F */
+                
+                NCD_check_bdry(bdf_P_28F,fpgs1[bdf_P_28F],bdf_P_28F,fpgs2[bdf_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fpgs1[bdf_P_28F],bdf_P_269,fmpgs2[bdf_M_6_P_269]);
+                NCD_check_bdry(bdf_P_28F,fpgs1[bdf_P_28F],bdf_P_269,fmpgs2[bdf_M_2_M_6_P_269]);
+                NCD_check_bdry(bdf_P_28F,fpgs1[bdf_P_28F],bdf_P_28F,fmpgs2[bdf_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fpgs1[bdf_P_28F],bdf_P_2EF,fmpgs2[bdf_M_F_M_2_P_2EF]);
+                NCD_check_bdry(bdf_P_28F,fpgs1[bdf_P_28F],bdf_P_2EF,fmpgs2[bdf_M_2_M_F_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_6_P_269],bdf_P_28F,fpgs2[bdf_P_28F]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_6_P_269],bdf_P_269,fmpgs2[bdf_M_6_P_269]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_6_P_269],bdf_P_269,fmpgs2[bdf_M_2_M_6_P_269]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_6_P_269],bdf_P_28F,fmpgs2[bdf_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_6_P_269],bdf_P_2EF,fmpgs2[bdf_M_F_M_2_P_2EF]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_6_P_269],bdf_P_2EF,fmpgs2[bdf_M_2_M_F_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_6_P_269],bdf_P_28F,fpgs2[bdf_P_28F]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_6_P_269],bdf_P_269,fmpgs2[bdf_M_6_P_269]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_6_P_269],bdf_P_269,fmpgs2[bdf_M_2_M_6_P_269]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_6_P_269],bdf_P_28F,fmpgs2[bdf_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_6_P_269],bdf_P_2EF,fmpgs2[bdf_M_F_M_2_P_2EF]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_6_P_269],bdf_P_2EF,fmpgs2[bdf_M_2_M_F_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_P_28F],bdf_P_28F,fpgs2[bdf_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_P_28F],bdf_P_269,fmpgs2[bdf_M_6_P_269]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_P_28F],bdf_P_269,fmpgs2[bdf_M_2_M_6_P_269]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_P_28F],bdf_P_28F,fmpgs2[bdf_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_P_28F],bdf_P_2EF,fmpgs2[bdf_M_F_M_2_P_2EF]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_P_28F],bdf_P_2EF,fmpgs2[bdf_M_2_M_F_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_F_M_2_P_2EF],bdf_P_28F,fpgs2[bdf_P_28F]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_F_M_2_P_2EF],bdf_P_269,fmpgs2[bdf_M_6_P_269]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_F_M_2_P_2EF],bdf_P_269,fmpgs2[bdf_M_2_M_6_P_269]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_F_M_2_P_2EF],bdf_P_28F,fmpgs2[bdf_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_F_M_2_P_2EF],bdf_P_2EF,fmpgs2[bdf_M_F_M_2_P_2EF]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_F_M_2_P_2EF],bdf_P_2EF,fmpgs2[bdf_M_2_M_F_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_M_F_M_2_P_2EF],bdf_P_28F,fpgs2[bdf_P_28F]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_M_F_M_2_P_2EF],bdf_P_269,fmpgs2[bdf_M_6_P_269]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_M_F_M_2_P_2EF],bdf_P_269,fmpgs2[bdf_M_2_M_6_P_269]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_M_F_M_2_P_2EF],bdf_P_28F,fmpgs2[bdf_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_M_F_M_2_P_2EF],bdf_P_2EF,fmpgs2[bdf_M_F_M_2_P_2EF]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_M_F_M_2_P_2EF],bdf_P_2EF,fmpgs2[bdf_M_2_M_F_M_2_P_2EF]);
+                
+                /*    2BF */
+                
+                NCD_check_bdry(bdf_P_2BF,fpgs1[bdf_P_2BF],bdf_P_2BF,fpgs2[bdf_P_2BF]);
+                NCD_check_bdry(bdf_P_2BF,fpgs1[bdf_P_2BF],bdf_P_269,fmpgs2[bdf_M_9_P_269]);
+                NCD_check_bdry(bdf_P_2BF,fpgs1[bdf_P_2BF],bdf_P_28F,fmpgs2[bdf_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2BF,fpgs1[bdf_P_2BF],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2BF,fpgs1[bdf_P_2BF],bdf_P_2EF,fmpgs2[bdf_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_9_P_269],bdf_P_2BF,fpgs2[bdf_P_2BF]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_9_P_269],bdf_P_269,fmpgs2[bdf_M_9_P_269]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_9_P_269],bdf_P_28F,fmpgs2[bdf_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_9_P_269],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_9_P_269],bdf_P_2EF,fmpgs2[bdf_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_F_M_2_P_28F],bdf_P_2BF,fpgs2[bdf_P_2BF]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_F_M_2_P_28F],bdf_P_269,fmpgs2[bdf_M_9_P_269]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_F_M_2_P_28F],bdf_P_28F,fmpgs2[bdf_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_F_M_2_P_28F],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_F_M_2_P_28F],bdf_P_2EF,fmpgs2[bdf_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_2BF,fpgs2[bdf_P_2BF]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_269,fmpgs2[bdf_M_9_P_269]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_28F,fmpgs2[bdf_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_2EF,fmpgs2[bdf_M_2_P_2EF]);
+                
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_P_2EF],bdf_P_2BF,fpgs2[bdf_P_2BF]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_P_2EF],bdf_P_269,fmpgs2[bdf_M_9_P_269]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_P_2EF],bdf_P_28F,fmpgs2[bdf_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_P_2EF],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2EF,fmpgs1[bdf_M_2_P_2EF],bdf_P_2EF,fmpgs2[bdf_M_2_P_2EF]);
+                
+                /*    2EF */
+                
+                NCD_check_bdry(bdf_P_2EF,fpgs1[bdf_P_2EF],bdf_P_2BF,fpgs2[bdf_P_2EF]);
+                NCD_check_bdry(bdf_P_2EF,fpgs1[bdf_P_2EF],bdf_P_269,fmpgs2[bdf_M_2_M_9_P_269]);
+                NCD_check_bdry(bdf_P_2EF,fpgs1[bdf_P_2EF],bdf_P_26C,fmpgs2[bdf_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_2EF,fpgs1[bdf_P_2EF],bdf_P_26C,fmpgs2[bdf_M_2_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_2EF,fpgs1[bdf_P_2EF],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2EF,fpgs1[bdf_P_2EF],bdf_P_2BF,fmpgs2[bdf_M_F_M_2_P_2BF]);
+                NCD_check_bdry(bdf_P_2EF,fpgs1[bdf_P_2EF],bdf_P_2BF,fmpgs2[bdf_M_2_P_2BF]);
+                
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_9_P_269],bdf_P_2BF,fpgs2[bdf_P_2EF]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_9_P_269],bdf_P_269,fmpgs2[bdf_M_2_M_9_P_269]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_9_P_269],bdf_P_26C,fmpgs2[bdf_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_9_P_269],bdf_P_26C,fmpgs2[bdf_M_2_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_9_P_269],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_9_P_269],bdf_P_2BF,fmpgs2[bdf_M_F_M_2_P_2BF]);
+                NCD_check_bdry(bdf_P_269,fmpgs1[bdf_M_2_M_9_P_269],bdf_P_2BF,fmpgs2[bdf_M_2_P_2BF]);
+                
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_C_P_26C],bdf_P_2BF,fpgs2[bdf_P_2EF]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_C_P_26C],bdf_P_269,fmpgs2[bdf_M_2_M_9_P_269]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_C_P_26C],bdf_P_26C,fmpgs2[bdf_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_C_P_26C],bdf_P_26C,fmpgs2[bdf_M_2_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_C_P_26C],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_C_P_26C],bdf_P_2BF,fmpgs2[bdf_M_F_M_2_P_2BF]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_C_P_26C],bdf_P_2BF,fmpgs2[bdf_M_2_P_2BF]);
+                
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_2_M_C_P_26C],bdf_P_2BF,fpgs2[bdf_P_2EF]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_2_M_C_P_26C],bdf_P_269,fmpgs2[bdf_M_2_M_9_P_269]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_2_M_C_P_26C],bdf_P_26C,fmpgs2[bdf_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_2_M_C_P_26C],bdf_P_26C,fmpgs2[bdf_M_2_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_2_M_C_P_26C],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_2_M_C_P_26C],bdf_P_2BF,fmpgs2[bdf_M_F_M_2_P_2BF]);
+                NCD_check_bdry(bdf_P_26C,fmpgs1[bdf_M_2_M_C_P_26C],bdf_P_2BF,fmpgs2[bdf_M_2_P_2BF]);
+                
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_2BF,fpgs2[bdf_P_2EF]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_269,fmpgs2[bdf_M_2_M_9_P_269]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_26C,fmpgs2[bdf_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_26C,fmpgs2[bdf_M_2_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_2BF,fmpgs2[bdf_M_F_M_2_P_2BF]);
+                NCD_check_bdry(bdf_P_28F,fmpgs1[bdf_M_2_M_F_M_2_P_28F],bdf_P_2BF,fmpgs2[bdf_M_2_P_2BF]);
+                
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_F_M_2_P_2BF],bdf_P_2BF,fpgs2[bdf_P_2EF]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_F_M_2_P_2BF],bdf_P_269,fmpgs2[bdf_M_2_M_9_P_269]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_F_M_2_P_2BF],bdf_P_26C,fmpgs2[bdf_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_F_M_2_P_2BF],bdf_P_26C,fmpgs2[bdf_M_2_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_F_M_2_P_2BF],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_F_M_2_P_2BF],bdf_P_2BF,fmpgs2[bdf_M_F_M_2_P_2BF]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_F_M_2_P_2BF],bdf_P_2BF,fmpgs2[bdf_M_2_P_2BF]);
+                
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_2_P_2BF],bdf_P_2BF,fpgs2[bdf_P_2EF]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_2_P_2BF],bdf_P_269,fmpgs2[bdf_M_2_M_9_P_269]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_2_P_2BF],bdf_P_26C,fmpgs2[bdf_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_2_P_2BF],bdf_P_26C,fmpgs2[bdf_M_2_M_C_P_26C]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_2_P_2BF],bdf_P_28F,fmpgs2[bdf_M_2_M_F_M_2_P_28F]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_2_P_2BF],bdf_P_2BF,fmpgs2[bdf_M_F_M_2_P_2BF]);
+                NCD_check_bdry(bdf_P_2BF,fmpgs1[bdf_M_2_P_2BF],bdf_P_2BF,fmpgs2[bdf_M_2_P_2BF]);
+            }
+        }
+    }
+    return sqrt(distsq);
 }
