@@ -748,7 +748,8 @@ static void bdmaps(double gvec[6],
             double vecs[24][6],
             double dists[15][24],
             double pgs[15][24][6],
-            double mpgs[15][24][6]) {
+            double mpgs[15][24][6],
+            double maxdist) {
     
     int ii, jj;
     double xtemp;
@@ -821,8 +822,10 @@ static void bdmaps(double gvec[6],
         dists[13][ii] = fabs(vecs[ii][0]+vecs[ii][5])/sqrt(2.);
         dists[14][ii] = fabs(vecs[ii][0]+vecs[ii][1]+vecs[ii][3]+vecs[ii][4]+vecs[ii][5])/sqrt(5.);
         for (jj = 0; jj < 15; jj++ ) {
-            rmv6(vecs[ii], prj[jj], pgs[jj][ii]);
-            imv6(pgs[jj][ii], MS[jj], mpgs[jj][ii]);
+            if (dists[jj][ii] <= maxdist) {
+              rmv6(vecs[ii], prj[jj], pgs[jj][ii]);
+              imv6(pgs[jj][ii], MS[jj], mpgs[jj][ii]);
+            } 
         }
     }
 }
@@ -981,7 +984,7 @@ static void bdfmaps(double vecs[24][6],
              double dists[11][24],
              double pgs[11][24][6],
              double mpgs[25][24][6],
-             int nmpgs[11]) {
+             int nmpgs[11], double maxdist) {
       
       int ii, jj;
       
@@ -1051,37 +1054,37 @@ static void bdfmaps(double vecs[24][6],
               imv6(pgs[jj][ii],MS[jj*3+7],mpgs[jj][ii]);
           }
           rmv6(vecs[ii],prj[P_C],pgtemp);
-          rmv6(pgtemp,prj[P_C],pgs[bdf_P_6C][ii]);
-          rmv6(pgtemp,prj[P_9],pgs[bdf_P_69][ii]);
-          rmv6(vecs[ii],prj[P_269],pgs[bdf_P_269][ii]);
-          rmv6(vecs[ii],prj[P_269],pgs[bdf_P_26C][ii]);
-          rmv6(vecs[ii],prj[P_28F],pgs[bdf_P_28F][ii]);
-          rmv6(vecs[ii],prj[P_2BF],pgs[bdf_P_2BF][ii]);
-          rmv6(vecs[ii],prj[P_2EF],pgs[bdf_P_2EF][ii]);
-          rmv6(vecs[ii],prj[P_2F],pgs[bdf_P_2F][ii]);
+          if (dists[bdf_P_6C][ii] <= maxdist)rmv6(pgtemp,prj[P_C],pgs[bdf_P_6C][ii]);
+          if (dists[bdf_P_69][ii] <= maxdist)rmv6(pgtemp,prj[P_9],pgs[bdf_P_69][ii]);
+          if (dists[bdf_P_269][ii] <= maxdist)rmv6(vecs[ii],prj[P_269],pgs[bdf_P_269][ii]);
+          if (dists[bdf_P_26C][ii] <= maxdist)rmv6(vecs[ii],prj[P_26C],pgs[bdf_P_26C][ii]);
+          if (dists[bdf_P_28F][ii] <= maxdist)rmv6(vecs[ii],prj[P_28F],pgs[bdf_P_28F][ii]);
+          if (dists[bdf_P_2BF][ii] <= maxdist)rmv6(vecs[ii],prj[P_2BF],pgs[bdf_P_2BF][ii]);
+          if (dists[bdf_P_2EF][ii] <= maxdist)rmv6(vecs[ii],prj[P_2EF],pgs[bdf_P_2EF][ii]);
+          if (dists[bdf_P_2F][ii] <= maxdist)rmv6(vecs[ii],prj[P_2F],pgs[bdf_P_2F][ii]);
           
-          imv6(pgs[bdf_P_69][ii],MS[M_6],mpgs[bdf_M_6_P_69][ii]);           /*4*/
-          imv6(pgs[bdf_P_69][ii],MS[M_9],mpgs[bdf_M_9_P_69][ii]);           /*5*/
-          imv6(pgs[bdf_P_269][ii],MS[M_6],mpgs[bdf_M_6_P_269][ii]);         /*6*/
-          imv6(mpgs[bdf_M_6_P_269][ii],MS[M_2],mpgs[bdf_M_2_M_6_P_269][ii]);/*7*/
-          imv6(pgs[bdf_P_28F][ii],MS[M_2],mpgs[bdf_M_2_P_28F][ii]);         /*8*/
-          imv6(pgs[bdf_P_2EF][ii],MS[M_2],pgtemp);
-          imv6(pgtemp,MS[M_F],mpgs[bdf_M_F_M_2_P_2EF][ii]);                 /*9*/
-          imv6(mpgs[bdf_M_F_M_2_P_2EF][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2EF][ii]); /*10*/
-          imv6(pgs[bdf_P_269][ii],MS[M_9],mpgs[bdf_M_9_P_269][ii]);         /*11*/
-          imv6(mpgs[bdf_M_2_P_28F][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_28F][ii]);/*12*/
-          imv6(pgs[bdf_P_2EF][ii],MS[M_2],mpgs[bdf_M_2_P_2EF][ii]); /*14*/
-          imv6(mpgs[bdf_M_9_P_269][ii],MS[M_2],mpgs[bdf_M_2_M_9_P_269][ii]);/*15*/
-          imv6(pgs[bdf_P_26C][ii],MS[M_C],mpgs[bdf_M_C_P_26C][ii]);/*16*/
-          imv6(mpgs[bdf_M_C_P_26C][ii],MS[M_2],mpgs[bdf_M_2_M_C_P_26C][ii]);/*17*/
-          imv6(mpgs[bdf_M_F_M_2_P_28F][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_28F][ii]);/*18*/
-          imv6(pgs[bdf_P_2BF][ii],MS[M_2],mpgs[bdf_M_2_P_2BF][ii]);/*20*/
-          imv6(mpgs[bdf_M_2_P_2BF][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_2BF][ii]);/*19*/
-          imv6(mpgs[bdf_M_F_M_2_P_2BF][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2BF][ii]);/*13*/
-          imv6(pgs[bdf_P_2F][ii],MS[M_2],mpgs[bdf_M_2_P_2F][ii]);/*21*/
-          imv6(mpgs[bdf_M_2_P_2F][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_2F][ii]);/*22*/
-          imv6(pgs[bdf_P_2F][ii],MS[M_F],mpgs[bdf_M_F_P_2F][ii]);/*23*/
-          imv6(mpgs[bdf_M_F_P_2F][ii],MS[M_2],mpgs[bdf_M_2_M_F_P_2F][ii]);/*24*/
+          if (dists[bdf_P_69][ii] <= maxdist)imv6(pgs[bdf_P_69][ii],MS[M_6],mpgs[bdf_M_6_P_69][ii]);           /*4*/
+          if (dists[bdf_P_69][ii]  <= maxdist)imv6(pgs[bdf_P_69][ii],MS[M_9],mpgs[bdf_M_9_P_69][ii]);           /*5*/
+          if (dists[bdf_P_269][ii] <= maxdist)imv6(pgs[bdf_P_269][ii],MS[M_6],mpgs[bdf_M_6_P_269][ii]);         /*6*/
+          if (dists[bdf_P_269][ii] <= maxdist)imv6(mpgs[bdf_M_6_P_269][ii],MS[M_2],mpgs[bdf_M_2_M_6_P_269][ii]);/*7*/
+          if (dists[bdf_P_28F][ii] <= maxdist)imv6(pgs[bdf_P_28F][ii],MS[M_2],mpgs[bdf_M_2_P_28F][ii]);         /*8*/
+          if (dists[bdf_P_2EF][ii] <= maxdist){ imv6(pgs[bdf_P_2EF][ii],MS[M_2],pgtemp);
+                                         imv6(pgtemp,MS[M_F],mpgs[bdf_M_F_M_2_P_2EF][ii]);}                 /*9*/
+          if (dists[bdf_P_2EF][ii] <= maxdist)imv6(mpgs[bdf_M_F_M_2_P_2EF][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2EF][ii]); /*10*/
+          if (dists[bdf_P_269][ii] <= maxdist)imv6(pgs[bdf_P_269][ii],MS[M_9],mpgs[bdf_M_9_P_269][ii]);         /*11*/
+          if (dists[bdf_P_28F][ii] <= maxdist)imv6(mpgs[bdf_M_2_P_28F][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_28F][ii]);/*12*/
+          if (dists[bdf_P_2EF][ii] <= maxdist)imv6(pgs[bdf_P_2EF][ii],MS[M_2],mpgs[bdf_M_2_P_2EF][ii]);         /*14*/
+          if (dists[bdf_P_269][ii] <= maxdist)imv6(mpgs[bdf_M_9_P_269][ii],MS[M_2],mpgs[bdf_M_2_M_9_P_269][ii]);/*15*/
+          if (dists[bdf_P_26C][ii] <= maxdist)imv6(pgs[bdf_P_26C][ii],MS[M_C],mpgs[bdf_M_C_P_26C][ii]);         /*16*/
+          if (dists[bdf_P_26C][ii] <= maxdist)imv6(mpgs[bdf_M_C_P_26C][ii],MS[M_2],mpgs[bdf_M_2_M_C_P_26C][ii]);/*17*/
+          if (dists[bdf_P_28F][ii] <= maxdist)imv6(mpgs[bdf_M_F_M_2_P_28F][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_28F][ii]);/*18*/
+          if (dists[bdf_P_2BF][ii] <= maxdist)imv6(pgs[bdf_P_2BF][ii],MS[M_2],mpgs[bdf_M_2_P_2BF][ii]);         /*20*/
+          if (dists[bdf_P_2BF][ii] <= maxdist)imv6(mpgs[bdf_M_2_P_2BF][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_2BF][ii]);/*19*/
+          if (dists[bdf_P_2BF][ii] <= maxdist)imv6(mpgs[bdf_M_F_M_2_P_2BF][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2BF][ii]);/*13*/
+          if (dists[bdf_P_2F][ii] <= maxdist)imv6(pgs[bdf_P_2F][ii],MS[M_2],mpgs[bdf_M_2_P_2F][ii]);            /*21*/
+          if (dists[bdf_P_2F][ii] <= maxdist)imv6(mpgs[bdf_M_2_P_2F][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_2F][ii]);   /*22*/
+          if (dists[bdf_P_2F][ii] <= maxdist)imv6(pgs[bdf_P_2F][ii],MS[M_F],mpgs[bdf_M_F_P_2F][ii]);            /*23*/
+          if (dists[bdf_P_2F][ii] <= maxdist)imv6(mpgs[bdf_M_F_P_2F][ii],MS[M_2],mpgs[bdf_M_2_M_F_P_2F][ii]);   /*24*/
  
       }
       nmpgs[bdf_P_8F] = 1;
@@ -1249,14 +1252,15 @@ double NCDist(double gvec1[6],double gvec2[6]) {
     int i1,i2,j1,j2;
     
     pass++;
-    bdmaps(gvec1,vecs1,dists1,pgs1,mpgs1);
-    bdfmaps(vecs1,fdists1,fpgs1,fmpgs1,nmpgs);
-    bdmaps(gvec2,vecs2,dists2,pgs2,mpgs2);
-    bdfmaps(vecs2,fdists2,fpgs2,fmpgs2,nmpgs);
-    
     distsq = g123distsq(gvec1,gvec2);
     dist = sqrt(distsq);
     report_double("dist = ",dist,"\n");
+
+    bdmaps(gvec1,vecs1,dists1,pgs1,mpgs1,dist);
+    bdfmaps(vecs1,fdists1,fpgs1,fmpgs1,nmpgs,dist);
+    bdmaps(gvec2,vecs2,dists2,pgs2,mpgs2,dist);
+    bdfmaps(vecs2,fdists2,fpgs2,fmpgs2,nmpgs,dist);
+    
     
     for (i1=0; i1 < 24; i1++) {
         mindists1[i1] = dists1[0][i1];
