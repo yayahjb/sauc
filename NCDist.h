@@ -1159,16 +1159,54 @@ static void rmv6 (double v1[6], double m[36], double v2[6]) {
 
 static void bdmaps(double gvec[6],
             double dists[NBND],
+            int iord[NBND],
             double pgs[NBND][6],
             double mpgs[NBND][6],
             double maxdist) {
     
-    int jj;
+    int ii, jj, itemp, igap, idone;
+    
+    for (jj=0; jj < NBND; jj++) {
+        iord[jj] = jj;
+    }
+
+    
+    dists[0] = fabs(gvec[1]-gvec[0])/sqrt(2.);
+    dists[1] = fabs(gvec[2]-gvec[1])/sqrt(2.);
+    dists[2] = fabs(gvec[3]);
+    dists[3] = fabs(gvec[4]);
+    dists[4] = fabs(gvec[5]);
+    dists[5] = fabs(gvec[1]-gvec[3])/sqrt(2.);
+    dists[6] = fabs(gvec[1]-gvec[3])/sqrt(2.);
+    dists[7] = fabs(gvec[1]+gvec[3])/sqrt(2.);
+    dists[8] = fabs(gvec[0]-gvec[4])/sqrt(2.);
+    dists[9] = fabs(gvec[0]-gvec[4])/sqrt(2.);
+    dists[10] = fabs(gvec[0]+gvec[4])/sqrt(2.);
+    dists[11] = fabs(gvec[0]-gvec[5])/sqrt(2.);
+    dists[12] = fabs(gvec[0]-gvec[5])/sqrt(2.);
+    dists[13] = fabs(gvec[0]+gvec[5])/sqrt(2.);
+    dists[14] = fabs(gvec[0]+gvec[1]+gvec[3]+gvec[4]+gvec[5])/sqrt(5.);
+
+    igap = NBND;
+    while (igap > 1) {
+        igap = igap/2;
+        idone = 0;
+        while (!idone) {
+            idone = 1;
+            for (jj=0; jj < NBND-igap; jj+=igap) {
+                if (dists[iord[jj]] > dists[iord[jj+igap]]) {
+                    idone = 0;
+                    itemp = iord[jj];
+                    iord[jj] = iord[jj+igap];
+                    iord[jj+igap] = itemp;
+                }
+            }
+        }
+    }
 
     for (jj = 0; jj < NBND; jj++ ) {
         rmv6(gvec, prj[jj], pgs[jj]);
         imv6(pgs[jj], MS[jj], mpgs[jj]);
-        dists[jj] = CNCM_gdist(gvec,pgs[jj]);
     }
     
 }
@@ -1186,6 +1224,7 @@ static void bdmaps(double gvec[6],
 
 
 static void bdfmaps(double gvec[6],
+             double basedists[NBND],
              double dists[NPGS],
              double pgs[NPGS][6],
              double mpgs[NMPGS][6],
@@ -1197,12 +1236,133 @@ static void bdfmaps(double gvec[6],
     
     double pgtemp[6];
     
+
+    for (ii=0; ii < NPGS; ii++) dists[ii] = DBL_MAX;
+    if ( basedists[P_2] < maxdist) {
+        if ( basedists[P_F] < maxdist) {
+            dists[bdf_P_2F] = sqrt(2.*gvec[5]*gvec[5]/9.+4.*gvec[4]*gvec[5]/9.
+                                   +4.*gvec[3]*gvec[5]/9.+2.*gvec[2]*gvec[5]/9.
+                                   +2.*gvec[1]*gvec[5]/9.+4.*gvec[0]*gvec[5]/9.
+                                   +2.*gvec[4]*gvec[4]/9.+4.*gvec[3]*gvec[4]/9.
+                                   +2.*gvec[2]*gvec[4]/9.+2.*gvec[1]*gvec[4]/9.
+                                   +4.*gvec[0]*gvec[4]/9.+2.*gvec[3]*gvec[3]/9.
+                                   +2.*gvec[2]*gvec[3]/9.+2.*gvec[1]*gvec[3]/9.
+                                   +4.*gvec[0]*gvec[3]/9.+5.*gvec[2]*gvec[2]/9.
+                                   -8.*gvec[1]*gvec[2]/9.+2.*gvec[0]*gvec[2]/9.
+                                   +5.*gvec[1]*gvec[1]/9.+2.*gvec[0]*gvec[1]/9.
+                                   +2.*gvec[0]*gvec[0]/9.);
+        }
+        if( basedists[P_7] < maxdist) {
+            dists[bdf_P_27] = sqrt(2.*gvec[3]*gvec[3]-2.*gvec[2]*gvec[3]
+                                   -2.*gvec[1]*gvec[3]+2.*gvec[2]*gvec[2]
+                                   -2.*gvec[1]*gvec[2]+2.*gvec[1]*gvec[1])/sqrt(3.);
+        }
+        if( basedists[P_A] < maxdist ) {
+            dists[bdf_P_2A] = sqrt(gvec[4]*gvec[4]-2.*gvec[0]*gvec[4]
+                                   +gvec[2]*gvec[2]-2.*gvec[1]*gvec[2]
+                                   +gvec[1]*gvec[1]+gvec[0]*gvec[0])/sqrt(2.);
+        }
+        if( basedists[P_D] < maxdist ) {
+            dists[bdf_P_2D] = sqrt(gvec[5]*gvec[5]-2.*gvec[0]*gvec[5]
+                                   +gvec[2]*gvec[2]-2.*gvec[1]*gvec[2]
+                                   +gvec[1]*gvec[1]+gvec[0]*gvec[0])/sqrt(2.);
+        }
+        if ( basedists[P_6] < maxdist ) {
+            if ( basedists[P_9] < maxdist ) {
+        dists[bdf_P_269] = sqrt(gvec[4]*gvec[4]/2.-gvec[0]*gvec[4]
+                                +2.*gvec[3]*gvec[3]/3.-2.*gvec[2]*gvec[3]/3.
+                                -2.*gvec[1]*gvec[3]/3.+2.*gvec[2]*gvec[2]/3.
+                                -2.*gvec[1]*gvec[2]/3.+2.*gvec[1]*gvec[1]/3.
+                                +gvec[0]*gvec[0]/2.);
+            }
+            if ( basedists[P_C] < maxdist ) {
+        dists[bdf_P_26C] =  sqrt(gvec[5]*gvec[5]/2.-gvec[0]*gvec[5]
+                                 +2.*gvec[3]*gvec[3]/3.-2.*gvec[2]*gvec[3]/3.
+                                 -2.*gvec[1]*gvec[3]/3.+2.*gvec[2]*gvec[2]/3.
+                                 -2.*gvec[1]*gvec[2]/3.+2.*gvec[1]*gvec[1]/3.
+                                 +gvec[0]*gvec[0]/2.);
+            }
+        }
+        if ( basedists[P_F] < maxdist ) {
+            if ( basedists[P_8] < maxdist ) {
+                dists[bdf_P_28F] = sqrt(gvec[5]*gvec[5]/3+2.*gvec[4]*gvec[5]/3.
+                                        +2.*gvec[0]*gvec[5]/3.+gvec[4]*gvec[4]/3.
+                                        +2.*gvec[0]*gvec[4]/3.+2.*gvec[3]*gvec[3]/3.
+                                        +2.*gvec[2]*gvec[3]/3.+2.*gvec[1]*gvec[3]/3.
+                                        +2.*gvec[2]*gvec[2]/3.-2.*gvec[1]*gvec[2]/3.
+                                        +2.*gvec[1]*gvec[1]/3.+gvec[0]*gvec[0]/3.);
+            }
+            if ( basedists[P_B] < maxdist ) {
+                dists[bdf_P_2BF] = sqrt(.4*gvec[5]*gvec[5]+.8*gvec[3]*gvec[5]
+                                        +.4*gvec[2]*gvec[5]+0.4*gvec[1]*gvec[5]
+                                        +.5*gvec[4]*gvec[4]+1.0*gvec[0]*gvec[4]
+                                        +.4*gvec[3]*gvec[3]+0.4*gvec[2]*gvec[3]
+                                        +.4*gvec[1]*gvec[3]+.6*gvec[2]*gvec[2]
+                                        -.8*gvec[1]*gvec[2]+.6*gvec[1]*gvec[1]
+                                        +0.5*gvec[0]*gvec[0]);
+            }
+            if ( basedists[P_E] < maxdist ) {
+                dists[bdf_P_2EF] = sqrt(0.5*gvec[5]*gvec[5]+1.0*gvec[0]*gvec[5]
+                                        +.4*gvec[4]*gvec[4]+.8*gvec[3]*gvec[4]
+                                        +.4*gvec[2]*gvec[4]+.4*gvec[1]*gvec[4]
+                                        +.4*gvec[3]*gvec[3]+.4*gvec[2]*gvec[3]
+                                        +.4*gvec[1]*gvec[3]+.6*gvec[2]*gvec[2]
+                                        -.8*gvec[1]*gvec[2]+.6*gvec[1]*gvec[1]
+                                        +.5*gvec[0]*gvec[0]);
+            }
+        }
+
+    }
+    
+    if (basedists[P_6] < maxdist ) {
+        if( basedists[P_C] < maxdist ) {
+            dists[bdf_P_6C] = sqrt((gvec[0]-gvec[5])*(gvec[0]-gvec[5])
+                                   + (gvec[1]-gvec[3])*(gvec[1]-gvec[3]))/sqrt(2.);
+        }
+        if( basedists[P_9] < maxdist ) {
+            dists[bdf_P_69] = sqrt((gvec[0]-gvec[4])*(gvec[0]-gvec[4])
+                                   + (gvec[1]-gvec[3])*(gvec[1]-gvec[3]))/sqrt(2.);
+        }
+    }
+    
+    if (basedists[P_8] < maxdist ) {
+        if (basedists[P_B] < maxdist ) {
+            dists[bdf_P_8B] = sqrt(0.5*gvec[4]*gvec[4]+1.0*gvec[0]*gvec[4]
+                                   +0.5*gvec[3]*gvec[3]+1.0*gvec[1]*gvec[3]
+                                   +0.5*gvec[1]*gvec[1]+0.5*gvec[0]*gvec[0]);
+        }
+        if (basedists[P_E] < maxdist ) {
+            dists[bdf_P_8E] = sqrt(0.5*gvec[5]*gvec[5]+1.0*gvec[0]*gvec[5]
+                                   +0.5*gvec[3]*gvec[3]+1.0*gvec[1]*gvec[3]
+                                   +0.5*gvec[1]*gvec[1]+0.5*gvec[0]*gvec[0]);
+        }
+        if (basedists[P_F] < maxdist ) {
+            dists[bdf_P_8F] = sqrt( 2.*(gvec[5]+gvec[4]+gvec[0])
+                                   *(gvec[5]+gvec[4]+gvec[0])
+                                   +3.*(gvec[3]+gvec[1])*(gvec[3]+gvec[1]))/sqrt(6.);
+        }
+    }
+    
+    if (basedists[P_F] < maxdist ) {
+        if (basedists[P_B] < maxdist ) {
+            dists[bdf_P_BF] = sqrt( 2.*(gvec[5]+gvec[3]+gvec[1])*(gvec[5]+gvec[3]+gvec[1])
+                                   +3.*(gvec[4]+gvec[0])*(gvec[4]+gvec[0]))/sqrt(6.);
+        }
+        if (basedists[P_E] < maxdist ) {
+            dists[bdf_P_EF] = sqrt( 3.*gvec[5]*gvec[5]+6.*gvec[0]*gvec[5]
+                                   +2.*gvec[4]*gvec[4]+4.*gvec[3]*gvec[4]
+                                   +4.*gvec[1]*gvec[4] + 2.*gvec[3]*gvec[3]
+                                   +4.*gvec[1]*gvec[3] + 2.*gvec[1]*gvec[1]
+                                   +3.*gvec[0]*gvec[0])/sqrt(6.);
+        }
+    }
+    
+    
     
     /* P_2F */
     
-    rmv6(gvec,prj[P_2F],pgs[bdf_P_2F]);
-    dists[bdf_P_2F] = CNCM_gdist(gvec,pgs[bdf_P_2F]);
     if (dists[bdf_P_2F] < maxdist) {
+        rmv6(gvec,prj[P_2F],pgs[bdf_P_2F]);
         imv6(pgs[bdf_P_2F],MS[M_2],mpgs[bdf_M_2_P_2F]);
         imv6(mpgs[bdf_M_2_P_2F],MS[M_F], mpgs[bdf_M_F_M_2_P_2F]);
         imv6(pgs[bdf_P_2F],MS[M_F], mpgs[bdf_M_F_P_2F]);
@@ -1212,9 +1372,8 @@ static void bdfmaps(double gvec[6],
     
     /* P_27 */
     
-    rmv6(gvec,prj[P_27],pgs[bdf_P_27]);
-    dists[bdf_P_27] = CNCM_gdist(gvec,pgs[bdf_P_27]);
     if (dists[bdf_P_27] < maxdist) {
+        rmv6(gvec,prj[P_27],pgs[bdf_P_27]);
         imv6(pgs[bdf_P_27],MS[M_2],mpgs[bdf_M_2_P_27]);
         imv6(mpgs[bdf_M_2_P_27],MS[M_7], mpgs[bdf_M_7_M_2_P_27]);
         imv6(pgs[bdf_P_27],MS[M_7], mpgs[bdf_M_7_P_27]);
@@ -1223,9 +1382,8 @@ static void bdfmaps(double gvec[6],
     
     /* P_2A */
     
-    rmv6(gvec,prj[P_2A],pgs[bdf_P_2A]);
-    dists[bdf_P_2A] = CNCM_gdist(gvec,pgs[bdf_P_2A]);
     if (dists[bdf_P_2A] < maxdist) {
+        rmv6(gvec,prj[P_2A],pgs[bdf_P_2A]);
         imv6(pgs[bdf_P_2A],MS[M_2],mpgs[bdf_M_2_P_2A]);
         imv6(mpgs[bdf_M_2_P_2A],MS[M_D], mpgs[bdf_M_D_M_2_P_2A]);
         imv6(pgs[bdf_P_2A],MS[M_A], mpgs[bdf_M_A_P_2A]);
@@ -1234,52 +1392,22 @@ static void bdfmaps(double gvec[6],
     
     /* P_2D */
     
-    rmv6(gvec,prj[P_2D],pgs[bdf_P_2D]);
-    dists[bdf_P_2D] = CNCM_gdist(gvec,pgs[bdf_P_2D]);
     if (dists[bdf_P_2D] < maxdist) {
+        rmv6(gvec,prj[P_2D],pgs[bdf_P_2D]);
         imv6(pgs[bdf_P_2D],MS[M_2],mpgs[bdf_M_2_P_2D]);
         imv6(mpgs[bdf_M_2_P_2D],MS[M_A], mpgs[bdf_M_A_M_2_P_2D]);
         imv6(pgs[bdf_P_2D],MS[M_D], mpgs[bdf_M_D_P_2D]);
         imv6(mpgs[bdf_M_D_P_2D], MS[M_2], mpgs[bdf_M_2_M_D_P_2D]);
     }
-    
-    rmv6(gvec,prj[P_17],pgs[bdf_P_17]);
-    dists[bdf_P_17] = CNCM_gdist(gvec,pgs[bdf_P_17]);
-    if (dists[bdf_P_17] < maxdist) {
-        imv6(pgs[bdf_P_17],MS[M_1],mpgs[bdf_M_1_P_17]);
-        imv6(mpgs[bdf_M_1_P_17],MS[M_A], mpgs[bdf_M_A_M_1_P_17]);
-        imv6(pgs[bdf_P_17],MS[M_7], mpgs[bdf_M_7_P_17]);
-        imv6(mpgs[bdf_M_7_P_17], MS[M_1], mpgs[bdf_M_1_M_7_P_17]);
-    }
-    
-    
-    rmv6(gvec,prj[P_1A],pgs[bdf_P_1A]);
-    dists[bdf_P_1A] = CNCM_gdist(gvec,pgs[bdf_P_1A]);
-    if (dists[bdf_P_1A] < maxdist) {
-        imv6(pgs[bdf_P_1A],MS[M_1],mpgs[bdf_M_1_P_1A]);
-        imv6(mpgs[bdf_M_1_P_1A],MS[M_7],mpgs[bdf_M_7_M_1_P_1A]);
-        imv6(pgs[bdf_P_1A],MS[M_A], mpgs[bdf_M_A_P_1A]);
-        imv6(mpgs[bdf_M_A_P_1A], MS[M_1], mpgs[bdf_M_1_M_A_P_1A]);
-    }
-    
-    rmv6(gvec,prj[P_1D],pgs[bdf_P_1D]);
-    dists[bdf_P_1D] = CNCM_gdist(gvec,pgs[bdf_P_1D]);
-    if (dists[bdf_P_1D] < maxdist) {
-        imv6(pgs[bdf_P_1D],MS[M_1],mpgs[bdf_M_1_P_1D]);
-        imv6(mpgs[bdf_M_1_P_1D],MS[M_D], mpgs[bdf_M_D_M_1_P_1D]);
-        imv6(pgs[bdf_P_1D],MS[M_D], mpgs[bdf_M_D_P_1D]);
-        imv6(mpgs[bdf_M_D_P_1D], MS[M_1], mpgs[bdf_M_1_M_D_P_1D]);
-    }
-    
+        
     
     rmv6(gvec,prj[P_6],pgtemp);
-    rmv6(pgtemp,prj[P_C],pgs[bdf_P_6C]);
     /*  Note: P_6 and P_9 commute and P_6 and P_C commute */
     
     /* P_6C */
     
-    dists[bdf_P_6C] = CNCM_gdist(gvec,pgs[bdf_P_6C]);
     if (dists[bdf_P_6C] < maxdist) {
+        rmv6(pgtemp,prj[P_C],pgs[bdf_P_6C]);
         imv6(pgs[bdf_P_6C],MS[M_C],mpgs[bdf_M_C_P_6C]);
         imv6(mpgs[bdf_M_C_P_6C],MS[M_C],mpgs[bdf_M_F_M_C_P_6C]);
         imv6(pgs[bdf_P_6C],MS[M_6],mpgs[bdf_M_6_P_6C]);
@@ -1287,9 +1415,8 @@ static void bdfmaps(double gvec[6],
     
     /* P_69 */
     
-    rmv6(pgtemp,prj[P_9],pgs[bdf_P_69]);
-    dists[bdf_P_69] = CNCM_gdist(gvec,pgs[bdf_P_69]);
     if (dists[bdf_P_69] < maxdist) {
+        rmv6(pgtemp,prj[P_9],pgs[bdf_P_69]);
         imv6(pgs[bdf_P_69],MS[M_6],mpgs[bdf_M_6_P_69]);
         imv6(pgs[bdf_P_69],MS[M_9],mpgs[bdf_M_9_P_69]);
         imv6(mpgs[bdf_M_6_P_69],MS[M_F],mpgs[bdf_M_F_M_6_P_69]);
@@ -1299,21 +1426,18 @@ static void bdfmaps(double gvec[6],
     /* P_8B */
     
     rmv6(gvec,prj[P_8B],pgs[bdf_P_8B]);
-    dists[bdf_P_8B] = CNCM_gdist(gvec,pgs[bdf_P_8B]);
     
     /* P_8E */
-    rmv6(gvec,prj[P_8E],pgs[bdf_P_8E]);
-    dists[bdf_P_8E] = CNCM_gdist(gvec,pgs[bdf_P_8E]);
     if (dists[bdf_P_8E] < maxdist) {
+        rmv6(gvec,prj[P_8E],pgs[bdf_P_8E]);
         imv6(pgs[bdf_P_8E],MS[M_8],mpgs[bdf_M_8_P_8F]);
     }
     
     
     /* P_8F */
     
-    rmv6(gvec,prj[P_8F],pgs[bdf_P_8F]);
-    dists[bdf_P_8F] = CNCM_gdist(gvec,pgs[bdf_P_8F]);
     if (dists[bdf_P_8F] < maxdist) {
+        rmv6(gvec,prj[P_8F],pgs[bdf_P_8F]);
         imv6(pgs[bdf_P_8F],MS[M_8],mpgs[bdf_M_8_P_8F]);
         imv6(pgs[bdf_P_8F],MS[M_F],mpgs[bdf_M_F_P_8F]);
         imv6(mpgs[bdf_M_F_P_8F],MS[M_B],mpgs[bdf_M_B_M_F_P_8F]);
@@ -1321,9 +1445,8 @@ static void bdfmaps(double gvec[6],
     
     
     /* P_BF */
-    rmv6(gvec,prj[P_BF],pgs[bdf_P_BF]);
-    dists[bdf_P_BF] = CNCM_gdist(gvec,pgs[bdf_P_BF]);
     if (dists[bdf_P_BF] < maxdist) {
+        rmv6(gvec,prj[P_BF],pgs[bdf_P_BF]);
         imv6(pgs[bdf_P_BF],MS[M_B],mpgs[bdf_M_B_P_BF]);
         imv6(pgs[bdf_P_BF],MS[M_F],mpgs[bdf_M_F_P_BF]);
         imv6(mpgs[bdf_M_F_P_BF],MS[M_8],mpgs[bdf_M_8_M_F_P_BF]);
@@ -1331,9 +1454,8 @@ static void bdfmaps(double gvec[6],
     
     
     /* P_EF */
-    rmv6(gvec,prj[P_EF],pgs[bdf_P_EF]);
-    dists[bdf_P_EF] = CNCM_gdist(gvec,pgs[bdf_P_EF]);
     if (dists[bdf_P_EF] < maxdist) {
+        rmv6(gvec,prj[P_EF],pgs[bdf_P_EF]);
         imv6(pgs[bdf_P_EF],MS[M_E],mpgs[bdf_M_E_P_EF]);
         imv6(mpgs[bdf_M_E_P_EF],MS[M_6],mpgs[bdf_M_6_M_E_P_EF]);
         imv6(pgs[bdf_P_EF],MS[M_F],mpgs[bdf_M_F_P_EF]);
@@ -1341,9 +1463,8 @@ static void bdfmaps(double gvec[6],
     
     /* P_269 */
     
-    rmv6(gvec,prj[P_269],pgs[bdf_P_269]);
-    dists[bdf_P_269] = CNCM_gdist(gvec,pgs[bdf_P_269]);
     if (dists[bdf_P_269] < maxdist) {
+        rmv6(gvec,prj[P_269],pgs[bdf_P_269]);
         imv6(pgs[bdf_P_269],MS[M_2],mpgs[bdf_M_2_P_269]);
         imv6(pgs[bdf_P_269],MS[M_6],mpgs[bdf_M_6_P_269]);
         imv6(pgs[bdf_P_269],MS[M_9],mpgs[bdf_M_9_P_269]);
@@ -1353,9 +1474,8 @@ static void bdfmaps(double gvec[6],
     
     /* P_26C */
     
-    rmv6(gvec,prj[P_26C],pgs[bdf_P_26C]);
-    dists[bdf_P_26C] = CNCM_gdist(gvec,pgs[bdf_P_26C]);
     if (dists[bdf_P_26C] < maxdist) {
+        rmv6(gvec,prj[P_26C],pgs[bdf_P_26C]);
         imv6(pgs[bdf_P_26C],MS[M_2],mpgs[bdf_M_2_P_26C]);
         imv6(pgs[bdf_P_26C],MS[M_6],mpgs[bdf_M_6_P_26C]);
         imv6(pgs[bdf_P_26C],MS[M_C],mpgs[bdf_M_C_P_26C]);
@@ -1365,9 +1485,8 @@ static void bdfmaps(double gvec[6],
     
     /* P_28F */
     
-    rmv6(gvec,prj[P_28F],pgs[bdf_P_28F]);
-    dists[bdf_P_28F] = CNCM_gdist(gvec,pgs[bdf_P_28F]);
     if (dists[bdf_P_28F] < maxdist) {
+        rmv6(gvec,prj[P_28F],pgs[bdf_P_28F]);
         imv6(pgs[bdf_P_28F],MS[M_2],mpgs[bdf_M_2_P_28F]);
         imv6(pgs[bdf_P_28F],MS[M_8],mpgs[bdf_M_8_P_28F]);
         imv6(pgs[bdf_P_28F],MS[M_F],mpgs[bdf_M_F_P_28F]);
@@ -1377,9 +1496,8 @@ static void bdfmaps(double gvec[6],
     
     /* P_2BF */
     
-    rmv6(gvec,prj[P_2BF],pgs[bdf_P_2BF]);
-    dists[bdf_P_2BF] = CNCM_gdist(gvec,pgs[bdf_P_2BF]);
     if (dists[bdf_P_2BF] < maxdist) {
+        rmv6(gvec,prj[P_2BF],pgs[bdf_P_2BF]);
         imv6(pgs[bdf_P_2BF],MS[M_2],mpgs[bdf_M_2_P_2BF]);
         imv6(pgs[bdf_P_2BF],MS[M_B],mpgs[bdf_M_B_P_2BF]);
         imv6(pgs[bdf_P_2BF],MS[M_F],mpgs[bdf_M_F_P_2BF]);
@@ -1389,9 +1507,8 @@ static void bdfmaps(double gvec[6],
     
     /* P_2EF */
     
-    rmv6(gvec,prj[P_2EF],pgs[bdf_P_2EF]);
-    dists[bdf_P_2EF] = CNCM_gdist(gvec,pgs[bdf_P_2EF]);
     if (dists[bdf_P_2EF] < maxdist) {
+        rmv6(gvec,prj[P_2EF],pgs[bdf_P_2EF]);
         imv6(pgs[bdf_P_2EF],MS[M_2],mpgs[bdf_M_2_P_2EF]);
         imv6(pgs[bdf_P_2EF],MS[M_E],mpgs[bdf_M_E_P_2EF]);
         imv6(pgs[bdf_P_2EF],MS[M_F],mpgs[bdf_M_F_P_2EF]);
@@ -1461,6 +1578,7 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
     double pgs2[NBND][6], mpgs2[NBND][6];
     double dpg1pg2;
     double distsq;
+    int iord1[NCASES],iord2[NCASES];
     double mindists1;
     double mindists2;
     int jx1, jx2, ix2;
@@ -1471,33 +1589,28 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
     dist = sqrt(distsq);
     report_double("dist = ",dist,"\n");
     
-    bdmaps(gvec1,dists1,pgs1,mpgs1,dist);
-    bdfmaps(gvec1,fdists1,fpgs1,fmpgs1,nmpgs,basempgs,dist);
-    bdmaps(gvec2,dists2,pgs2,mpgs2,dist);
-    bdfmaps(gvec2,fdists2,fpgs2,fmpgs2,nmpgs,basempgs,dist);
+    bdmaps(gvec1,dists1,iord1,pgs1,mpgs1,dist);
+    bdmaps(gvec2,dists2,iord2,pgs2,mpgs2,dist);
     
-    
-    mindists1 = dists1[0];
-    mindists2 = dists2[0];
-    for (j1=1; j1< NBND; j1++) {
-        mindists1 = NCD_min(dists1[j1],mindists1);
-        mindists2 = NCD_min(dists2[j1],mindists2);
+    for (j1=NBND; j1<NCASES; j1++) {
+        iord1[j1] = j1;
+        iord2[j1] = j1;
     }
     
-    
-    
+    mindists1 = dists1[iord1[0]];
+    mindists2 = dists2[iord2[0]];
     
     
     if (mindists1+mindists2 < dist) {
         for (jx1 = 0; jx1 < NBND; jx1++) {
             double d1;
-            j1 = jord[jx1];
+            j1 = iord1[jx1];
             if (j1 < NBND) d1 = dists1[j1];
             else d1=fdists1[baseord[j1]];
             if (d1*d1 < distsq) {
                 for (jx2 = 0; jx2 < NBND; jx2++) {
                     double d2;
-                    j2 = jord2[jx2];
+                    j2 = iord2[jx2];
                     if (j2 < NBND) d2 = dists2[j2];
                     else d2=fdists2[baseord[j2]];
                     if (j1 < NBND && j2 < NBND && j1 < NBND && j2< NBND &&
@@ -1546,10 +1659,12 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
                 }
             }
         }
+        bdfmaps(gvec1,dists1,fdists1,fpgs1,fmpgs1,nmpgs,basempgs,sqrt(distsq));
+        bdfmaps(gvec2,dists2,fdists2,fpgs2,fmpgs2,nmpgs,basempgs,sqrt(distsq));
         for (jx1 = 0; jx1 < NCASES; jx1++) {
             double d1;
             j1 = jord[jx1];
-            if (j1 < NBND) d1 = d1 = dists1[j1];
+            if (j1 < NBND) d1 = dists1[j1];
             else d1=fdists1[baseord[j1]];
             if (d1*d1 < distsq) {
                 for (jx2 = 0; jx2 < NCASES; jx2++) {
