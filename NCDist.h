@@ -13,10 +13,10 @@
 
 
 /* #define NCDIST_DEBUG */
-#define NCDIST_NO_INNER_PASS
 /* #define NCDIST_NO_OUTER_PASS */
 
 #include <cmath>
+
 #ifdef NCDIST_DEBUG
 static double oldvalue;
 static int changed=0;
@@ -107,163 +107,6 @@ static int pass=0;
 #define P_R20PF 50
 #define P_R22PF 51
 
-
-/* The number of boundaries that are targets of
-   each of the reflection group tranforms */
-static int numnum2bd[15] = {
-    16,16,24,24,24,18,18,18,18,18,18,18,18,18,2
-};
-
-static int num2bd[15][24][2] =
-{
-    /*prj[P-1]   1 */
-    {{P_1,0},{P_1,1},{P_1,6},{P_1,7},{P_1,12},{P_1,13},{P_1,18},{P_1,19},
-        {P_2,3},{P_2,5},{P_2,9},{P_2,11},{P_2,15},{P_2,17},{P_2,21},{P_2,23}},
-    /*prj[P_2]   2 */
-    {{P_1,4},{P_1,5},{P_1,10},{P_1,11},{P_1,16},{P_1,17},{P_1,22},{P_1,23},
-        {P_2,0},{P_2,2},{P_2,6},{P_2,8},{P_2,12},{P_2,14},{P_2,18},{P_2,20}},
-    /*prj[P_3]   3 */
-    {{P_3,0},{P_3,2},{P_3,6},{P_3,8},{P_3,12},{P_3,14},{P_3,18},{P_3,20},
-        {P_4,1},{P_4,3},{P_4,7},{P_4,9},{P_4,13},{P_4,15},{P_4,19},{P_4,22},
-        {P_5,4},{P_5,5},{P_5,10},{P_5,11},{P_5,16},{P_5,17},{P_5,22},{P_5,23}},
-    /*prj[P_4]   4 */
-    {{P_3,1},{P_3,4},{P_3,7},{P_3,10},{P_3,13},{P_3,16},{P_3,19},{P_3,22},
-        {P_4,0},{P_4,5},{P_4,6},{P_4,11},{P_4,12},{P_4,17},{P_4,18},{P_4,23},
-        {P_5,2},{P_5,3},{P_5,8},{P_5,9},{P_5,14},{P_5,15},{P_5,20},{P_5,21}},
-    /*prj[P_5]   5 */
-    {{P_3,3},{P_3,5},{P_3,9},{P_3,11},{P_3,15},{P_3,17},{P_3,21},{P_3,23},
-        {P_4,2},{P_4,4},{P_4,8},{P_4,10},{P_4,14},{P_4,16},{P_4,20},{P_4,22},
-        {P_5,0},{P_5,1},{P_5,6},{P_5,7},{P_5,12},{P_5,13},{P_5,18},{P_5,19}},
-    
-    /*prj[P_6]   6 */
-    {{P_6,0},{P_6,6},{P_7,0},{P_7,6},{P_8,12},{P_8,18},
-        {P_9,1},{P_9,7},{P_A,1},{P_A,7},{P_B,13},{P_B,19},
-        {P_C,4},{P_C,10},{P_D,4},{P_D,10},{P_E,16},{P_E,22}},
-    /*prj[P_7]   7 */
-    {{P_6,0},{P_6,6},{P_7,0},{P_7,6},{P_8,12},{P_8,18},
-        {P_9,1},{P_9,7},{P_A,1},{P_A,7},{P_B,13},{P_B,19},
-        {P_C,4},{P_C,10},{P_D,4},{P_D,10},{P_E,16},{P_E,22}},
-    /*prj[P_8]   8 */
-    {{P_6,12},{P_6,18},{P_7,12},{P_7,18},{P_8,0},{P_8,6},
-        {P_9,13},{P_9,19},{P_A,13},{P_A,19},{P_B,1},{P_B,7},
-        {P_C,16},{P_C,22},{P_D,16},{P_D,22},{P_E,4},{P_E,10}},
-    
-    /*prj[P_9]   9 */
-    {{P_6,1},{P_6,13},{P_7,6},{P_7,13},{P_8,7},{P_8,19},
-        {P_9,0},{P_9,12},{P_A,0},{P_A,12},{P_B,6},{P_B,18},
-        {P_C,6},{P_C,18},{P_D,2},{P_D,14},{P_E,8},{P_E,20}},
-    /*prj[P_A]   A */
-    {{P_6,1},{P_6,13},{P_7,6},{P_7,13},{P_8,7},{P_8,19},
-        {P_9,0},{P_9,12},{P_A,0},{P_A,12},{P_B,6},{P_B,18},
-        {P_C,6},{P_C,18},{P_D,2},{P_D,14},{P_E,8},{P_E,20}},
-    /*prj[P_B]   B */
-    {{P_6,7},{P_6,19},{P_7,7},{P_7,19},{P_8,1},{P_8,13},
-        {P_9,6},{P_9,18},{P_A,6},{P_A,18},{P_B,0},{P_B,12},
-        {P_C,8},{P_C,20},{P_D,8},{P_D,20},{P_E,2},{P_E,14}},
-    
-    /*prj[P_C]   C */
-    {{P_6,3},{P_6,21},{P_7,3},{P_7,21},{P_8,9},{P_8,15},
-        {P_9,2},{P_9,20},{P_A,2},{P_A,20},{P_B,8},{P_B,14},
-        {P_C,0},{P_C,18},{P_D,0},{P_D,18},{P_E,6},{P_E,12}},
-    /*prj[P_D]   D */
-    {{P_6,3},{P_6,21},{P_7,3},{P_7,21},{P_8,9},{P_8,15},
-        {P_9,2},{P_9,20},{P_A,2},{P_A,20},{P_B,8},{P_B,14},
-        {P_C,0},{P_C,18},{P_D,0},{P_D,18},{P_E,6},{P_E,12}},
-    /*prj[P_E]   E */
-    {{P_6,9},{P_6,15},{P_7,9},{P_7,15},{P_8,3},{P_8,21},
-        {P_9,8},{P_9,14},{P_A,8},{P_A,14},{P_B,2},{P_B,20},
-        {P_C,6},{P_C,12},{P_D,6},{P_D,12},{P_E,0},{P_E,18}},
-    
-    /*prj[P_F]   E */
-    {{P_F,0},{P_F,1}}
-};
-
-
-/* The actual boundary mappings */
-
-static int bdnum[15][24] = {
-     /*prj[P-1]   1 */
-     {P_1,P_1,P_R2P1,P_R2P1,P_2,P_2,
-         P_1,P_1,P_R2P1,P_R2P1,P_2,P_2,
-         P_1,P_1,P_R2P1,P_R2P1,P_2,P_2,
-         P_1,P_1,P_R2P1,P_R2P1,P_2,P_2},
-     /*prj[P_2]   2 */
-     {P_2,P_R2P1,P_2,P_1,P_R2P1,P_1,
-         P_2,P_R2P1,P_2,P_1,P_R2P1,P_1,
-         P_2,P_R2P1,P_2,P_1,P_R2P1,P_1,
-         P_2,P_R2P1,P_2,P_1,P_R2P1,P_1},
-     
-     /*prj[P_3]   3 */
-     {P_3,P_4,P_3,P_5,P_4,P_5,
-         P_3,P_4,P_3,P_5,P_4,P_5,
-         P_3,P_4,P_3,P_5,P_4,P_5,
-         P_3,P_4,P_3,P_5,P_4,P_5},
-     /*prj[P_4]   4 */
-     {P_4,P_3,P_5,P_3,P_5,P_4,
-         P_4,P_3,P_5,P_3,P_5,P_4,
-         P_4,P_3,P_5,P_3,P_5,P_4,
-         P_4,P_3,P_5,P_3,P_5,P_4},
-     /*prj[P_5]   5 */
-     {P_5,P_5,P_4,P_4,P_3,P_3,
-         P_5,P_5,P_4,P_4,P_3,P_3,
-         P_5,P_5,P_4,P_4,P_3,P_3,
-         P_5,P_5,P_4,P_4,P_3,P_3},
-     
-     /*prj[P_6]   6 */
-     {P_6,P_9,P_R17PE,P_C,P_R9PE,P_R7PE,
-         P_6,P_B,P_R17PE,P_E,P_R3PE,P_R1PE,
-         P_8,P_9,P_R5PE,P_E,P_R9PE,P_R1PE,
-         P_8,P_B,P_R5PE,P_C,P_R3PE,P_R7PE},
-     /*prj[P_7]   7 */
-     {P_6,P_9,P_R17PE,P_C,P_R9PE,P_R7PE,
-         P_6,P_B,P_R17PE,P_E,P_R3PE,P_R1PE,
-         P_8,P_9,P_R5PE,P_E,P_R9PE,P_R1PE,
-         P_8,P_B,P_R5PE,P_C,P_R3PE,P_R7PE},
-     /*prj[P_8]   8 */
-     {P_8,P_B,P_R5PE,P_E,P_R7PE,P_R3PE,
-         P_8,P_9,P_R5PE,P_C,P_R9PE,P_R7PE,
-         P_6,P_B,P_R17PE,P_C,P_R3PE,P_R7PE,
-         P_6,P_9,P_R17PE,P_E,P_R9PE,P_R1PE},
-     
-     /*prj[P_9]   9 */
-     {P_9,P_6,P_C,P_R17PE,P_R7PE,P_R9PE,
-         P_B,P_6,P_E,P_R17PE,P_R1PE,P_R3PE,
-         P_9,P_8,P_E,P_R5PE,P_R1PE,P_R9PE,
-         P_B,P_8,P_C,P_R5PE,P_R7PE,P_R3PE},
-     /*prj[P_A]   A */
-     {P_9,P_6,P_C,P_R17PE,P_R7PE,P_R9PE,
-         P_B,P_6,P_E,P_R17PE,P_R1PE,P_R3PE,
-         P_9,P_8,P_E,P_R5PE,P_R1PE,P_R9PE,
-         P_B,P_8,P_C,P_R5PE,P_R7PE,P_R3PE},
-     /*prj[P_B]   B */
-     {P_B,P_8,P_E,P_R5PE,P_R1PE,P_R3PE,
-         P_9,P_8,P_C,P_R5PE,P_R7PE,P_R9PE,
-         P_B,P_6,P_C,P_R17PE,P_R7PE,P_R3PE,
-         P_9,P_6,P_E,P_R17PE,P_R1PE,P_R9PE},
-     
-     /*prj[P_C]   C */
-     {P_C,P_R7PE,P_9,P_R9PE,P_6,P_R17PE,
-         P_E,P_R1PE,P_B,P_R3PE,P_6,P_R17PE,
-         P_E,P_R1PE,P_9,P_R9PE,P_8,P_R5PE,
-         P_C,P_R7PE,P_B,P_R3PE,P_8,P_R5PE},
-     /*prj[P_D]   D */
-     {P_C,P_R7PE,P_9,P_R9PE,P_6,P_R17PE,
-         P_E,P_R1PE,P_B,P_R3PE,P_6,P_R17PE,
-         P_E,P_R1PE,P_9,P_R9PE,P_8,P_R5PE,
-         P_C,P_R7PE,P_B,P_R3PE,P_8,P_R5PE},
-     /*prj[P_E]   E */
-     {P_E,P_R1PE,P_B,P_R3PE,P_8,P_R5PE,
-         P_C,P_R7PE,P_9,P_R9PE,P_8,P_R5PE,
-         P_C,P_R7PE,P_B,P_R3PE,P_6,P_R17PE,
-         P_E,P_R1PE,P_9,P_R9PE,P_6,P_R17PE},
-     
-     /*prj[P_F]   F */
-     {P_F,P_F,P_R2PF,P_R2PF,P_R4PF,P_R4PF,
-         P_R6PF,P_R6PF,P_R8PF,P_R8PF,P_R10PF,P_R10PF,
-         P_R12PF,P_R12PF,P_R14PF,P_R14PF,P_R16PF,P_R16PF,
-         P_R18PF,P_R18PF,P_R20PF,P_R20PF,P_R22PF,P_R22PF}
-     
- };
 
 
 /* Boundary porjectors */
@@ -1307,11 +1150,6 @@ static void rmv6 (double v1[6], double m[36], double v2[6]) {
        applying the 24-way unfolding */
 
 #define NREFL 24
-#ifdef NCDIST_NO_INNER_PASS
-  #define NREFL_INNER 1
-#else
-  #define NREFL_INNER NREFL
-#endif
 #ifdef NCDIST_NO_OUTER_PASS
 #define NREFL_OUTER 1
 #else
@@ -1320,95 +1158,19 @@ static void rmv6 (double v1[6], double m[36], double v2[6]) {
 #define NBND  15
 
 static void bdmaps(double gvec[6],
-            double vecs[NREFL][6],
-            double dists[NBND][NREFL],
-            double pgs[NBND][NREFL][6],
-            double mpgs[NBND][NREFL][6],
+            double dists[NBND],
+            double pgs[NBND][6],
+            double mpgs[NBND][6],
             double maxdist) {
     
-    int ii, jj;
-    double xtemp;
-    
-    
-    /*
-     0 --  5 +++
-     6 -- 11 +--       M_3
-     12 -- 17 -+-      M_4
-     18 -- 23 --+      M_5
-     */
-    
-    for (ii = 0; ii < 24; ii++) {
-        cpyvn(6,gvec,vecs[ii]);
-        if (ii >= 6 && ii <= 17) {   /*  Apply M_5 */
-            vecs[ii][5] = -vecs[ii][5];
-        }
-        if ((ii >= 6 && ii <= 11)|| ii >= 18) {  /* Apply M_4 */
-            vecs[ii][4] = -vecs[ii][4];
-        }
-        if (ii>=12) {                 /* Apply M_3 */
-            vecs[ii][3] = -vecs[ii][3];
-        }
-        /*
-           0,6,12,18          I
-           1,7,13,19          M_2
-           2,8,14,20          M_1
-           3,9,15,21          M_2.M_1
-           4,10,16,22         M_1.M_2
-           5,11,17,23     M_2.M_1.M_2
-        */
-        
-        jj = ii%6;
-        if (jj==1||jj==3) {           /* Apply M_1 */
-            xtemp = vecs[ii][0];
-            vecs[ii][0] = vecs[ii][1];
-            vecs[ii][1] = xtemp;
-            xtemp = vecs[ii][3];
-            vecs[ii][3] = vecs[ii][4];
-            vecs[ii][4] = xtemp;
-        }
-        if (jj==2||jj>=4) {           /* Apply M_2 */
-            xtemp = vecs[ii][1];
-            vecs[ii][1] = vecs[ii][2];
-            vecs[ii][2] = xtemp;
-            xtemp = vecs[ii][4];
-            vecs[ii][4] = vecs[ii][5];
-            vecs[ii][5] = xtemp;
-        }
-        if (jj>=4) {                 /* Apply M_1 */
-            xtemp = vecs[ii][0];
-            vecs[ii][0] = vecs[ii][1];
-            vecs[ii][1] = xtemp;
-            xtemp = vecs[ii][3];
-            vecs[ii][3] = vecs[ii][4];
-            vecs[ii][4] = xtemp;
-        }
-        if (jj==3||jj==5) {          /* Apply M_2 */
-            xtemp = vecs[ii][1];
-            vecs[ii][1] = vecs[ii][2];
-            vecs[ii][2] = xtemp;
-            xtemp = vecs[ii][4];
-            vecs[ii][4] = vecs[ii][5];
-            vecs[ii][5] = xtemp;
-        }
+    int jj;
+
+    for (jj = 0; jj < NBND; jj++ ) {
+        rmv6(gvec, prj[jj], pgs[jj]);
+        imv6(pgs[jj], MS[jj], mpgs[jj]);
+        dists[jj] = CNCM_gdist(gvec,pgs[jj]);
     }
     
-    for (ii=0; ii < 24; ii ++) {
-        if (ii==0) {
-            for (jj = 0; jj < 15; jj++ ) {
-                rmv6(vecs[ii], prj[jj], pgs[jj][ii]);
-                imv6(pgs[jj][ii], MS[jj], mpgs[jj][ii]);
-                dists[jj][ii] = CNCM_gdist(vecs[ii],pgs[jj][ii]);
-            }
-         } else {
-            for (jj=0; jj < NBND; jj++) {
-                dists[jj][ii] = dists[jj][0];
-                if (dists[jj][ii] <= maxdist) {
-                    imv6(pgs[jj][0],RS[jj],pgs[jj][ii]);
-                    imv6(mpgs[jj][0],RS[jj],mpgs[jj][ii]);
-                }
-            }
-        }
-    }
 }
 
 
@@ -1423,378 +1185,221 @@ static void bdmaps(double gvec[6],
  */
 
 
-static void bdfmaps(double vecs[NREFL][6],
-             double dists[NPGS][NREFL],
-             double pgs[NPGS][NREFL][6],
-             double mpgs[NMPGS][NREFL][6],
+static void bdfmaps(double gvec[6],
+             double dists[NPGS],
+             double pgs[NPGS][6],
+             double mpgs[NMPGS][6],
              int nmpgs[NPGS],
              int basempgs[NPGS],
-             double maxdist) {
+                    double maxdist) {
     
     int ii, jj;
-
+    
     double pgtemp[6];
     
-    for (ii=0; ii < NREFL_INNER; ii++) {
-        if (ii==0) {
-            
-            /* P_2F */
-            
-            rmv6(vecs[ii],prj[P_2F],pgs[bdf_P_2F][ii]);
-            dists[bdf_P_2F][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_2F][ii]);
-            if (dists[bdf_P_2F][ii] < maxdist) {
-                imv6(pgs[bdf_P_2F][ii],MS[M_2],mpgs[bdf_M_2_P_2F][ii]);
-                imv6(mpgs[bdf_M_2_P_2F][ii],MS[M_F], mpgs[bdf_M_F_M_2_P_2F][ii]);
-                imv6(pgs[bdf_P_2F][ii],MS[M_F], mpgs[bdf_M_F_P_2F][ii]);
-                imv6(mpgs[bdf_M_F_P_2F][ii], MS[M_2], mpgs[bdf_M_2_M_F_P_2F][ii]);
-            }
-
-            
-            /* P_27 */
-            
-            rmv6(vecs[ii],prj[P_27],pgs[bdf_P_27][ii]);
-            dists[bdf_P_27][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_27][ii]);
-            if (dists[bdf_P_27][ii] < maxdist) {
-                imv6(pgs[bdf_P_27][ii],MS[M_2],mpgs[bdf_M_2_P_27][ii]);
-                imv6(mpgs[bdf_M_2_P_27][ii],MS[M_7], mpgs[bdf_M_7_M_2_P_27][ii]);
-                imv6(pgs[bdf_P_27][ii],MS[M_7], mpgs[bdf_M_7_P_27][ii]);
-                imv6(mpgs[bdf_M_7_P_27][ii], MS[M_2], mpgs[bdf_M_2_M_7_P_27][ii]);
-            }
-
-            /* P_2A */
-            
-            rmv6(vecs[ii],prj[P_2A],pgs[bdf_P_2A][ii]);
-            dists[bdf_P_2A][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_2A][ii]);
-            if (dists[bdf_P_2A][ii] < maxdist) {
-                imv6(pgs[bdf_P_2A][ii],MS[M_2],mpgs[bdf_M_2_P_2A][ii]);
-                imv6(mpgs[bdf_M_2_P_2A][ii],MS[M_D], mpgs[bdf_M_D_M_2_P_2A][ii]);
-                imv6(pgs[bdf_P_2A][ii],MS[M_A], mpgs[bdf_M_A_P_2A][ii]);
-                imv6(mpgs[bdf_M_A_P_2A][ii], MS[M_2], mpgs[bdf_M_2_M_A_P_2A][ii]);
-            }
-
-            /* P_2D */
-            
-            rmv6(vecs[ii],prj[P_2D],pgs[bdf_P_2D][ii]);
-            dists[bdf_P_2D][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_2D][ii]);
-            if (dists[bdf_P_2D][ii] < maxdist) {
-                imv6(pgs[bdf_P_2D][ii],MS[M_2],mpgs[bdf_M_2_P_2D][ii]);
-                imv6(mpgs[bdf_M_2_P_2D][ii],MS[M_A], mpgs[bdf_M_A_M_2_P_2D][ii]);
-                imv6(pgs[bdf_P_2D][ii],MS[M_D], mpgs[bdf_M_D_P_2D][ii]);
-                imv6(mpgs[bdf_M_D_P_2D][ii], MS[M_2], mpgs[bdf_M_2_M_D_P_2D][ii]);
-            }
-
-            rmv6(vecs[ii],prj[P_17],pgs[bdf_P_17][ii]);
-            dists[bdf_P_17][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_17][ii]);
-            if (dists[bdf_P_17][ii] < maxdist) {
-                imv6(pgs[bdf_P_17][ii],MS[M_1],mpgs[bdf_M_1_P_17][ii]);
-                imv6(mpgs[bdf_M_1_P_17][ii],MS[M_A], mpgs[bdf_M_A_M_1_P_17][ii]);
-                imv6(pgs[bdf_P_17][ii],MS[M_7], mpgs[bdf_M_7_P_17][ii]);
-                imv6(mpgs[bdf_M_7_P_17][ii], MS[M_1], mpgs[bdf_M_1_M_7_P_17][ii]);
-            }
-            
-            
-            rmv6(vecs[ii],prj[P_1A],pgs[bdf_P_1A][ii]);
-            dists[bdf_P_1A][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_1A][ii]);
-            if (dists[bdf_P_1A][ii] < maxdist) {
-                imv6(pgs[bdf_P_1A][ii],MS[M_1],mpgs[bdf_M_1_P_1A][ii]);
-                imv6(mpgs[bdf_M_1_P_1A][ii],MS[M_7],mpgs[bdf_M_7_M_1_P_1A][ii]);
-                imv6(pgs[bdf_P_1A][ii],MS[M_A], mpgs[bdf_M_A_P_1A][ii]);
-                imv6(mpgs[bdf_M_A_P_1A][ii], MS[M_1], mpgs[bdf_M_1_M_A_P_1A][ii]);
-            }
-            
-            rmv6(vecs[ii],prj[P_1D],pgs[bdf_P_1D][ii]);
-            dists[bdf_P_1D][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_1D][ii]);
-            if (dists[bdf_P_1D][ii] < maxdist) {
-                imv6(pgs[bdf_P_1D][ii],MS[M_1],mpgs[bdf_M_1_P_1D][ii]);
-                imv6(mpgs[bdf_M_1_P_1D][ii],MS[M_D], mpgs[bdf_M_D_M_1_P_1D][ii]);
-                imv6(pgs[bdf_P_1D][ii],MS[M_D], mpgs[bdf_M_D_P_1D][ii]);
-                imv6(mpgs[bdf_M_D_P_1D][ii], MS[M_1], mpgs[bdf_M_1_M_D_P_1D][ii]);
-            }
-
-                    
-            rmv6(vecs[ii],prj[P_6],pgtemp);
-            rmv6(pgtemp,prj[P_C],pgs[bdf_P_6C][ii]);
-            /*  Note: P_6 and P_9 commute and P_6 and P_C commute */
-            
-            /* P_6C */
-            
-            dists[bdf_P_6C][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_6C][ii]);
-            if (dists[bdf_P_6C][ii] < maxdist) {
-                imv6(pgs[bdf_P_6C][ii],MS[M_C],mpgs[bdf_M_C_P_6C][ii]);
-                imv6(mpgs[bdf_M_C_P_6C][ii],MS[M_C],mpgs[bdf_M_F_M_C_P_6C][ii]);
-                imv6(pgs[bdf_P_6C][ii],MS[M_6],mpgs[bdf_M_6_P_6C][ii]);
-            }
-            
-            /* P_69 */
-            
-            rmv6(pgtemp,prj[P_9],pgs[bdf_P_69][ii]);
-            dists[bdf_P_69][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_69][ii]);
-            if (dists[bdf_P_69][ii] < maxdist) {
-                imv6(pgs[bdf_P_69][ii],MS[M_6],mpgs[bdf_M_6_P_69][ii]);
-                imv6(pgs[bdf_P_69][ii],MS[M_9],mpgs[bdf_M_9_P_69][ii]);
-                imv6(mpgs[bdf_M_6_P_69][ii],MS[M_F],mpgs[bdf_M_F_M_6_P_69][ii]);
-                imv6(mpgs[bdf_M_9_P_69][ii],MS[M_F],mpgs[bdf_M_F_M_9_P_69][ii]);
-            }
-            
-            /* P_8B */
-            
-            rmv6(vecs[ii],prj[P_8B],pgs[bdf_P_8B][ii]);
-            dists[bdf_P_8B][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_8B][ii]);
-            
-            /* P_8E */
-            rmv6(vecs[ii],prj[P_8E],pgs[bdf_P_8E][ii]);
-            dists[bdf_P_8E][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_8E][ii]);
-            if (dists[bdf_P_8E][ii] < maxdist) {
-                imv6(pgs[bdf_P_8E][ii],MS[M_8],mpgs[bdf_M_8_P_8F][ii]);
-            }
-
-            
-            /* P_8F */
-            
-            rmv6(vecs[ii],prj[P_8F],pgs[bdf_P_8F][ii]);
-            dists[bdf_P_8F][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_8F][ii]);
-            if (dists[bdf_P_8F][ii] < maxdist) {
-                imv6(pgs[bdf_P_8F][ii],MS[M_8],mpgs[bdf_M_8_P_8F][ii]);
-                imv6(pgs[bdf_P_8F][ii],MS[M_F],mpgs[bdf_M_F_P_8F][ii]);
-                imv6(mpgs[bdf_M_F_P_8F][ii],MS[M_B],mpgs[bdf_M_B_M_F_P_8F][ii]);
-            }
-            
-            
-            /* P_BF */
-            rmv6(vecs[ii],prj[P_BF],pgs[bdf_P_BF][ii]);
-            dists[bdf_P_BF][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_BF][ii]);
-            if (dists[bdf_P_BF][ii] < maxdist) {
-                imv6(pgs[bdf_P_BF][ii],MS[M_B],mpgs[bdf_M_B_P_BF][ii]);
-                imv6(pgs[bdf_P_BF][ii],MS[M_F],mpgs[bdf_M_F_P_BF][ii]);
-                imv6(mpgs[bdf_M_F_P_BF][ii],MS[M_8],mpgs[bdf_M_8_M_F_P_BF][ii]);
-            }
-            
-            
-            /* P_EF */
-            rmv6(vecs[ii],prj[P_EF],pgs[bdf_P_EF][ii]);
-            dists[bdf_P_EF][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_EF][ii]);
-            if (dists[bdf_P_EF][ii] < maxdist) {
-                imv6(pgs[bdf_P_EF][ii],MS[M_E],mpgs[bdf_M_E_P_EF][ii]);
-                imv6(mpgs[bdf_M_E_P_EF][ii],MS[M_6],mpgs[bdf_M_6_M_E_P_EF][ii]);
-                imv6(pgs[bdf_P_EF][ii],MS[M_F],mpgs[bdf_M_F_P_EF][ii]);
-            }
-            
-            /* P_269 */
-            
-            rmv6(vecs[ii],prj[P_269],pgs[bdf_P_269][ii]);
-            dists[bdf_P_269][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_269][ii]);
-            if (dists[bdf_P_269][ii] < maxdist) {
-                imv6(pgs[bdf_P_269][ii],MS[M_2],mpgs[bdf_M_2_P_269][ii]);
-                imv6(pgs[bdf_P_269][ii],MS[M_6],mpgs[bdf_M_6_P_269][ii]);
-                imv6(pgs[bdf_P_269][ii],MS[M_9],mpgs[bdf_M_9_P_269][ii]);
-                imv6(mpgs[bdf_M_6_P_269][ii],MS[M_2],mpgs[bdf_M_2_M_6_P_269][ii]);
-                imv6(mpgs[bdf_M_9_P_269][ii],MS[M_2],mpgs[bdf_M_2_M_9_P_269][ii]);
-            }
-            
-            /* P_26C */
-            
-            rmv6(vecs[ii],prj[P_26C],pgs[bdf_P_26C][ii]);
-            dists[bdf_P_26C][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_26C][ii]);
-            if (dists[bdf_P_26C][ii] < maxdist) {
-                imv6(pgs[bdf_P_26C][ii],MS[M_2],mpgs[bdf_M_2_P_26C][ii]);
-                imv6(pgs[bdf_P_26C][ii],MS[M_6],mpgs[bdf_M_6_P_26C][ii]);
-                imv6(pgs[bdf_P_26C][ii],MS[M_C],mpgs[bdf_M_C_P_26C][ii]);
-                imv6(mpgs[bdf_M_6_P_26C][ii],MS[M_2],mpgs[bdf_M_2_M_6_P_26C][ii]);
-                imv6(mpgs[bdf_M_C_P_26C][ii],MS[M_2],mpgs[bdf_M_2_M_C_P_26C][ii]);
-            }
-            
-            /* P_28F */
-            
-            rmv6(vecs[ii],prj[P_28F],pgs[bdf_P_28F][ii]);
-            dists[bdf_P_28F][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_28F][ii]);
-            if (dists[bdf_P_28F][ii] < maxdist) {
-                imv6(pgs[bdf_P_28F][ii],MS[M_2],mpgs[bdf_M_2_P_28F][ii]);
-                imv6(pgs[bdf_P_28F][ii],MS[M_8],mpgs[bdf_M_8_P_28F][ii]);
-                imv6(pgs[bdf_P_28F][ii],MS[M_F],mpgs[bdf_M_F_P_28F][ii]);
-                imv6(mpgs[bdf_M_2_P_28F][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_28F][ii]);
-                imv6(mpgs[bdf_M_F_M_2_P_28F][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_28F][ii]);
-            }
-            
-            /* P_2BF */
-            
-            rmv6(vecs[ii],prj[P_2BF],pgs[bdf_P_2BF][ii]);
-            dists[bdf_P_2BF][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_2BF][ii]);
-            if (dists[bdf_P_2BF][ii] < maxdist) {
-                imv6(pgs[bdf_P_2BF][ii],MS[M_2],mpgs[bdf_M_2_P_2BF][ii]);
-                imv6(pgs[bdf_P_2BF][ii],MS[M_B],mpgs[bdf_M_B_P_2BF][ii]);
-                imv6(pgs[bdf_P_2BF][ii],MS[M_F],mpgs[bdf_M_F_P_2BF][ii]);
-                imv6(mpgs[bdf_M_2_P_2BF][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_2BF][ii]);
-                imv6(mpgs[bdf_M_F_M_2_P_2BF][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2BF][ii]);
-            }
-            
-            /* P_2EF */
-        
-            rmv6(vecs[ii],prj[P_2EF],pgs[bdf_P_2EF][ii]);
-            dists[bdf_P_2EF][ii] = CNCM_gdist(vecs[ii],pgs[bdf_P_2EF][ii]);
-            if (dists[bdf_P_2EF][ii] < maxdist) {
-                imv6(pgs[bdf_P_2EF][ii],MS[M_2],mpgs[bdf_M_2_P_2EF][ii]);
-                imv6(pgs[bdf_P_2EF][ii],MS[M_E],mpgs[bdf_M_E_P_2EF][ii]);
-                imv6(pgs[bdf_P_2EF][ii],MS[M_F],mpgs[bdf_M_F_P_2EF][ii]);
-                imv6(mpgs[bdf_M_2_P_2EF][ii],MS[M_F],mpgs[bdf_M_F_M_2_P_2EF][ii]);
-                imv6(mpgs[bdf_M_F_M_2_P_2EF][ii],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2EF][ii]);
-            }
-
-            
-        } else {
-            dists[bdf_P_2F][ii] = dists[bdf_P_2F][0];
-            dists[bdf_P_27][ii] = dists[bdf_P_27][0];
-            dists[bdf_P_2A][ii] = dists[bdf_P_2A][0];
-            dists[bdf_P_2D][ii] = dists[bdf_P_2D][0];
-            dists[bdf_P_17][ii] = dists[bdf_P_17][0];
-            dists[bdf_P_1A][ii] = dists[bdf_P_1A][0];
-            dists[bdf_P_1D][ii] = dists[bdf_P_1D][0];
-            dists[bdf_P_6C][ii] = dists[bdf_P_6C][0];
-            dists[bdf_P_69][ii] = dists[bdf_P_69][0];
-            dists[bdf_P_8B][ii] = dists[bdf_P_8B][0];
-            dists[bdf_P_8E][ii] = dists[bdf_P_8E][0];
-            dists[bdf_P_8F][ii] = dists[bdf_P_8F][0];
-            dists[bdf_P_BF][ii] = dists[bdf_P_BF][0];
-            dists[bdf_P_EF][ii] = dists[bdf_P_EF][0];
-            dists[bdf_P_269][ii] = dists[bdf_P_269][0];
-            dists[bdf_P_26C][ii] = dists[bdf_P_26C][0];
-            dists[bdf_P_28F][ii] = dists[bdf_P_28F][0];
-            dists[bdf_P_2BF][ii] = dists[bdf_P_2BF][0];
-            dists[bdf_P_2EF][ii] = dists[bdf_P_2EF][0];
-            if (dists[bdf_P_2F][ii] < maxdist) {
-                imv6(pgs[bdf_P_2F][0],RS[ii],pgs[bdf_P_2F][ii]);
-                imv6(mpgs[bdf_M_2_P_2F][0],RS[ii],mpgs[bdf_M_2_P_2F][ii]);
-                imv6(mpgs[bdf_M_F_M_2_P_2F][0],RS[ii],mpgs[bdf_M_F_M_2_P_2F][ii]);
-                imv6(mpgs[bdf_M_F_P_2F][0],RS[ii],mpgs[bdf_M_F_P_2F][ii]);
-                imv6(mpgs[bdf_M_2_M_F_P_2F][0],RS[ii],mpgs[bdf_M_2_M_F_P_2F][ii]);
-            }
-            if (dists[bdf_P_27][ii] < maxdist) {
-                imv6(pgs[bdf_P_27][0],RS[ii],pgs[bdf_P_27][ii]);
-                imv6(mpgs[bdf_M_2_P_27][0],RS[ii],mpgs[bdf_M_2_P_27][ii]);
-                imv6(mpgs[bdf_M_7_M_2_P_27][0],RS[ii],mpgs[bdf_M_7_M_2_P_27][ii]);
-                imv6(mpgs[bdf_M_7_P_27][0],RS[ii],mpgs[bdf_M_7_P_27][ii]);
-                imv6(mpgs[bdf_M_2_M_7_P_27][0],RS[ii],mpgs[bdf_M_2_M_7_P_27][ii]);
-            }
-
-            if (dists[bdf_P_2A][ii] < maxdist) {
-                imv6(pgs[bdf_P_2A][0],RS[ii],pgs[bdf_P_2A][ii]);
-                imv6(mpgs[bdf_M_2_P_2A][0],RS[ii],mpgs[bdf_M_2_P_2A][ii]);
-                imv6(mpgs[bdf_M_D_M_2_P_2A][0],RS[ii],mpgs[bdf_M_D_M_2_P_2A][ii]);
-                imv6(mpgs[bdf_M_A_P_2A][0],RS[ii],mpgs[bdf_M_A_P_2A][ii]);
-                imv6(mpgs[bdf_M_2_M_A_P_2A][0],RS[ii],mpgs[bdf_M_2_M_A_P_2A][ii]);
-            }
-
-            if (dists[bdf_P_2D][ii] < maxdist) {
-                imv6(pgs[bdf_P_2D][0],RS[ii],pgs[bdf_P_2D][ii]);
-                imv6(mpgs[bdf_M_2_P_2D][0],RS[ii],mpgs[bdf_M_2_P_2D][ii]);
-                imv6(mpgs[bdf_M_A_M_2_P_2D][0],RS[ii],mpgs[bdf_M_A_M_2_P_2D][ii]);
-                imv6(mpgs[bdf_M_D_P_2D][0],RS[ii],mpgs[bdf_M_D_P_2D][ii]);
-                imv6(mpgs[bdf_M_2_M_D_P_2D][0],RS[ii],mpgs[bdf_M_2_M_D_P_2D][ii]);
-            }
-            if (dists[bdf_P_17][ii] < maxdist) {
-                imv6(pgs[bdf_P_17][0],RS[ii],pgs[bdf_P_17][ii]);
-                imv6(mpgs[bdf_M_1_P_17][0],RS[ii],mpgs[bdf_M_1_P_17][ii]);
-                imv6(mpgs[bdf_M_A_M_1_P_17][0],RS[ii],mpgs[bdf_M_A_M_1_P_17][ii]);
-                imv6(mpgs[bdf_M_7_P_17][0],RS[ii],mpgs[bdf_M_7_P_17][ii]);
-                imv6(mpgs[bdf_M_1_M_7_P_17][0],RS[ii],mpgs[bdf_M_1_M_7_P_17][ii]);
-            }
-            
-            if (dists[bdf_P_1A][ii] < maxdist) {
-                imv6(pgs[bdf_P_1A][0],RS[ii],pgs[bdf_P_1A][ii]);
-                imv6(mpgs[bdf_M_1_P_1A][0],RS[ii],mpgs[bdf_M_1_P_1A][ii]);
-                imv6(mpgs[bdf_M_7_M_1_P_1A][0],RS[ii],mpgs[bdf_M_7_M_1_P_1A][ii]);
-                imv6(mpgs[bdf_M_A_P_1A][0],RS[ii],mpgs[bdf_M_A_P_1A][ii]);
-                imv6(mpgs[bdf_M_1_M_A_P_1A][0],RS[ii],mpgs[bdf_M_1_M_A_P_1A][ii]);
-            }
-            
-            if (dists[bdf_P_1D][ii] < maxdist) {
-                imv6(pgs[bdf_P_1D][0],RS[ii],pgs[bdf_P_1D][ii]);
-                imv6(mpgs[bdf_M_1_P_1D][0],RS[ii],mpgs[bdf_M_2_P_2D][ii]);
-                imv6(mpgs[bdf_M_D_M_1_P_1D][0],RS[ii],mpgs[bdf_M_D_M_1_P_1D][ii]);
-                imv6(mpgs[bdf_M_D_P_1D][0],RS[ii],mpgs[bdf_M_D_P_1D][ii]);
-                imv6(mpgs[bdf_M_1_M_D_P_1D][0],RS[ii],mpgs[bdf_M_1_M_D_P_1D][ii]);
-            }
-            if (dists[bdf_P_6C][ii] < maxdist) {
-                imv6(pgs[bdf_P_6C][0],RS[ii],pgs[bdf_P_6C][ii]);
-                imv6(mpgs[bdf_M_C_P_6C][0],RS[ii],mpgs[bdf_M_C_P_6C][ii]);
-                imv6(mpgs[bdf_M_F_M_C_P_6C][0],RS[ii],mpgs[bdf_M_F_M_C_P_6C][ii]);
-                imv6(mpgs[bdf_M_6_P_6C][0],RS[ii],mpgs[bdf_M_6_P_6C][ii]);
-            }
-            if (dists[bdf_P_69][ii] < maxdist) {
-                imv6(pgs[bdf_P_69][0],RS[ii],pgs[bdf_P_69][ii]);
-                imv6(mpgs[bdf_M_6_P_69][0],RS[ii],mpgs[bdf_M_6_P_69][ii]);
-                imv6(mpgs[bdf_M_9_P_69][0],RS[ii],mpgs[bdf_M_9_P_69][ii]);
-                imv6(mpgs[bdf_M_F_M_6_P_69][0],RS[ii],mpgs[bdf_M_F_M_6_P_69][ii]);
-                imv6(mpgs[bdf_M_F_M_9_P_69][0],RS[ii],mpgs[bdf_M_F_M_9_P_69][ii]);
-            }
-            if (dists[bdf_P_8B][ii] < maxdist) {
-                imv6(pgs[bdf_P_8B][0],RS[ii],pgs[bdf_P_8B][ii]);
-            }
-            if (dists[bdf_P_8E][ii] < maxdist) {
-                imv6(pgs[bdf_P_8E][0],RS[ii],pgs[bdf_P_8E][ii]);
-                imv6(mpgs[bdf_M_8_P_8F][0],RS[ii],mpgs[bdf_M_8_P_8F][ii]);
-            }
-            if (dists[bdf_P_8F][ii] < maxdist) {
-                imv6(pgs[bdf_P_8F][0],RS[ii],pgs[bdf_P_8F][ii]);
-                imv6(mpgs[bdf_M_8_P_8F][0],RS[ii],mpgs[bdf_M_8_P_8F][ii]);
-                imv6(mpgs[bdf_M_F_P_8F][0],RS[ii],mpgs[bdf_M_F_P_8F][ii]);
-                imv6(mpgs[bdf_M_B_M_F_P_8F][0],RS[ii],mpgs[bdf_M_B_M_F_P_8F][ii]);
-            }
-            if (dists[bdf_P_BF][ii] < maxdist) {
-                imv6(pgs[bdf_P_BF][0],RS[ii],pgs[bdf_P_BF][ii]);
-                imv6(mpgs[bdf_M_B_P_BF][0],RS[ii],mpgs[bdf_M_B_P_BF][ii]);
-                imv6(mpgs[bdf_M_F_P_BF][0],RS[ii],mpgs[bdf_M_F_P_BF][ii]);
-                imv6(mpgs[bdf_M_8_M_F_P_BF][0],RS[ii],mpgs[bdf_M_8_M_F_P_BF][ii]);
-            }
-            if (dists[bdf_P_EF][ii] < maxdist) {
-                imv6(pgs[bdf_P_EF][0],RS[ii],pgs[bdf_P_EF][ii]);
-                imv6(mpgs[bdf_M_E_P_EF][0],RS[ii],mpgs[bdf_M_E_P_EF][ii]);
-                imv6(mpgs[bdf_M_6_M_E_P_EF][0],RS[ii],mpgs[bdf_M_6_M_E_P_EF][ii]);
-                imv6(mpgs[bdf_M_F_P_EF][0],RS[ii],mpgs[bdf_M_F_P_EF][ii]);
-            }
-            if (dists[bdf_P_269][ii] < maxdist) {
-                imv6(pgs[bdf_P_269][0],RS[ii],pgs[bdf_P_269][ii]);
-                imv6(mpgs[bdf_M_2_P_269][0],RS[ii],mpgs[bdf_M_2_P_269][ii]);
-                imv6(mpgs[bdf_M_6_P_269][0],RS[ii],mpgs[bdf_M_6_P_269][ii]);
-                imv6(mpgs[bdf_M_9_P_269][0],RS[ii],mpgs[bdf_M_9_P_269][ii]);
-                imv6(mpgs[bdf_M_2_M_6_P_269][0],RS[ii],mpgs[bdf_M_2_M_6_P_269][ii]);
-                imv6(mpgs[bdf_M_2_M_9_P_269][0],RS[ii],mpgs[bdf_M_2_M_9_P_269][ii]);
-            }
-            if (dists[bdf_P_26C][ii] < maxdist) {
-                imv6(pgs[bdf_P_26C][0],RS[ii],pgs[bdf_P_26C][ii]);
-                imv6(mpgs[bdf_M_2_P_26C][0],RS[ii],mpgs[bdf_M_2_P_26C][ii]);
-                imv6(mpgs[bdf_M_6_P_26C][0],RS[ii],mpgs[bdf_M_6_P_26C][ii]);
-                imv6(mpgs[bdf_M_C_P_26C][0],RS[ii],mpgs[bdf_M_C_P_26C][ii]);
-                imv6(mpgs[bdf_M_2_M_6_P_26C][0],RS[ii],mpgs[bdf_M_2_M_6_P_26C][ii]);
-                imv6(mpgs[bdf_M_2_M_C_P_26C][0],RS[ii],mpgs[bdf_M_2_M_C_P_26C][ii]);
-            }
-            if (dists[bdf_P_28F][ii] < maxdist) {
-                imv6(pgs[bdf_P_28F][0],RS[ii],pgs[bdf_P_28F][ii]);
-                imv6(mpgs[bdf_M_2_P_28F][0],RS[ii],mpgs[bdf_M_2_P_28F][ii]);
-                imv6(mpgs[bdf_M_8_P_28F][0],RS[ii],mpgs[bdf_M_8_P_28F][ii]);
-                imv6(mpgs[bdf_M_F_P_28F][0],RS[ii],mpgs[bdf_M_F_P_28F][ii]);
-                imv6(mpgs[bdf_M_F_M_2_P_28F][0],RS[ii],mpgs[bdf_M_F_M_2_P_28F][ii]);
-                imv6(mpgs[bdf_M_2_M_F_M_2_P_28F][0],RS[ii],mpgs[bdf_M_2_M_F_M_2_P_28F][ii]);
-            }
-            if (dists[bdf_P_2BF][ii] < maxdist) {
-                imv6(pgs[bdf_P_2BF][0],RS[ii],pgs[bdf_P_2BF][ii]);
-                imv6(mpgs[bdf_M_2_P_2BF][0],RS[ii],mpgs[bdf_M_2_P_2BF][ii]);
-                imv6(mpgs[bdf_M_B_P_2BF][0],RS[ii],mpgs[bdf_M_B_P_2BF][ii]);
-                imv6(mpgs[bdf_M_F_P_2BF][0],RS[ii],mpgs[bdf_M_F_P_2BF][ii]);
-                imv6(mpgs[bdf_M_F_M_2_P_2BF][0],RS[ii],mpgs[bdf_M_F_M_2_P_2BF][ii]);
-                imv6(mpgs[bdf_M_2_M_F_M_2_P_2BF][0],RS[ii],mpgs[bdf_M_2_M_F_M_2_P_2BF][ii]);
-            }
-            if (dists[bdf_P_2EF][ii] < maxdist) {
-                imv6(pgs[bdf_P_2EF][0],RS[ii],pgs[bdf_P_2EF][ii]);
-                imv6(mpgs[bdf_M_2_P_2EF][0],RS[ii],mpgs[bdf_M_2_P_2EF][ii]);
-                imv6(mpgs[bdf_M_E_P_2EF][0],RS[ii],mpgs[bdf_M_E_P_2EF][ii]);
-                imv6(mpgs[bdf_M_F_P_2EF][0],RS[ii],mpgs[bdf_M_F_P_2EF][ii]);
-                imv6(mpgs[bdf_M_F_M_2_P_2EF][0],RS[ii],mpgs[bdf_M_F_M_2_P_2EF][ii]);
-                imv6(mpgs[bdf_M_2_M_F_M_2_P_2EF][0],RS[ii],mpgs[bdf_M_2_M_F_M_2_P_2EF][ii]);
-            }
-                 
-        }
-        
+    
+    /* P_2F */
+    
+    rmv6(gvec,prj[P_2F],pgs[bdf_P_2F]);
+    dists[bdf_P_2F] = CNCM_gdist(gvec,pgs[bdf_P_2F]);
+    if (dists[bdf_P_2F] < maxdist) {
+        imv6(pgs[bdf_P_2F],MS[M_2],mpgs[bdf_M_2_P_2F]);
+        imv6(mpgs[bdf_M_2_P_2F],MS[M_F], mpgs[bdf_M_F_M_2_P_2F]);
+        imv6(pgs[bdf_P_2F],MS[M_F], mpgs[bdf_M_F_P_2F]);
+        imv6(mpgs[bdf_M_F_P_2F], MS[M_2], mpgs[bdf_M_2_M_F_P_2F]);
     }
+    
+    
+    /* P_27 */
+    
+    rmv6(gvec,prj[P_27],pgs[bdf_P_27]);
+    dists[bdf_P_27] = CNCM_gdist(gvec,pgs[bdf_P_27]);
+    if (dists[bdf_P_27] < maxdist) {
+        imv6(pgs[bdf_P_27],MS[M_2],mpgs[bdf_M_2_P_27]);
+        imv6(mpgs[bdf_M_2_P_27],MS[M_7], mpgs[bdf_M_7_M_2_P_27]);
+        imv6(pgs[bdf_P_27],MS[M_7], mpgs[bdf_M_7_P_27]);
+        imv6(mpgs[bdf_M_7_P_27], MS[M_2], mpgs[bdf_M_2_M_7_P_27]);
+    }
+    
+    /* P_2A */
+    
+    rmv6(gvec,prj[P_2A],pgs[bdf_P_2A]);
+    dists[bdf_P_2A] = CNCM_gdist(gvec,pgs[bdf_P_2A]);
+    if (dists[bdf_P_2A] < maxdist) {
+        imv6(pgs[bdf_P_2A],MS[M_2],mpgs[bdf_M_2_P_2A]);
+        imv6(mpgs[bdf_M_2_P_2A],MS[M_D], mpgs[bdf_M_D_M_2_P_2A]);
+        imv6(pgs[bdf_P_2A],MS[M_A], mpgs[bdf_M_A_P_2A]);
+        imv6(mpgs[bdf_M_A_P_2A], MS[M_2], mpgs[bdf_M_2_M_A_P_2A]);
+    }
+    
+    /* P_2D */
+    
+    rmv6(gvec,prj[P_2D],pgs[bdf_P_2D]);
+    dists[bdf_P_2D] = CNCM_gdist(gvec,pgs[bdf_P_2D]);
+    if (dists[bdf_P_2D] < maxdist) {
+        imv6(pgs[bdf_P_2D],MS[M_2],mpgs[bdf_M_2_P_2D]);
+        imv6(mpgs[bdf_M_2_P_2D],MS[M_A], mpgs[bdf_M_A_M_2_P_2D]);
+        imv6(pgs[bdf_P_2D],MS[M_D], mpgs[bdf_M_D_P_2D]);
+        imv6(mpgs[bdf_M_D_P_2D], MS[M_2], mpgs[bdf_M_2_M_D_P_2D]);
+    }
+    
+    rmv6(gvec,prj[P_17],pgs[bdf_P_17]);
+    dists[bdf_P_17] = CNCM_gdist(gvec,pgs[bdf_P_17]);
+    if (dists[bdf_P_17] < maxdist) {
+        imv6(pgs[bdf_P_17],MS[M_1],mpgs[bdf_M_1_P_17]);
+        imv6(mpgs[bdf_M_1_P_17],MS[M_A], mpgs[bdf_M_A_M_1_P_17]);
+        imv6(pgs[bdf_P_17],MS[M_7], mpgs[bdf_M_7_P_17]);
+        imv6(mpgs[bdf_M_7_P_17], MS[M_1], mpgs[bdf_M_1_M_7_P_17]);
+    }
+    
+    
+    rmv6(gvec,prj[P_1A],pgs[bdf_P_1A]);
+    dists[bdf_P_1A] = CNCM_gdist(gvec,pgs[bdf_P_1A]);
+    if (dists[bdf_P_1A] < maxdist) {
+        imv6(pgs[bdf_P_1A],MS[M_1],mpgs[bdf_M_1_P_1A]);
+        imv6(mpgs[bdf_M_1_P_1A],MS[M_7],mpgs[bdf_M_7_M_1_P_1A]);
+        imv6(pgs[bdf_P_1A],MS[M_A], mpgs[bdf_M_A_P_1A]);
+        imv6(mpgs[bdf_M_A_P_1A], MS[M_1], mpgs[bdf_M_1_M_A_P_1A]);
+    }
+    
+    rmv6(gvec,prj[P_1D],pgs[bdf_P_1D]);
+    dists[bdf_P_1D] = CNCM_gdist(gvec,pgs[bdf_P_1D]);
+    if (dists[bdf_P_1D] < maxdist) {
+        imv6(pgs[bdf_P_1D],MS[M_1],mpgs[bdf_M_1_P_1D]);
+        imv6(mpgs[bdf_M_1_P_1D],MS[M_D], mpgs[bdf_M_D_M_1_P_1D]);
+        imv6(pgs[bdf_P_1D],MS[M_D], mpgs[bdf_M_D_P_1D]);
+        imv6(mpgs[bdf_M_D_P_1D], MS[M_1], mpgs[bdf_M_1_M_D_P_1D]);
+    }
+    
+    
+    rmv6(gvec,prj[P_6],pgtemp);
+    rmv6(pgtemp,prj[P_C],pgs[bdf_P_6C]);
+    /*  Note: P_6 and P_9 commute and P_6 and P_C commute */
+    
+    /* P_6C */
+    
+    dists[bdf_P_6C] = CNCM_gdist(gvec,pgs[bdf_P_6C]);
+    if (dists[bdf_P_6C] < maxdist) {
+        imv6(pgs[bdf_P_6C],MS[M_C],mpgs[bdf_M_C_P_6C]);
+        imv6(mpgs[bdf_M_C_P_6C],MS[M_C],mpgs[bdf_M_F_M_C_P_6C]);
+        imv6(pgs[bdf_P_6C],MS[M_6],mpgs[bdf_M_6_P_6C]);
+    }
+    
+    /* P_69 */
+    
+    rmv6(pgtemp,prj[P_9],pgs[bdf_P_69]);
+    dists[bdf_P_69] = CNCM_gdist(gvec,pgs[bdf_P_69]);
+    if (dists[bdf_P_69] < maxdist) {
+        imv6(pgs[bdf_P_69],MS[M_6],mpgs[bdf_M_6_P_69]);
+        imv6(pgs[bdf_P_69],MS[M_9],mpgs[bdf_M_9_P_69]);
+        imv6(mpgs[bdf_M_6_P_69],MS[M_F],mpgs[bdf_M_F_M_6_P_69]);
+        imv6(mpgs[bdf_M_9_P_69],MS[M_F],mpgs[bdf_M_F_M_9_P_69]);
+    }
+    
+    /* P_8B */
+    
+    rmv6(gvec,prj[P_8B],pgs[bdf_P_8B]);
+    dists[bdf_P_8B] = CNCM_gdist(gvec,pgs[bdf_P_8B]);
+    
+    /* P_8E */
+    rmv6(gvec,prj[P_8E],pgs[bdf_P_8E]);
+    dists[bdf_P_8E] = CNCM_gdist(gvec,pgs[bdf_P_8E]);
+    if (dists[bdf_P_8E] < maxdist) {
+        imv6(pgs[bdf_P_8E],MS[M_8],mpgs[bdf_M_8_P_8F]);
+    }
+    
+    
+    /* P_8F */
+    
+    rmv6(gvec,prj[P_8F],pgs[bdf_P_8F]);
+    dists[bdf_P_8F] = CNCM_gdist(gvec,pgs[bdf_P_8F]);
+    if (dists[bdf_P_8F] < maxdist) {
+        imv6(pgs[bdf_P_8F],MS[M_8],mpgs[bdf_M_8_P_8F]);
+        imv6(pgs[bdf_P_8F],MS[M_F],mpgs[bdf_M_F_P_8F]);
+        imv6(mpgs[bdf_M_F_P_8F],MS[M_B],mpgs[bdf_M_B_M_F_P_8F]);
+    }
+    
+    
+    /* P_BF */
+    rmv6(gvec,prj[P_BF],pgs[bdf_P_BF]);
+    dists[bdf_P_BF] = CNCM_gdist(gvec,pgs[bdf_P_BF]);
+    if (dists[bdf_P_BF] < maxdist) {
+        imv6(pgs[bdf_P_BF],MS[M_B],mpgs[bdf_M_B_P_BF]);
+        imv6(pgs[bdf_P_BF],MS[M_F],mpgs[bdf_M_F_P_BF]);
+        imv6(mpgs[bdf_M_F_P_BF],MS[M_8],mpgs[bdf_M_8_M_F_P_BF]);
+    }
+    
+    
+    /* P_EF */
+    rmv6(gvec,prj[P_EF],pgs[bdf_P_EF]);
+    dists[bdf_P_EF] = CNCM_gdist(gvec,pgs[bdf_P_EF]);
+    if (dists[bdf_P_EF] < maxdist) {
+        imv6(pgs[bdf_P_EF],MS[M_E],mpgs[bdf_M_E_P_EF]);
+        imv6(mpgs[bdf_M_E_P_EF],MS[M_6],mpgs[bdf_M_6_M_E_P_EF]);
+        imv6(pgs[bdf_P_EF],MS[M_F],mpgs[bdf_M_F_P_EF]);
+    }
+    
+    /* P_269 */
+    
+    rmv6(gvec,prj[P_269],pgs[bdf_P_269]);
+    dists[bdf_P_269] = CNCM_gdist(gvec,pgs[bdf_P_269]);
+    if (dists[bdf_P_269] < maxdist) {
+        imv6(pgs[bdf_P_269],MS[M_2],mpgs[bdf_M_2_P_269]);
+        imv6(pgs[bdf_P_269],MS[M_6],mpgs[bdf_M_6_P_269]);
+        imv6(pgs[bdf_P_269],MS[M_9],mpgs[bdf_M_9_P_269]);
+        imv6(mpgs[bdf_M_6_P_269],MS[M_2],mpgs[bdf_M_2_M_6_P_269]);
+        imv6(mpgs[bdf_M_9_P_269],MS[M_2],mpgs[bdf_M_2_M_9_P_269]);
+    }
+    
+    /* P_26C */
+    
+    rmv6(gvec,prj[P_26C],pgs[bdf_P_26C]);
+    dists[bdf_P_26C] = CNCM_gdist(gvec,pgs[bdf_P_26C]);
+    if (dists[bdf_P_26C] < maxdist) {
+        imv6(pgs[bdf_P_26C],MS[M_2],mpgs[bdf_M_2_P_26C]);
+        imv6(pgs[bdf_P_26C],MS[M_6],mpgs[bdf_M_6_P_26C]);
+        imv6(pgs[bdf_P_26C],MS[M_C],mpgs[bdf_M_C_P_26C]);
+        imv6(mpgs[bdf_M_6_P_26C],MS[M_2],mpgs[bdf_M_2_M_6_P_26C]);
+        imv6(mpgs[bdf_M_C_P_26C],MS[M_2],mpgs[bdf_M_2_M_C_P_26C]);
+    }
+    
+    /* P_28F */
+    
+    rmv6(gvec,prj[P_28F],pgs[bdf_P_28F]);
+    dists[bdf_P_28F] = CNCM_gdist(gvec,pgs[bdf_P_28F]);
+    if (dists[bdf_P_28F] < maxdist) {
+        imv6(pgs[bdf_P_28F],MS[M_2],mpgs[bdf_M_2_P_28F]);
+        imv6(pgs[bdf_P_28F],MS[M_8],mpgs[bdf_M_8_P_28F]);
+        imv6(pgs[bdf_P_28F],MS[M_F],mpgs[bdf_M_F_P_28F]);
+        imv6(mpgs[bdf_M_2_P_28F],MS[M_F],mpgs[bdf_M_F_M_2_P_28F]);
+        imv6(mpgs[bdf_M_F_M_2_P_28F],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_28F]);
+    }
+    
+    /* P_2BF */
+    
+    rmv6(gvec,prj[P_2BF],pgs[bdf_P_2BF]);
+    dists[bdf_P_2BF] = CNCM_gdist(gvec,pgs[bdf_P_2BF]);
+    if (dists[bdf_P_2BF] < maxdist) {
+        imv6(pgs[bdf_P_2BF],MS[M_2],mpgs[bdf_M_2_P_2BF]);
+        imv6(pgs[bdf_P_2BF],MS[M_B],mpgs[bdf_M_B_P_2BF]);
+        imv6(pgs[bdf_P_2BF],MS[M_F],mpgs[bdf_M_F_P_2BF]);
+        imv6(mpgs[bdf_M_2_P_2BF],MS[M_F],mpgs[bdf_M_F_M_2_P_2BF]);
+        imv6(mpgs[bdf_M_F_M_2_P_2BF],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2BF]);
+    }
+    
+    /* P_2EF */
+    
+    rmv6(gvec,prj[P_2EF],pgs[bdf_P_2EF]);
+    dists[bdf_P_2EF] = CNCM_gdist(gvec,pgs[bdf_P_2EF]);
+    if (dists[bdf_P_2EF] < maxdist) {
+        imv6(pgs[bdf_P_2EF],MS[M_2],mpgs[bdf_M_2_P_2EF]);
+        imv6(pgs[bdf_P_2EF],MS[M_E],mpgs[bdf_M_E_P_2EF]);
+        imv6(pgs[bdf_P_2EF],MS[M_F],mpgs[bdf_M_F_P_2EF]);
+        imv6(mpgs[bdf_M_2_P_2EF],MS[M_F],mpgs[bdf_M_F_M_2_P_2EF]);
+        imv6(mpgs[bdf_M_F_M_2_P_2EF],MS[M_2],mpgs[bdf_M_2_M_F_M_2_P_2EF]);
+    }
+    
+    
     nmpgs[bdf_P_2F] = 4;
     basempgs[bdf_P_2F] = bdf_M_2_P_2F;
     nmpgs[bdf_P_27] = 4;
@@ -1846,289 +1451,269 @@ static void bdfmaps(double vecs[NREFL][6],
 
 
 double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
-    double vecs1[NREFL][6], dists1[NBND][NREFL];
-    double pgs1[NBND][NREFL][6], mpgs1[NBND][NREFL][6];
-    double fdists1[NPGS][NREFL], fdists2[NPGS][NREFL];
-    double fpgs1[NPGS][NREFL][6], fpgs2[NPGS][NREFL][6];
-    double fmpgs1[NMPGS][NREFL][6], fmpgs2[NMPGS][NREFL][6];
+    double dists1[NBND];
+    double pgs1[NBND][6], mpgs1[NBND][6];
+    double fdists1[NPGS], fdists2[NPGS];
+    double fpgs1[NPGS][6], fpgs2[NPGS][6];
+    double fmpgs1[NMPGS][6], fmpgs2[NMPGS][6];
     int nmpgs[NPGS], basempgs[NPGS];
-    double vecs2[NREFL][6], dists2[NBND][NREFL];
-    double pgs2[NBND][NREFL][6], mpgs2[NBND][NREFL][6];
+    double dists2[NBND];
+    double pgs2[NBND][6], mpgs2[NBND][6];
     double dpg1pg2;
     double distsq;
-    double mindists1[NREFL];
-    double mindists2[NREFL];
+    double mindists1;
+    double mindists2;
     int jx1, jx2, ix2;
-    int i1,i2,j1,j2;
+    int j1,j2;
     
     pass++;
     distsq = dist*dist;
     dist = sqrt(distsq);
     report_double("dist = ",dist,"\n");
-
-    bdmaps(gvec1,vecs1,dists1,pgs1,mpgs1,dist);
-    bdfmaps(vecs1,fdists1,fpgs1,fmpgs1,nmpgs,basempgs,dist);
-    bdmaps(gvec2,vecs2,dists2,pgs2,mpgs2,dist);
-    bdfmaps(vecs2,fdists2,fpgs2,fmpgs2,nmpgs,basempgs,dist);
+    
+    bdmaps(gvec1,dists1,pgs1,mpgs1,dist);
+    bdfmaps(gvec1,fdists1,fpgs1,fmpgs1,nmpgs,basempgs,dist);
+    bdmaps(gvec2,dists2,pgs2,mpgs2,dist);
+    bdfmaps(gvec2,fdists2,fpgs2,fmpgs2,nmpgs,basempgs,dist);
     
     
-    mindists1[0] = dists1[0][0];
-    mindists2[0] = dists2[0][0];
+    mindists1 = dists1[0];
+    mindists2 = dists2[0];
     for (j1=1; j1< NBND; j1++) {
-        mindists1[0] = NCD_min(dists1[j1][0],mindists1[0]);
-        mindists2[0] = NCD_min(dists2[j1][0],mindists2[0]);
-    }
-
-    for (i1=1; i1 < NREFL_INNER; i1++) {
-        mindists1[i1] = mindists1[0];
-        mindists2[i1] = mindists2[0];
+        mindists1 = NCD_min(dists1[j1],mindists1);
+        mindists2 = NCD_min(dists2[j1],mindists2);
     }
     
     
-    for (i1=0; i1< NREFL_INNER; i1++) {
-        {i2 = 0;
-            if (mindists1[i1]+mindists2[i2] < dist) {
-                for (jx1 = 0; jx1 < NBND; jx1++) {
-                    double d1;
-                    j1 = jord[jx1];
-                    if (j1 < NBND) d1 = dists1[j1][i1];
-                    else d1=fdists1[baseord[j1]][i1];
-                    if (d1*d1 < distsq) {
-                        for (jx2 = 0; jx2 < NBND; jx2++) {
-                            double d2;
-                            j2 = jord2[jx2];
-                            if (j2 < NBND) d2 = dists2[j2][i2];
-                            else d2=fdists2[baseord[j2]][i2];
-                            if (j1 < NBND && j2 < NBND && bdnum[j1][i1] < NBND && bdnum[j2][i2]< NBND &&
-                                (baseord[bdnum[j1][i1]]==baseord[bdnum[j2][i2]]
-                                 || mapord[bdnum[j1][i1]]==mapord[bdnum[j2][i2]]
-                                 || baseord[bdnum[j1][i1]]==mapord[bdnum[j2][i2]]
-                                 || mapord[bdnum[j1][i1]]==baseord[bdnum[j2][i2]])
-                                ) {
-                                if((d1+d2)*(d1*d2) < distsq) {
-                                    dpg1pg2 = sqrt(NCD_min(NCD_min(NCD_min(CNCM_gdistsq(pgs1[j1][i1],pgs2[j2][i2]),
-                                                                           CNCM_gdistsq(pgs1[j1][i1],mpgs2[j2][i2])),
-                                                                   CNCM_gdistsq(mpgs1[j1][i1],pgs2[j2][i2])),
-                                                           CNCM_gdistsq(mpgs1[j1][i1],mpgs2[j2][i2])));
-                                    distsq = NCD_min(distsq,
-                                                     (d1+d2+dpg1pg2)
-                                                     *(d1+d2+dpg1pg2));
-                                    if (baseord[bdnum[j1][i1]]==baseord[bdnum[j2][i2]]) {
-                                    distsq = NCD_min(distsq,(d1+d2)*(d1+d2)+CNCM_gdistsq(pgs1[j1][i1],pgs2[j2][i2]));
-                                    }
-                                    distsq = NCD_min(distsq,(CNCM_gdist(vecs1[i1],pgs2[j2][i2])+d2)
-                                                     *(CNCM_gdist(vecs1[i1],pgs2[j2][i2])+d2));
-                                    distsq = NCD_min(distsq,(CNCM_gdist(vecs1[i1],mpgs2[j2][i2])+d2)
-                                                     *(CNCM_gdist(vecs1[i1],mpgs2[j2][i2])+d2));
-                                    distsq = NCD_min(distsq,(CNCM_gdist(vecs2[i2],pgs1[j1][i1])+d1)
-                                                     *(CNCM_gdist(vecs2[i2],pgs1[j1][i1])+d1));
-                                    distsq = NCD_min(distsq,(CNCM_gdist(vecs2[i2],mpgs1[j1][i1])+d1)
-                                                     *(CNCM_gdist(vecs2[i2],mpgs1[j1][i1])+d1));
-                                    
-                                    report_double_if_changed("used dpg1pg2: ",sqrt(distsq)," ");
-                                    also_if_changed_report_integer("pass = ",pass,"\n");
-                                    also_if_changed_report_integer("i1 = ",i1," ");
-                                    also_if_changed_report_integer("j1 = ",j1," ");
-                                    also_if_changed_report_integer("i2 = ",i2," ");
-                                    also_if_changed_report_integer("j2 = ",j2," ");
-                                    also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
-                                    also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
-                                    also_if_changed_report_double_vector("pgs1 = ",pgs1[j1][i1]," ");
-                                    also_if_changed_report_double_vector("mpgs1 = ",mpgs1[j1][i1]," ");
-                                    also_if_changed_report_double_vector("pgs2 = ",pgs2[j1][i2]," ");
-                                    also_if_changed_report_double_vector("mpgs2 = ",mpgs2[j1][i2]," ");
-                                    
-                                }
+    
+    
+    
+    if (mindists1+mindists2 < dist) {
+        for (jx1 = 0; jx1 < NBND; jx1++) {
+            double d1;
+            j1 = jord[jx1];
+            if (j1 < NBND) d1 = dists1[j1];
+            else d1=fdists1[baseord[j1]];
+            if (d1*d1 < distsq) {
+                for (jx2 = 0; jx2 < NBND; jx2++) {
+                    double d2;
+                    j2 = jord2[jx2];
+                    if (j2 < NBND) d2 = dists2[j2];
+                    else d2=fdists2[baseord[j2]];
+                    if (j1 < NBND && j2 < NBND && j1 < NBND && j2< NBND &&
+                        (baseord[j1]==baseord[j2]
+                         || mapord[j1]==mapord[j2]
+                         || baseord[j1]==mapord[j2]
+                         || mapord[j1]==baseord[j2])
+                        ) {
+                        if((d1+d2)*(d1*d2) < distsq) {
+                            dpg1pg2 = sqrt(NCD_min(NCD_min(NCD_min(CNCM_gdistsq(pgs1[j1],pgs2[j2]),
+                                                                   CNCM_gdistsq(pgs1[j1],mpgs2[j2])),
+                                                           CNCM_gdistsq(mpgs1[j1],pgs2[j2])),
+                                                   CNCM_gdistsq(mpgs1[j1],mpgs2[j2])));
+                            distsq = NCD_min(distsq,
+                                             (d1+d2+dpg1pg2)
+                                             *(d1+d2+dpg1pg2));
+                            if (baseord[j1]==baseord[j2]) {
+                                distsq = NCD_min(distsq,(d1+d2)*(d1+d2)+CNCM_gdistsq(pgs1[j1],pgs2[j2]));
                             }
+                            distsq = NCD_min(distsq,(CNCM_gdist(gvec1,pgs2[j2])+d2)
+                                             *(CNCM_gdist(gvec1,pgs2[j2])+d2));
+                            report_double_if_changed("used dpg1pg2 pgs2 endpoint: ", sqrt(distsq)," ")
+                            distsq = NCD_min(distsq,(CNCM_gdist(gvec1,mpgs2[j2])+d2)
+                                             *(CNCM_gdist(gvec1,mpgs2[j2])+d2));
+                            report_double_if_changed("used dpg1pg2 mpgs2 endpoint: ", sqrt(distsq)," ")
+                            distsq = NCD_min(distsq,(CNCM_gdist(gvec2,pgs1[j1])+d1)
+                                             *(CNCM_gdist(gvec2,pgs1[j1])+d1));
+                            report_double_if_changed("used dpg1pg2 pgs1 endpoint: ", sqrt(distsq)," ")
+                            distsq = NCD_min(distsq,(CNCM_gdist(gvec2,mpgs1[j1])+d1)
+                                             *(CNCM_gdist(gvec2,mpgs1[j1])+d1));
+                            report_double_if_changed("used dpg1pg2 mpgs1 endpoint: ", sqrt(distsq)," ")
+                            
+                            report_double_if_changed("used dpg1pg2: ",sqrt(distsq)," ");
+                            also_if_changed_report_integer("pass = ",pass,"\n");
+                            also_if_changed_report_integer("j1 = ",j1," ");
+                            also_if_changed_report_integer("j2 = ",j2," ");
+                            also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                            also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                            also_if_changed_report_double_vector("pgs1 = ",pgs1[j1]," ");
+                            also_if_changed_report_double_vector("mpgs1 = ",mpgs1[j1]," ");
+                            also_if_changed_report_double_vector("pgs2 = ",pgs2[j1]," ");
+                            also_if_changed_report_double_vector("mpgs2 = ",mpgs2[j1]," ");
+                            
                         }
                     }
                 }
-                for (jx1 = 0; jx1 < NCASES; jx1++) {
-                    double d1;
-                    j1 = jord[jx1];
-                    if (j1 < NBND) d1 = d1 = dists1[j1][i1];
-                    else d1=fdists1[baseord[j1]][i1];
-                    if (d1*d1 < distsq) {
-                        for (jx2 = 0; jx2 < NCASES; jx2++) {
-                            double d2;
-                            j2 = jord2[jx2];
-                            if (j2 < NBND) d2 = dists2[j2][i2];
-                            else d2=fdists2[baseord[j2]][i2];
-                            if (j1 < NBND && j2 < NBND && bdnum[j1][i1] < NBND && bdnum[j2][i2]< NBND &&
-                                (baseord[bdnum[j1][i1]]==baseord[bdnum[j2][i2]]
-                                 || mapord[bdnum[j1][i1]]==mapord[bdnum[j2][i2]]
-                                 || baseord[bdnum[j1][i1]]==mapord[bdnum[j2][i2]]
-                                 || mapord[bdnum[j1][i1]]==baseord[bdnum[j2][i2]])
-                                ) {continue;} else {
-                                if((d1+d2)*(d1+d2) < distsq) {
-                                    double bndpt1[6];
-                                    double bndpt2[6];
-                                    double mbndpt1[6][6];
-                                    double mbndpt2[6][6];
-                                    int kk1,kk2;
-                                    int nmpbdpt1,nmpbdpt2;
-                                    if (j1 < 15) {
-                                        cpyvn(6,pgs1[j1][i1],bndpt1);
-                                        nmpbdpt1 = 1;
-                                        cpyvn(6,mpgs1[j1][i1],mbndpt1[0]);
-                                    } else {
-                                        int k1;
-                                        cpyvn(6,fpgs1[baseord[j1]][i1],bndpt1);
-                                        nmpbdpt1 = nmpgs[baseord[j1]];
-                                        for (k1=0; k1 < nmpbdpt1; k1++) {
-                                            cpyvn(6,fmpgs1[basempgs[baseord[j1]]+k1][i1],mbndpt1[k1]);
-                                        }
-                                    }
-                                    if (j2 < 15) {
-                                        cpyvn(6,pgs2[j2][i2],bndpt2);
-                                        nmpbdpt2 = 1;
-                                        cpyvn(6,mpgs2[j2][i2],mbndpt2[0]);
-                                    } else {
-                                        int k2;
-                                        cpyvn(6,fpgs2[baseord[j2]][i2],bndpt2);
-                                        nmpbdpt2 = nmpgs[baseord[j2]];
-                                        for (k2=0; k2 < nmpbdpt2; k2++) {
-                                            cpyvn(6,fmpgs2[basempgs[baseord[j2]]+k2][i2],mbndpt2[k2]);
-                                        }
-                                    }
-
-                                    dpg1pg2 = NCD_min(NCD_min(NCD_min(CNCM_gdistsq(bndpt1,bndpt2),
-                                                                           CNCM_gdistsq(bndpt1,mbndpt2[0])),
-                                                                   CNCM_gdistsq(mbndpt1[0],bndpt2)),
-                                                           CNCM_gdistsq(mbndpt1[0],mbndpt2[0]));
-
-                                    report_double_if_changed("used dpg1pg2 crosspath base: ",sqrt(NCD_min(distsq,
-                                                                                                   (d1+d2+sqrt(dpg1pg2))
-                                                                                                   *(d1+d2+sqrt(dpg1pg2))))," ");
+            }
+        }
+        for (jx1 = 0; jx1 < NCASES; jx1++) {
+            double d1;
+            j1 = jord[jx1];
+            if (j1 < NBND) d1 = d1 = dists1[j1];
+            else d1=fdists1[baseord[j1]];
+            if (d1*d1 < distsq) {
+                for (jx2 = 0; jx2 < NCASES; jx2++) {
+                    double d2;
+                    j2 = jord2[jx2];
+                    if (j2 < NBND) d2 = dists2[j2];
+                    else d2=fdists2[baseord[j2]];
+                    if (j1 < NBND && j2 < NBND && j1 < NBND && j2< NBND &&
+                        (baseord[j1]==baseord[j2]
+                         || mapord[j1]==mapord[j2]
+                         || baseord[j1]==mapord[j2]
+                         || mapord[j1]==baseord[j2])
+                        ) {continue;} else {
+                        if((d1+d2)*(d1+d2) < distsq) {
+                            double bndpt1[6];
+                            double bndpt2[6];
+                            double mbndpt1[6][6];
+                            double mbndpt2[6][6];
+                            int kk1,kk2;
+                            int nmpbdpt1,nmpbdpt2;
+                            if (j1 < 15) {
+                                cpyvn(6,pgs1[j1],bndpt1);
+                                nmpbdpt1 = 1;
+                                cpyvn(6,mpgs1[j1],mbndpt1[0]);
+                            } else {
+                                int k1;
+                                cpyvn(6,fpgs1[baseord[j1]],bndpt1);
+                                nmpbdpt1 = nmpgs[baseord[j1]];
+                                for (k1=0; k1 < nmpbdpt1; k1++) {
+                                    cpyvn(6,fmpgs1[basempgs[baseord[j1]]+k1],mbndpt1[k1]);
+                                }
+                            }
+                            if (j2 < 15) {
+                                cpyvn(6,pgs2[j2],bndpt2);
+                                nmpbdpt2 = 1;
+                                cpyvn(6,mpgs2[j2],mbndpt2[0]);
+                            } else {
+                                int k2;
+                                cpyvn(6,fpgs2[baseord[j2]],bndpt2);
+                                nmpbdpt2 = nmpgs[baseord[j2]];
+                                for (k2=0; k2 < nmpbdpt2; k2++) {
+                                    cpyvn(6,fmpgs2[basempgs[baseord[j2]]+k2],mbndpt2[k2]);
+                                }
+                            }
+                            
+                            dpg1pg2 = NCD_min(NCD_min(NCD_min(CNCM_gdistsq(bndpt1,bndpt2),
+                                                              CNCM_gdistsq(bndpt1,mbndpt2[0])),
+                                                      CNCM_gdistsq(mbndpt1[0],bndpt2)),
+                                              CNCM_gdistsq(mbndpt1[0],mbndpt2[0]));
+                            
+                            report_double_if_changed("used dpg1pg2 crosspath base: ",sqrt(NCD_min(distsq,
+                                                                                                  (d1+d2+sqrt(dpg1pg2))
+                                                                                                  *(d1+d2+sqrt(dpg1pg2))))," ");
+                            also_if_changed_report_integer("pass = ",pass,"\n");
+                            also_if_changed_report_integer("j1 = ",j1," ");
+                            also_if_changed_report_integer("j2 = ",j2," ");
+                            also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                            also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                            also_if_changed_report_double_vector("bndpt1 = ",bndpt1,"\n");
+                            also_if_changed_report_double_vector("mbndpt1[0] = ",mbndpt1[0],"\n");
+                            also_if_changed_report_double_vector("bndpt2 = ",bndpt2,"\n");
+                            also_if_changed_report_double_vector("mbndpt2[0] = ",mbndpt2[0],"\n");
+                            
+                            if (nmpbdpt1 > 1) {
+                                for (kk1=1; kk1<nmpbdpt1; kk1++ ){
+                                    dpg1pg2 = NCD_min(dpg1pg2,NCD_min(CNCM_gdistsq(mbndpt1[kk1],bndpt2),
+                                                                      CNCM_gdistsq(mbndpt1[kk1],mbndpt2[0])));
+                                    report_double_if_changed("used dpg1pg2 crosspath left",sqrt(NCD_min(distsq,
+                                                                                                        (d1+d2+sqrt(dpg1pg2))
+                                                                                                        *(d1+d2+sqrt(dpg1pg2))))," ");
                                     also_if_changed_report_integer("pass = ",pass,"\n");
-                                    also_if_changed_report_integer("i1 = ",i1," ");
                                     also_if_changed_report_integer("j1 = ",j1," ");
-                                    also_if_changed_report_integer("i2 = ",i2," ");
                                     also_if_changed_report_integer("j2 = ",j2," ");
                                     also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
                                     also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
-                                    also_if_changed_report_double_vector("bndpt1 = ",bndpt1,"\n");
-                                    also_if_changed_report_double_vector("mbndpt1[0] = ",mbndpt1[0],"\n");
+                                    also_if_changed_report_integer("kk1 = ",kk1," ");
+                                    also_if_changed_report_integer("kk2 = ",-1,"\n");
+                                    also_if_changed_report_double_vector("mbndpt1[kk1] = ",mbndpt1[kk1],"\n");
                                     also_if_changed_report_double_vector("bndpt2 = ",bndpt2,"\n");
                                     also_if_changed_report_double_vector("mbndpt2[0] = ",mbndpt2[0],"\n");
-
-                                    if (nmpbdpt1 > 1) {
-                                        for (kk1=1; kk1<nmpbdpt1; kk1++ ){
-                                            dpg1pg2 = NCD_min(dpg1pg2,NCD_min(CNCM_gdistsq(mbndpt1[kk1],bndpt2),
-                                                                              CNCM_gdistsq(mbndpt1[kk1],mbndpt2[0])));
-                                            report_double_if_changed("used dpg1pg2 crosspath",sqrt(NCD_min(distsq,
-                                                                                                           (d1+d2+sqrt(dpg1pg2))
-                                                                                                           *(d1+d2+sqrt(dpg1pg2))))," ");
-                                            also_if_changed_report_integer("pass = ",pass,"\n");
-                                            also_if_changed_report_integer("i1 = ",i1," ");
-                                            also_if_changed_report_integer("j1 = ",j1," ");
-                                            also_if_changed_report_integer("i2 = ",i2," ");
-                                            also_if_changed_report_integer("j2 = ",j2," ");
-                                            also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
-                                            also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
-                                            also_if_changed_report_integer("kk1 = ",kk1," ");
-                                            also_if_changed_report_integer("kk2 = ",-1,"\n");
-                                            also_if_changed_report_double_vector("mbndpt1[kk1] = ",mbndpt1[kk1],"\n");
-                                            also_if_changed_report_double_vector("bndpt2 = ",bndpt2,"\n");
-                                            also_if_changed_report_double_vector("mbndpt2[0] = ",mbndpt2[0],"\n");
-                                            
-
-                                        }
-                                    }
-                                    if (nmpbdpt2 > 1) {
-                                        for (kk2=1; kk2<nmpbdpt2; kk2++ ){
-                                            dpg1pg2 = NCD_min(dpg1pg2,NCD_min(CNCM_gdistsq(bndpt1,mbndpt2[kk2]),
-                                                                              CNCM_gdistsq(mbndpt1[0],mbndpt2[kk2])));
-                                            report_double_if_changed("used dpg1pg2 crosspath: ",sqrt(NCD_min(distsq,
-                                                                                                           (d1+d2+sqrt(dpg1pg2))
-                                                                                                           *(d1+d2+sqrt(dpg1pg2))))," ");
-                                            also_if_changed_report_integer("pass = ",pass,"\n");
-                                            also_if_changed_report_integer("i1 = ",i1," ");
-                                            also_if_changed_report_integer("j1 = ",j1," ");
-                                            also_if_changed_report_integer("i2 = ",i2," ");
-                                            also_if_changed_report_integer("j2 = ",j2," ");
-                                            also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
-                                            also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
-                                            also_if_changed_report_integer("kk1 = ",-1," ");
-                                            also_if_changed_report_integer("kk2 = ",kk2,"\n");
-                                            also_if_changed_report_double_vector("bndpt1 = ",bndpt1,"\n");
-                                            also_if_changed_report_double_vector("mbndpt1[0] = ",mbndpt1[0],"\n");
-                                            also_if_changed_report_double_vector("mbndpt2[kk2] = ",mbndpt2[kk2],"\n");
-                                            
-                                        }
-                                    }
-                                    for (kk1=2; kk1 < nmpbdpt1; kk1++ ){
-                                        for (kk2=2; kk2 < nmpbdpt2; kk2++ ){
-                                            dpg1pg2 = NCD_min(dpg1pg2,CNCM_gdistsq(mbndpt1[kk1],mbndpt2[kk2]));
-                                            report_double_if_changed("used dpg1pg2 crosspath: ",sqrt(NCD_min(distsq,
-                                                                                                           (d1+d2+sqrt(dpg1pg2))
-                                                                                                           *(d1+d2+sqrt(dpg1pg2))))," ");
-                                            also_if_changed_report_integer("pass = ",pass,"\n");
-                                            also_if_changed_report_integer("i1 = ",i1," ");
-                                            also_if_changed_report_integer("j1 = ",j1," ");
-                                            also_if_changed_report_integer("i2 = ",i2," ");
-                                            also_if_changed_report_integer("j2 = ",j2," ");
-                                            also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
-                                            also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
-                                            also_if_changed_report_integer("kk1 = ",kk1," ");
-                                            also_if_changed_report_integer("kk2 = ",kk2,"\n");
-                                            also_if_changed_report_double_vector("mbndpt1[kk1] = ",mbndpt1[kk2],"\n");
-                                            also_if_changed_report_double_vector("mbndpt2[kk2] = ",mbndpt2[kk2],"\n");
-
-                                        }
-                                    }
-                                    dpg1pg2 = sqrt(dpg1pg2);
-                                    distsq = NCD_min(distsq,
-                                                     (d1+d2+dpg1pg2)
-                                                     *(d1+d2+dpg1pg2));
-                                    distsq = NCD_min(distsq,(CNCM_gdist(vecs1[i1],bndpt2)+d2)
-                                                     *(CNCM_gdist(vecs1[i1],bndpt2)+d2));
-                                    distsq = NCD_min(distsq,(CNCM_gdist(vecs1[i1],mbndpt2[0])+d2)
-                                                     *(CNCM_gdist(vecs1[i1],mbndpt2[0])+d2));
-                                    distsq = NCD_min(distsq,(CNCM_gdist(vecs2[i2],bndpt1)+d1)
-                                                     *(CNCM_gdist(vecs2[i2],bndpt1)+d1));
-                                    distsq = NCD_min(distsq,(CNCM_gdist(vecs2[i2],mbndpt1[0])+d1)
-                                                     *(CNCM_gdist(vecs2[i2],mbndpt1[0])+d1));
-                                    if (nmpbdpt1 > 1) {
-                                        for (kk1=1; kk1<nmpbdpt1; kk1++ ){
-                                            distsq = NCD_min(distsq,(CNCM_gdist(vecs2[i2],mbndpt1[kk1])+d1)
-                                                             *(CNCM_gdist(vecs2[i2],mbndpt1[kk1])+d1));
-                                            
-                                        }
-                                    }
-                                    if (nmpbdpt2 > 1) {
-                                        for (kk2=1; kk2<nmpbdpt2; kk2++ ){
-                                            distsq = NCD_min(distsq,(CNCM_gdist(vecs1[i1],mbndpt2[kk2])+d2)
-                                                             *(CNCM_gdist(vecs1[i1],mbndpt2[kk2])+d2));
-                                        }
-                                    }
-                                    for (kk1=2; kk1 < nmpbdpt1; kk1++ ){
-                                        for (kk2=2; kk2 < nmpbdpt2; kk2++ ){
-                                            distsq = NCD_min(distsq,(CNCM_gdist(vecs2[i2],mbndpt1[kk1])+d1)
-                                                             *(CNCM_gdist(vecs2[i2],mbndpt1[kk1])+d1));
-                                            distsq = NCD_min(distsq,(CNCM_gdist(vecs1[i1],mbndpt2[kk2])+d2)
-                                                             *(CNCM_gdist(vecs1[i1],mbndpt2[kk2])+d2));
-                                        }
-                                    }
-
-                                    report_double_if_changed("used dpg1pg2 crosspath end: ",sqrt(distsq)," ");
-                                    also_if_changed_report_integer("pass = ",pass,"\n");
-                                    also_if_changed_report_integer("i1 = ",i1," ");
-                                    also_if_changed_report_integer("j1 = ",j1," ");
-                                    also_if_changed_report_integer("i2 = ",i2," ");
-                                    also_if_changed_report_integer("j2 = ",j2," ");
-                                    also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
-                                    also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
-
+                                    
                                     
                                 }
                             }
+                            if (nmpbdpt2 > 1) {
+                                for (kk2=1; kk2<nmpbdpt2; kk2++ ){
+                                    dpg1pg2 = NCD_min(dpg1pg2,NCD_min(CNCM_gdistsq(bndpt1,mbndpt2[kk2]),
+                                                                      CNCM_gdistsq(mbndpt1[0],mbndpt2[kk2])));
+                                    report_double_if_changed("used dpg1pg2 crosspath right: ",sqrt(NCD_min(distsq,
+                                                                                                           (d1+d2+sqrt(dpg1pg2))
+                                                                                                           *(d1+d2+sqrt(dpg1pg2))))," ");
+                                    also_if_changed_report_integer("pass = ",pass,"\n");
+                                    also_if_changed_report_integer("j1 = ",j1," ");
+                                    also_if_changed_report_integer("j2 = ",j2," ");
+                                    also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                                    also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                                    also_if_changed_report_integer("kk1 = ",-1," ");
+                                    also_if_changed_report_integer("kk2 = ",kk2,"\n");
+                                    also_if_changed_report_double_vector("bndpt1 = ",bndpt1,"\n");
+                                    also_if_changed_report_double_vector("mbndpt1[0] = ",mbndpt1[0],"\n");
+                                    also_if_changed_report_double_vector("mbndpt2[kk2] = ",mbndpt2[kk2],"\n");
+                                    
+                                }
+                            }
+                            for (kk1=2; kk1 < nmpbdpt1; kk1++ ){
+                                for (kk2=2; kk2 < nmpbdpt2; kk2++ ){
+                                    dpg1pg2 = NCD_min(dpg1pg2,CNCM_gdistsq(mbndpt1[kk1],mbndpt2[kk2]));
+                                    report_double_if_changed("used dpg1pg2 crosspath center: ",sqrt(NCD_min(distsq,
+                                                                                                            (d1+d2+sqrt(dpg1pg2))
+                                                                                                            *(d1+d2+sqrt(dpg1pg2))))," ");
+                                    also_if_changed_report_integer("pass = ",pass,"\n");
+                                    also_if_changed_report_integer("j1 = ",j1," ");
+                                    also_if_changed_report_integer("j2 = ",j2," ");
+                                    also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                                    also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                                    also_if_changed_report_integer("kk1 = ",kk1," ");
+                                    also_if_changed_report_integer("kk2 = ",kk2,"\n");
+                                    also_if_changed_report_double_vector("mbndpt1[kk1] = ",mbndpt1[kk2],"\n");
+                                    also_if_changed_report_double_vector("mbndpt2[kk2] = ",mbndpt2[kk2],"\n");
+                                    
+                                }
+                            }
+                            dpg1pg2 = sqrt(dpg1pg2);
+                            distsq = NCD_min(distsq,
+                                             (d1+d2+dpg1pg2)
+                                             *(d1+d2+dpg1pg2));
+                            if (nmpbdpt1 > 1) {
+                                for (kk1=1; kk1<nmpbdpt1; kk1++ ){
+                                    distsq = NCD_min(distsq,(CNCM_gdist(gvec2,mbndpt1[kk1])+d1)
+                                                     *(CNCM_gdist(gvec2,mbndpt1[kk1])+d1));
+                                    
+                                }
+                            }
+                            if (nmpbdpt2 > 1) {
+                                for (kk2=1; kk2<nmpbdpt2; kk2++ ){
+                                    distsq = NCD_min(distsq,(CNCM_gdist(gvec1,mbndpt2[kk2])+d2)
+                                                     *(CNCM_gdist(gvec1,mbndpt2[kk2])+d2));
+                                }
+                            }
+                            for (kk1=2; kk1 < nmpbdpt1; kk1++ ){
+                                for (kk2=2; kk2 < nmpbdpt2; kk2++ ){
+                                    distsq = NCD_min(distsq,(CNCM_gdist(gvec2,mbndpt1[kk1])+d1)
+                                                     *(CNCM_gdist(gvec2,mbndpt1[kk1])+d1));
+                                    distsq = NCD_min(distsq,(CNCM_gdist(gvec1,mbndpt2[kk2])+d2)
+                                                     *(CNCM_gdist(gvec1,mbndpt2[kk2])+d2));
+                                }
+                            }
+                            
+                            report_double_if_changed("used dpg1pg2 crosspath end: ",sqrt(distsq)," ");
+                            also_if_changed_report_integer("pass = ",pass,"\n");
+                            also_if_changed_report_integer("j1 = ",j1," ");
+                            also_if_changed_report_integer("j2 = ",j2," ");
+                            also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                            also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                            
+                            
                         }
                     }
                 }
-             }
+            }
         }
     }
+    
+    
     return sqrt(distsq);
 }
 
