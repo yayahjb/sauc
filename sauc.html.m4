@@ -127,8 +127,9 @@ Search of Alternate Unit Cells - SAUC
 <center>
 <H1>SAUC</H1>
 Search of Alternate Unit Cells
-<br />Copyright Keith J. McGill 2013
+<br />Copyright Keith J. McGill 2013, 2014
 <br /><br />Keith J McGill, Mojgan Asadi, Maria T. Karakasheva, Lawrence C. Andrews, Herbert J. Bernstein
+<br /><br />Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein
 <br /><br />Dowling College and Micro Encoder Inc.
 <br />Work Supported In Part By NIGMS
 <br /><br />Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
@@ -184,7 +185,7 @@ Lattice Centering:</th>
 </td>
 </tr>
 <th align="left">
-Algorithm:</th>
+Metric:</th>
 <tr><td>
 <input type="radio" name="Algorithm" value="1" />L1<br />
 <input type="radio" name="Algorithm" value="2" />L2<br />
@@ -220,7 +221,7 @@ Similarity:</th>
 <tr><td>
 <input type="radio" name="Similarity" value="1" />Nearest<br />
 <input type="radio" name="Similarity" value="2" /checked>Sphere<br />
-Range of S<td><br /><br /><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere"VALUE="2.5" SIZE="9"></td>
+Radius of S<td><br /><br /><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere"VALUE="2.5" SIZE="9"></td>
 </td></tr>
 <tr><td>
 <input type="radio" name="Similarity" value="3" />Range<br />
@@ -354,6 +355,18 @@ or a
 <a href="http://arxiv.org/abs/1307.1811">arxiv.org/abs/1307.1811</a>.
 <p>
 
+<a name="Rev_0.8"></a>
+<h2>Revison 0.8</h2>
+<p>
+Revision 0.8 of 24 April 2014 has revised output, following the suggestions of Graeme Winter and 
+the good example of Nearest-Cell (Ramraj et al., 2011) in giving some of the provenance of the
+cell and organizing long output lists into collapsed lists of families.  Unlike Nearest-Cell
+we have chosen to organize the families on the PDB HEADER field, rather than the sequence.
+For clarity, many uses of the term "algorithm" have been changed to "metric".  The output
+of the nearest cell search has been changed to include the distance and to conform to the
+style of the style of the Sphere search output.  The NCDist metric algorithm has been updated
+to the most current release.  -- MA &amp; HJB
+<p>
 <a name="Introduction"></a>
 <h2>Introduction</h2> 
 <p>
@@ -811,7 +824,7 @@ Wyckoff, R. W. G. (1931). The structure of crystals. No. 19. The Chemical Catalo
 </center>
 
 <hr>
-Updated 23 October 2013.
+Updated 25 April 2014.
 </font>
 </body>
 </html>'

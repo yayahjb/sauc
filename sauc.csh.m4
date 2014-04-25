@@ -23,6 +23,17 @@ set searchurl="'SEARCHURL()`"
 echo "<head>"
 echo "<title>SAUC"
 echo "</title>"
+echo ''`<script type="text/javascript">''`
+echo ''`	function open_close(id) {''`
+echo ''`		var display = document.getElementById(id).style.display;''`
+echo ''`		if (display == "block") {''`
+echo ''`		document.getElementById(id).style.display = "none";''`
+echo ''`		}''`
+echo ''`		else {''`
+echo ''`		document.getElementById(id).style.display = "block";''`
+echo ''`        }''`
+echo ''`	}''`
+echo ''`</script>''`
 echo "</head>"
 echo ''`<body><font face="Arial,Helvetica,Times">''`
 'ifelse(CGIMETHOD(),`GET',`echo $QUERY_STRING |')` tr ''`\&''` ''`\n''`  |sed "s/^./set &/" | sed "s/%2B/+/g" > /tmp/outstr$$
@@ -37,6 +48,7 @@ echo "<h1 align=center>SAUC</h1>"
 echo ''`<center>''`
 echo "Search of Alternate Unit Cells"
 echo "<br />Copyright Keith J. McGill 2013"
+echo "<br />Rev 0.8, 24 Apr 2014 Mojgan Asadi, Herbert J. Bernstein"
 echo ''`</center>''`
 echo "<p>"
 echo "<center>"
@@ -52,7 +64,7 @@ echo $Gamma " " >>/tmp/instr$$
 echo "| Cell: " A:$A B:$B C:$C Alpha:$Alpha Beta:$Beta Gamma:$Gamma "|"
 echo "<br />"
 echo ${Algorithm} " "  >> /tmp/instr$$
-echo "| Algorithm: "
+echo "| Metric: "
 if ($Algorithm == 1) then
 	echo "L1"
 else if ($Algorithm == 2) then
@@ -73,7 +85,7 @@ else
 endif
 if ($Similarity == 2) then
 	echo ${RangeSphere} >> /tmp/instr$$
-	echo "| Range of S: " $RangeSphere " |"
+	echo "| Radius of S: " $RangeSphere " |"
 else if ($Similarity == 3) then
 	echo ${RangeA} >> /tmp/instr$$
 	echo "| Range of A: " $RangeA
@@ -96,14 +108,15 @@ echo "" >>/tmp/instr$$
 echo "</center>"
 echo ''`<p><hr /><p><h2><a name="Results"></a>Results of SAUC Run</h2>''`
 setenv SAUC_BATCH_MODE YES
+setenv SAUC_JAVASCRIPT YES
 setenv ITERATE_QUERY NO
 setenv OUTPUT_STYLE $OutputStyle
-echo "<PRE>"
+echo ''`<PRE><font face="Monaco, Anadale Mono" size="2">''`
 cd' HTDOCS()`
 'BINPATH()` < /tmp/instr$$
 rm /tmp/instr$$
 #cat /tmp/instr$$ 
-echo "</pre>"
+echo "</font></pre>"
 echo ''`<p>''`
 echo "<hr />"
 echo ''`<center>''`

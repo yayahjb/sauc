@@ -6,6 +6,7 @@
    rev 27 May 2013 -- HJB
    rev 24 Jun 2013 -- HJB
    rev  6 Jul 2013 -- HJB
+   rev 22 Apr 2014 -- HJB
  
      *******************************************************
          You may redistribute this program under the terms
@@ -60,12 +61,15 @@
 #include <limits.h>
 #include <time.h>
 #include <iostream>
+#include <cstring>
+#define USE_ARMADILLO_LIBRARY
 #include "TNear.h"
 #include "triple.h"
 #include "rhrand.h"
 #include "unitcell.h"
 #include <fstream>
 #include <string>
+#include <sstream>
 #include "V7.h"
 #include "Cell.h"
 #include "Reducer.h"
@@ -74,6 +78,12 @@
 #include <armadillo>
 #include <vector>
 
+/* Forward Declaration */
+void SphereResults( std::ostream& out,
+                   const std::vector<unitcell>&  myvector,
+                   const std::vector<size_t>&    myindices,
+                   const std::vector<double>&    mydistances,
+                   const unitcell&               unknownCell);
 
 using namespace std;
 
@@ -88,7 +98,15 @@ const int NUM_COLUMNS = 9, NUM_ROWS = 200000, NUM_DUMP = 2;
 string idArray[NUM_ROWS][1];
 double cellDArray[NUM_ROWS][6];
 string spaceArray[NUM_ROWS][1];
+string entryArray[NUM_ROWS][8];
+long entryhash[131072];
+long entryhashlink[NUM_ROWS];
+long entryhashvalue[NUM_ROWS];
+long headhash[131072];
+long headhashlink[NUM_ROWS];
+long headhashvalue[NUM_ROWS];
 int zArray[NUM_ROWS][1];
+int numentries;
 double probeArray[6];
 arma::vec6 primredprobe;
 string probelattice;
@@ -102,6 +120,7 @@ double result0 = 0, result1 = 0, result2 = 0, result3 = 0, result4 = 0, result5 
 double numRangeA, numRangeB, numRangeC, numRangeAlpha, numRangeBeta, numRangeGamma, sphereRange;
 string valueDump;
 int sauc_batch_mode = 0;
+int sauc_javascript = 0;
 
 //*****************************************************************************
 double convertToDouble(string value)
@@ -120,6 +139,123 @@ int convertToInt(string zvalue)
     if (!(issvalue >> number)) number = 0;
     return number;
 }
+
+inline long hashvalue(string str) {
+    unsigned int ii;
+    unsigned long hash;
+    const char * strasstr = str.c_str();
+    hash = 0;
+    for(ii=0;ii<str.length();ii++) {
+        hash = ((hash << 4)| (hash>>28))^((unsigned long)(tolower(strasstr[ii]))-32);
+    }
+    return (long) (hash&0x10000);
+}
+
+vector<string> split(const string& str, char delim) {
+    vector<string> values;
+    const char * strasstr = str.c_str();
+    unsigned int istart,iend;
+    istart=0;
+    while (istart < str.length()){
+        for (iend=istart;iend<str.length();iend++){
+            if (strasstr[iend] == delim) {
+                values.push_back(str.substr(istart,iend-istart));
+                istart = iend+1;
+                break;
+            }
+        }
+        if (iend < str.length()) continue;
+        values.push_back(str.substr(istart,iend-istart));
+        istart = iend+1;
+        break;
+    }
+    return values;
+}
+
+//*****************************************************************************
+void makeEntryDatabase(string filename)
+{
+    ifstream infile;
+    string line,id,head,acc,cmpd,src,aut,res,exp;
+    char * idasstr;
+    numentries = 0;
+    long hash;
+    long hashnext;
+    long ii;
+    
+    for (ii=0; ii < 131072; ii++) entryhash[ii] = headhash[ii] = -1;
+    for (ii=0; ii < NUM_ROWS; ii++) entryhashlink[ii] = headhashlink[ii] = -1;
+    
+	infile.open(filename.c_str());
+    getline(infile,line);
+    getline(infile,line);
+    while (getline(infile,line)) {
+        line += "\t\t\t\t\t\t\t\t";
+        vector<string> values = split(line,'\t');
+        id = values[0];
+        head = values[1];
+        acc = values[2];
+        cmpd = values[3];
+        src = values[4];
+        aut = values[5];
+        res = values[6];
+        exp = values[7];
+        /* if (numentries < 20) {
+            for (ii=0; ii < values.size(); ii++)
+            cout << ii << " " << values[ii] << endl;
+            cout << id << head << acc << cmpd << src << aut << res << exp << endl;
+        } */
+        entryArray[numentries][0] = id;
+        entryArray[numentries][1] = head;
+        entryArray[numentries][2] = acc;
+        entryArray[numentries][3] = cmpd;
+        entryArray[numentries][4] = src;
+        entryArray[numentries][5] = aut;
+        entryArray[numentries][6] = res;
+        entryArray[numentries][7] = exp;
+        hash = hashvalue(id);
+        entryhashvalue[numentries] = hash;
+        hashnext = entryhash[hash];
+        entryhash[hash] = numentries;
+        entryhashlink[numentries] = hashnext;
+        hash = hashvalue(head);
+        headhashvalue[numentries] = hash;
+        hashnext = headhash[hash];
+        headhash[hash] = numentries;
+        headhashlink[numentries] = hashnext;
+        numentries++;
+    }
+
+}
+
+long findEntryDatabase(string id) {
+    long hash=hashvalue(id);
+    long hashnext;
+    
+    hashnext = entryhash[hash];
+    while (hashnext >= 0) {
+        if (!strcasecmp(id.c_str(),entryArray[hashnext][0].c_str())) {
+            return hashnext;
+        }
+        hashnext = entryhashlink[hashnext];
+    }
+    return -1L;
+}
+
+long findHeadDatabase(string id) {
+    long hash=hashvalue(id);
+    long hashnext;
+    
+    hashnext = headhash[hash];
+    while (hashnext >= 0) {
+        if (!strcasecmp(id.c_str(),entryArray[hashnext][1].c_str())) {
+            return hashnext;
+        }
+        hashnext = headhashlink[hashnext];
+    }
+    return hashnext;
+}
+
 
 //*****************************************************************************
 void makeDatabase(string filename)
@@ -381,8 +517,10 @@ void buildNearTree( void )
         int Algorithm = 0;
         if (serialin.is_open()) {
             std::cout << "Reading database " << filenames[choiceAlgorithm] << std::endl;
-            serialin >> token; if (!serialin.good() || token != string("Algorithm:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'Algorithm:' token" << std::endl;
+            serialin >> token; if (!serialin.good() ||
+                                   (token != string("Algorithm:")
+                                    && token != string("Metric:"))) {
+                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'Metric' or 'Algorithm:' token" << std::endl;
                 break;
             }
             serialin >> Algorithm;
@@ -764,7 +902,7 @@ void buildNearTree( void )
                                                 );
     serialout.open(filenames[choiceAlgorithm].c_str(),std::ios::out|std::ios::trunc);
     if (serialout.is_open()) {
-        serialout << "Algorithm: "<< choiceAlgorithm << std::endl;
+        serialout << "Metric: "<< choiceAlgorithm << std::endl;
         serialout << "DelayedIndices: { ";
         for (si = 0; si < DelayedIndices->size(); si++) {
             serialout << (*DelayedIndices)[si];
@@ -853,79 +991,54 @@ void buildNearTree( void )
     }
 }
 
-//*****************************************************************************
-void NearestResult( std::ostream& out, const std::string cellDArray[], const unitcell& nearestData )
-{
-    out << "\nNearest Results\n" << "PDBID: " << idArray[numRow][0] << " " <<
-    "A: "     << cellDArray[0] << " " <<
-    "B: "     << cellDArray[1] << " " <<
-    "C: "     << cellDArray[2] << " " <<
-    "Alpha: " << cellDArray[3] << " " <<
-    "Beta: "  << cellDArray[4] << " " <<
-    "Gamma: " << cellDArray[5] << " " <<
-    "Space Group: " << spaceArray[numRow][0] << " " <<
-    "Z: " << zArray[numRow][0] << std::endl;
-    out << "As Primitive Reduced\n"<<
-    "A: "     << nearestData.getData(0) << " " <<
-    "B: "     << nearestData.getData(1) << " " <<
-    "C: "     << nearestData.getData(2) << " " <<
-    "Alpha: " << nearestData.getData(3) << " " <<
-    "Beta: "  << nearestData.getData(4) << " " <<
-    "Gamma: " << nearestData.getData(5) << std::endl;
-}
 
 //*****************************************************************************
 void NearestInputReport( std::ostream& out, const arma::vec6& probeArray, const arma::vec6& primredprobe )
 {
-    out << "Raw Unknown Cell\n" <<
-    "A: " << probeArray[0] << " " <<
-    "B: " << probeArray[1] << " " <<
-    "C: " << probeArray[2] << " " <<
-    "Alpha: " << probeArray[3] << " " <<
-    "Beta: " << probeArray[4] << " " <<
-    "Gamma: " << probeArray[5] << " " <<
-    "Lattice: "<< probelattice <<  std::endl;
-    out << "Reduced Primitive Cell\n" <<
-    "A: " << primredprobe[0] << " " <<
-    "B: " << primredprobe[1] << " " <<
-    "C: " << primredprobe[2] << " " <<
-    "Alpha: " << primredprobe[3] << " " <<
-    "Beta: " << primredprobe[4] << " " <<
-    "Gamma: " << primredprobe[5]  <<  std::endl;
+    out << "Raw Unknown Cell [" <<
+    probeArray[0] << ", " <<
+    probeArray[1] << ", " <<
+    probeArray[2] << ", " <<
+    probeArray[3] << ", " <<
+    probeArray[4] << ", " <<
+    probeArray[5] <<
+    "] Lattice: "<< probelattice <<  std::endl;
+    out << "Reduced Primitive Cell: [" <<
+    primredprobe[0] << ", " <<
+    primredprobe[1] << ", " <<
+    primredprobe[2] << ", " <<
+    primredprobe[3] << ", " <<
+    primredprobe[4] << ", " <<
+    primredprobe[5] << "]" << std::endl;
 }
 
 //*****************************************************************************
 void findNearest( void )
 {
-    CNearTree <unitcell>::iterator nnresult;
-	std::cout << std::endl;
-	// unitcell unknownCell = unitcell(probeArray[0], probeArray[1], probeArray[2], probeArray[3], probeArray[4], probeArray[5], 0, 0, 0, 0, 0, 0, 0);
+    vector <unitcell> myvector;
+    vector <size_t> myindices;
+    vector <double> mydistances;
+    long spheredata;
+
+    
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
     NearestInputReport( std::cout, probeArray, primredprobe );
-    nnresult = cellTree[choiceAlgorithm-1]->NearestNeighbor(1.e38, unknownCell);
-    if (nnresult != cellTree_itend[choiceAlgorithm-1]) {
-        std::string cellparams[6];
-        std::ostringstream osa, osb, osc, osalpha, osbeta, osgamma;
-        unitcell nearestData = *nnresult;
-        
-        numRow = (int)nearestData.getRow();
-        
-        osa << cellDArray[numRow][0];
-        osb << cellDArray[numRow][1];
-        osc << cellDArray[numRow][2];
-        osalpha << cellDArray[numRow][3];
-        osbeta << cellDArray[numRow][4];
-        osgamma << cellDArray[numRow][5];
-        
-        cellparams[0] = osa.str();
-        cellparams[1] = osb.str();
-        cellparams[2] = osc.str();
-        cellparams[3] = osalpha.str();
-        cellparams[4] = osbeta.str();
-        cellparams[5] = osgamma.str();
-        
+
+	std::cout << std::endl;
+    spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(1,3., myvector,
+                                                                     myindices,mydistances,unknownCell);
+    if (spheredata == 0) {
+        spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(1,30., myvector,
+                                                                     myindices,mydistances,unknownCell);
+        if (spheredata == 0) {
+            spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(1,1.e38, myvector,
+                                                                             myindices,mydistances,unknownCell);
+        }
+
+    }
+    if (spheredata != 0) {
         std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
-        NearestResult( std::cout, cellparams, nearestData );
+        SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
         
         if (!sauc_batch_mode)
             std::cout << "File name if you want the output saved" << std::endl;
@@ -942,8 +1055,7 @@ void findNearest( void )
                 std::cout << " ";
                 std::ofstream output( filename.c_str() );
                 NearestInputReport( output, probeArray, primredprobe );
-                NearestResult( output, cellparams, nearestData );
-                output.close();
+                SphereResults( output, myvector, myindices, mydistances, unknownCell);                output.close();
                 if (sauc_batch_mode)
                     std::cout << "Output saved to: " << filename << std::endl;
             }
@@ -959,48 +1071,182 @@ void SphereResults( std::ostream& out,
                    const std::vector<double>&    mydistances,
                    const unitcell&               unknownCell)
 {
+    long entry;
+    string head;
+    vector<long> myentries;
+    vector<long> myfamilies;
+    vector<long> myfamiliesordinal;
+    vector<long> myfamilylist;
+    vector<long> myfamilycount;
+    vector<long> mythread;
+    myentries.assign(myvector.size(),-1L);   /* The entry with this PDB ID */
+    myfamilies.assign(myvector.size(),-1L);  /* The base entry with the same header */
+    myfamiliesordinal.assign(myvector.size(),-1L);/* ordinal in the family list */
+    myfamilylist.assign(myvector.size(),-1L);/* List in distance order of first
+                                         entry in each family */
+    myfamilycount.assign(myvector.size(),-1L);/* counts of hits in each family */
+    mythread.assign(myvector.size(),-1L);     /* links on hashed headers */
+    long ind, family_size;
+    long nextthread, prevthread, firstthread, numhit, thread[257];
+    int ii, jj;
+    family_size=0;
+    for (ii=0; ii < 257; ii++) thread[ii] = -1;
     out << "\nSphere Results " << myvector.size() << " Cells" <<std::endl;
-    for (size_t ind=0; ind < myvector.size(); ind++) {
+    /* find the header threads of the results,
+       this depends on the assumption that the original
+       list is sorted by distance
+     */
+    for (ind=0; ind < (long)myvector.size(); ind++) {
+        myentries[ind] = myfamilies[ind] = myfamiliesordinal[ind] = myfamilylist[ind] = myfamilycount[ind] = mythread[ind] = -1;
+    }
+    for (ind=0; ind < (long)myvector.size(); ind++) {
         const unitcell * const cell = & myvector[ind];
         numRow = (int)(*cell).getRow();
-        out << ind+1<<". PDBID: " << idArray[numRow][0] << " " <<
-        "distance: " << mydistances[ind] << " " <<
-        "A: " << cellDArray[numRow][0] << " " <<
-        "B: " << cellDArray[numRow][1] << " " <<
-        "C: " << cellDArray[numRow][2] << " " <<
-        "Alpha: " << cellDArray[numRow][3] << " " <<
-        "Beta: "  << cellDArray[numRow][4] << " " <<
-        "Gamma: " << cellDArray[numRow][5] << " " <<
-        "Space Group: " << spaceArray[numRow][0] << " " <<
-        "Z: " << zArray[numRow][0] << std::endl;
-        out << "    As Primitive Reduced: "<<
-        "A: "     << (*cell).getData(0) << " " <<
-        "B: "     << (*cell).getData(1) << " " <<
-        "C: "     << (*cell).getData(2) << " " <<
-        "Alpha: " << (*cell).getData(3) << " " <<
-        "Beta: "  << (*cell).getData(4) << " " <<
-        "Gamma: " << (*cell).getData(5) << std::endl;
+        entry = findEntryDatabase(idArray[numRow][0]);
+        if (entry < 0) {
+            cout << "entry for "<< idArray[numRow][0] << " is negative" << endl;
+            myentries[ind] = -1;
+            myfamilies[ind] = -1;
+        } else {
+            myentries[ind] = entry;
+            myfamilies[ind] = findHeadDatabase(entryArray[entry][1]);
+            if (myfamilies[ind] < 0 ) {
+                cout << "head for "<< entryArray[entry][1] << " is negative" << endl;
+            }
+        }
+        ii = (myfamilies[ind])&0xFF;  /* hash code for families */
+        if (entry < 0) ii = 256;
+        nextthread = thread[ii];
+        if (nextthread < 0) {
+            thread[ii] = ind;
+            myfamiliesordinal[ind] = family_size;
+            mythread[ind] = -1;
+            myfamilylist[family_size] = ind;
+            myfamilycount[family_size] = 1L;
+            family_size++;
+        } else {
+            firstthread = -1;
+            prevthread = -1;
+            numhit = 0;
+            while (nextthread >= 0) {
+                prevthread = nextthread;
+                nextthread = mythread[prevthread];
+                if (myfamilies[prevthread] == myfamilies[ind]) {
+                    if (numhit==0) firstthread = prevthread;
+                    numhit++;
+                    myfamiliesordinal[ind] = myfamiliesordinal[prevthread];
+                }
+            }
+            if (numhit==0) {
+                myfamiliesordinal[ind] = family_size;
+                myfamilylist[family_size] = ind;
+                myfamilycount[family_size] = 1L;
+                family_size++;
+            } else {
+                myfamiliesordinal[ind] = myfamiliesordinal[firstthread];
+                myfamilycount[myfamiliesordinal[ind]]++;
+            }
+            mythread[prevthread] = ind;
+            mythread[ind] = -1;
+        }
     }
+
+    out << "Found " << family_size << " families organized by PDB header" << endl << endl;
+    
+    for (ii = 0; ii < family_size; ii++) {
+        long myfamily;
+        long familyordinal;
+        ind = myfamilylist[ii];
+        myfamily = myfamilies[ind];
+        familyordinal = 0;
+        string pdbid;
+        while (ind >= 0) {
+            const unitcell * const cell = & myvector[ind];
+            numRow = (int)(*cell).getRow();
+            if (sauc_javascript) {
+               pdbid = "<b><a href=\"http://www.rcsb.org/pdb/explore.do?structureId=" +
+                       idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
+            } else {
+               pdbid = idArray[numRow][0];
+            }
+            familyordinal++;
+            if (familyordinal == 1) {
+                entry = findEntryDatabase(idArray[numRow][0]);
+                if (entry >= 0) {
+                    out << ii+1 << ": "<< entryArray[entry][1];
+                } else {
+                    out << ii+1 << ": Unidentified Header";
+                }
+                if (myfamilycount[ii] > 1) {
+                    out << " [" << myfamilycount[ii] << " cells found] ";
+                    if (sauc_javascript) {
+                      out << "<a href=\"javascript:open_close('famfloat"<< ii+1 << "');\">(expand/collapse)</a>";
+                    }
+                }
+                out << endl;
+            }
+            if (familyordinal == 2 && sauc_javascript) {
+                out << "<div id=\"famfloat" << ii+1 <<
+                "\" style=\"display:none\">";
+            }
+            out << "    " << familyordinal << ": " <<
+            pdbid << " Dist: " <<
+            mydistances[ind] << " Cell: [" <<
+            cellDArray[numRow][0] << ", " <<
+            cellDArray[numRow][1] << ", " <<
+            cellDArray[numRow][2] << ", " <<
+            cellDArray[numRow][3] << ", " <<
+            cellDArray[numRow][4] << ", " <<
+            cellDArray[numRow][5] << "], SG: " <<
+            spaceArray[numRow][0] << ", Z: " <<
+            zArray[numRow][0] << " ";
+            out << " Prim. Red. Cell: ["<<
+            (*cell).getData(0) << ", " <<
+            (*cell).getData(1) << ", " <<
+            (*cell).getData(2) << ", " <<
+            (*cell).getData(3) << ", " <<
+            (*cell).getData(4) << ", " <<
+            (*cell).getData(5) << "]" << std::endl;
+            entry = findEntryDatabase(idArray[numRow][0]);
+            if (entry >= 0) {
+                out << "      " << "Compound: " << entryArray[entry][3] << endl;
+                out << "      " << "Source: " << entryArray[entry][4]
+                    << ", Res: " << entryArray[entry][6]
+                    << " " << entryArray[entry][7]
+                    << endl;
+            }
+            ind = mythread[ind];
+            while (ind >= 0) {
+                if (myfamilies[ind] == myfamily) break;
+                ind = mythread[ind];
+            }
+        }
+        if (myfamilycount[ii] > 1 && sauc_javascript) {
+            out << "</div>";
+        }
+        out << endl;
+    }
+        
 }
 
 //*****************************************************************************
 void SphereInputReport( std::ostream& out )
 {
-    out << "Raw Unknown Cell         \n" <<
-    "A: " << probeArray[0] << " " <<
-    "B: " << probeArray[1] << " " <<
-    "C: " << probeArray[2] << " " <<
-    "Alpha: " << probeArray[3] << " " <<
-    "Beta: " << probeArray[4] << " " <<
-    "Gamma: " << probeArray[5] <<
-    " Lattice: "<< probelattice <<  std::endl;
-    out << "As Primitive Reduced Cell\n" <<
-    "A: " << primredprobe[0] << " " <<
-    "B: " << primredprobe[1] << " " <<
-    "C: " << primredprobe[2] << " " <<
-    "Alpha: " << primredprobe[3] << " " <<
-    "Beta: " << primredprobe[4] << " " <<
-    "Gamma: " << primredprobe[5]  <<  std::endl;
+    out << "Raw Unknown Cell: ["<<
+    probeArray[0] << ", " <<
+    probeArray[1] << ", " <<
+    probeArray[2] << ", " <<
+    probeArray[3] << ", " <<
+    probeArray[4] << ", " <<
+    probeArray[5] <<
+    "] Lattice: "<< probelattice <<  std::endl;
+    out << "Primitive Reduced Cell: [" <<
+    primredprobe[0] << ", " <<
+    primredprobe[1] << ", " <<
+    primredprobe[2] << ", " <<
+    primredprobe[3] << ", " <<
+    primredprobe[4] << ", " <<
+    primredprobe[5] << "]" << std::endl;
 }
 
 //*****************************************************************************
@@ -1084,7 +1330,11 @@ int main ()
     if (std::getenv("SAUC_BATCH_MODE")) {
         sauc_batch_mode = 1;
     }
-    
+
+    if (std::getenv("SAUC_JAVASCRIPT")) {
+        sauc_javascript = 1;
+    }
+
     //Create Database
     
     filenames[0] = "PDBcelldatabase.csv";
@@ -1093,14 +1343,16 @@ int main ()
     filenames[3] = "PDBcellneartreeNCDist.dmp";
     filenames[4] = "PDBcellneartreeV7.dmp";
 	makeDatabase(filenames[0]);
+    makeEntryDatabase("entries.idx");
     
 	unitcell cell;
     
-    std::cout << "sauc Copyright (C) Keith McGill 2013" << std::endl;
+    std::cout << "sauc Copyright (C) Keith McGill 2013, 2014" << std::endl;
     std::cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
     std::cout << "This is free software, and you are welcome to" << std::endl;
     std::cout << "redistribute it under the GPL or LGPL" << std::endl;
     std::cout << "See the program documentation for details" << std::endl;
+    std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
     
 	while (endProgram != 1)
 	{
@@ -1171,17 +1423,17 @@ int main ()
             if (!sauc_batch_mode) std::cout << "\n3. NCDist";
             if (!sauc_batch_mode) std::cout << "\n4. V7";
             if (!sauc_batch_mode) std::cout << "\n5. Quit";
-            if (!sauc_batch_mode) std::cout << "\nChoose An Algorithm: ";
+            if (!sauc_batch_mode) std::cout << "\nChoose a Metric: ";
             priorAlgorithm = choiceAlgorithm;
             std::cin >> choiceAlgorithm; std::cin.clear();
             std::cin.ignore(100000,'\n');
             
             if (sauc_batch_mode && choiceAlgorithm > 0 && choiceAlgorithm < 5 ) {
                 switch (choiceAlgorithm) {
-                    case 1: std::cout << "L1 search algorithm" << std::endl; break;
-                    case 2: std::cout << "L2 search algorithm" << std::endl; break;
-                    case 3: std::cout << "NCDist search algorithm" << std::endl; break;
-                    case 4: std::cout << "V7 search algorithm" << std::endl; break;
+                    case 1: std::cout << "L1 metric search algorithm" << std::endl; break;
+                    case 2: std::cout << "L2 metric search algorithm" << std::endl; break;
+                    case 3: std::cout << "NCDist metric search algorithm" << std::endl; break;
+                    case 4: std::cout << "V7 metric search algorithm" << std::endl; break;
                 }
             }
             
@@ -1244,7 +1496,7 @@ int main ()
         {
             if (!sauc_batch_mode) std::cout << "1. Nearest";
             if (!sauc_batch_mode) std::cout << "\n2. Sphere";
-            if (!sauc_batch_mode) std::cout << "\n3. Range(Does not use any Algorithms)";
+            if (!sauc_batch_mode) std::cout << "\n3. Range";
             if (!sauc_batch_mode) std::cout << "\n4. Back";
             if (!sauc_batch_mode) std::cout << "\n5. Quit";
             if (!sauc_batch_mode) std::cout << "\nChoose A Similarity: ";
@@ -1264,7 +1516,7 @@ int main ()
             }
             else if (choiceSimilar == 2)
             {
-                if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Range: ";
+                if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Radius: ";
                 std::cin >> sphereRange; std::cin.clear();
                 std::cin.ignore(100000,'\n');
                 if (sauc_batch_mode) {
@@ -1330,7 +1582,7 @@ int main ()
         while (quitContinue == 0)
         {
             if (!sauc_batch_mode) std::cout << "1. Input New Values";
-            if (!sauc_batch_mode) std::cout << "\n2. Choose a New Algorithm";
+            if (!sauc_batch_mode) std::cout << "\n2. Choose a New Metric";
             if (!sauc_batch_mode) std::cout << "\n3. Choose a New Similarity";
             if (!sauc_batch_mode) std::cout << "\n4. Quit";
             if (!sauc_batch_mode) std::cout << "\nChoice: ";

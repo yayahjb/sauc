@@ -6,6 +6,7 @@
 #
 #  1 July 2012
 #  Rev 13 July 2013
+#  Rev 21 April 2014
 #
 #  Modify the following definitions for your system
 #
@@ -50,6 +51,7 @@ HTDOCSEXT   ?=   /sauc
 #  PDBCELLINDEXURL is the URL from which to retrieve the
 #  fixed-field PDB cell index
 PDBCELLINDEXURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
+PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #
 #  Default compile flag definition to select debug mode under unix
 CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
@@ -74,7 +76,7 @@ MATHSCRIBEURL = http://$(HTTPDSERVER)$(HTDOCSEXT)/$(MATHSCRIBEPATH)
 #
 # SAUC URLS
 #
-SAUCVERSION = 0.7.0
+SAUCVERSION = 0.8.0
 SAUCTARBALLURL = http://downloads.sf.net/iterate/sauc-$(SAUCVERSION).tar.gz
 SAUCZIPURL = http://downloads.sf.net/iterate/sauc-$(SAUCVERSION).zip
 
@@ -157,11 +159,13 @@ updatedb.csh:	updatedb.csh.m4 Makefile edit
 		-DCGIMETHOD=$(CGIMETHOD)\
 		-DBINDEST=$(BINDEST)\
 		-DPDBCELLINDEXURL=$(PDBCELLINDEXURL)\
+		-DPDBENTRIESURL=$(PDBENTRIESURL)\
 		< updatedb.csh.m4 > updatedb.csh
 		chmod 755 updatedb.csh
 #
 install:	edit sauc sauc.csh sauc.html \
-		$(MATHSCRIBEPATH) gpl.txt lgpl.txt
+		$(MATHSCRIBEPATH) gpl.txt lgpl.txt \
+		entries.idx
 		-mkdir -p $(BINDEST)
 		-mkdir -p $(CGIBIN)
 		-mkdir -p $(HTDOCS)
@@ -175,6 +179,7 @@ install:	edit sauc sauc.csh sauc.html \
 		cp lgpl.txt $(HTDOCS)
 		cp *.csv $(HTDOCS)
 		cp *.dmp $(HTDOCS)
+		cp entries.idx $(HTDOCS)
 		ln -f -s $(HTDOCS)/sauc.html $(HTDOCS)/index.html
 		cp -r $(MATHSCRIBEPATH) $(HTDOCS)/$(MATHSCRIBEPATH)
 
@@ -215,8 +220,11 @@ idx2csv:    idx2csv.f
 
 $(NEWDB)/crystal.idx: $(NEWDB)
 	(cd $(NEWDB); wget -N $(PDBCELLINDEXURL) )
-	    
-updatedb:   $(NEWDB)/crystal.idx idx2csv $(SAVEDB) $(NEWDB) sauc
+
+$(NEWDB)/entries.idx: $(NEWDB)
+	(cd $(NEWDB); wget -N $(PDBENTRIESURL) )
+
+updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2csv $(SAVEDB) $(NEWDB) sauc
 	-cp PDBcelldatabase.csv $(SAVEDB)/
 	-cp *.dmp $(SAVEDB)/
 	-(cd $(NEWDB);rm -f *.dmp result*)
@@ -233,6 +241,7 @@ last_update:	$(NEWDB)/last_update updatedb
 	cp $(NEWDB)/*.dmp .
 	cp $(NEWDB)/*.csv .
 	cp $(NEWDB)/last_update .
+	cp $(NEWDB)/entries.idx .
 	touch last_update
 
 $(NEWDB)/last_update:
