@@ -7,5 +7,5 @@ CGIBIN=/home/project-web/iterate/cgi-bin;export CGIBIN;
 CGIMETHOD=GET;export CGIMETHOD;
 BINDEST=/home/project-web/iterate/cgi-bin;export BINDEST;
 PDBCELLINDEXURL=http://www.bmrb.wisc.edu/ftp/pub/pdb/derived_data/index/crystal.idx;export PDBCELLINDEXURL;
-PDBENTRIESURL=http://www.bmrb.wisc.edu/ftp/pub/pdb/derived_data/index/entries.ids;export PDBENTRIESURL;
+PDBENTRIESURL=http://www.bmrb.wisc.edu/ftp/pub/pdb/derived_data/index/entries.idx;export PDBENTRIESURL;
 export CXXFLAGS="-Wall -O3 -DUSE_LOCAL_HEADERS -g -I$HOME/include"
