@@ -104,6 +104,8 @@ static int ispbd[NBDPRJ] =     {1,1,1,1,1,1,1,0,1,1,0,1,1,0,0,1,1,1,1,1,0,0,0,0,
 static int ismbd[NBDPRJ] =     {1,1,1,1,1,0,0,1,0,0,1,0,0,1,1,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,1,0,0,0,1,1};
 static int ispmappedbd[NBND] = {1,1,1,1,1,0,1,1,0,1,1,0,1,1,0};
 static int ismmappedbd[NBND] = {1,1,1,1,1,1,0,0,1,0,0,1,0,0,1};
+static int pmmappedbd[NBND]  = {0, 1, 2, 3, 4, 7,-1,-1,10,-1,-1,13,-1,-1,-1};
+static int mpmappedbd[NBND]  = {0, 1, 2, 3, 4,-1,-1, 5,-1,-1, 8,-1,-1,11,-1};
 
 static const char * prjnames[NBDPRJ] = {"1","2","3","4","5","6","7","8","9","A","B","C","D","E","F",
                                     "6C","67","9A","CD","12","8B","8E","8F","BF","EF","28F","2BF","2EF", "269",
@@ -1108,56 +1110,10 @@ static int Rinv[NREFL] = {
 
 #define NMPGS            65
 #define NPGS             18
-#define NCASES           31
 
 
-static int baseord[NCASES] = {0,1,2,3,4,5,5,7,8,8,10,11,11,13,14,
-    bdf_P_2F,  bdf_P_EF,  bdf_P_8F,  bdf_P_BF,  bdf_P_2BF,
-    bdf_P_27,  bdf_P_6C,  bdf_P_2A,  bdf_P_28B, bdf_P_2D, 
-    bdf_P_28F, bdf_P_2EF, bdf_P_269, bdf_P_69,  bdf_P_28E, bdf_P_26C };
-static int mapord[15]  = {0,1,2,3,4,7,6,5,10,9,8,13,12,11,14};
-                              
-static int fmapord[NMPGS] = {0,
-    /*     1        2        3        4 */
-    bdf_P_2F,bdf_P_2F,bdf_P_2F,bdf_P_2F,
-    /*     5        6        7        8 */
-    bdf_P_8F,bdf_P_BF,bdf_P_BF,bdf_P_8F,
-    /*     9       10       11       12 */
-    bdf_P_EF,bdf_P_EF,bdf_P_8E,bdf_P_8B,
-    /*    13       14       15       16 */
-    bdf_P_69,bdf_P_BF,bdf_P_69,bdf_P_69,
-    /*    17       18       19       20 */
-    bdf_P_8F,bdf_P_69,bdf_P_6C,bdf_P_8E,
-    /*    21       22       23       24 */
-    bdf_P_EF,bdf_P_26C,bdf_P_28F,bdf_P_2BF,
-    /*     25        26        27        28 */
-    bdf_P_28F,bdf_P_2EF,bdf_P_269,bdf_P_28E,
-    /*     29        30        31        32 */
-    bdf_P_2EF,bdf_P_28B,bdf_P_2BF,bdf_P_28F,
-    /*     33        34        35        36 */
-    bdf_P_269,bdf_P_2BF,bdf_P_2BF,bdf_P_2EF,
-    /*     37        38        39        40 */
-    bdf_P_2EF,bdf_P_28F,bdf_P_2BF,bdf_P_2EF,
-    /*     41        42        43        44 */
-    bdf_P_2BF,bdf_P_2BF,bdf_P_26C,bdf_P_2EF,
-    /*     45        46       47       48 */
-    bdf_P_28F,bdf_P_28F,bdf_P_27,bdf_P_27,
-    /*    49       50       51       52 */
-    bdf_P_27,bdf_P_27,bdf_P_2D,bdf_P_2D,
-    /*    53       54       55       56 */
-    bdf_P_2A,bdf_P_2D,bdf_P_2A,bdf_P_2A,
-    /*    57       58        59        60 */
-    bdf_P_2D,bdf_P_2A,bdf_P_28B,bdf_P_26C,
-    /*     61        62        63        64 */
-    bdf_P_269,bdf_P_28E,bdf_P_26C,bdf_P_269
-};
-
-
-static int jord[NCASES] =
-  {0,1,8,9,10,5,6,7,11,12,13,2,3,4,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30};
-static int jord2[NCASES] =
-  {0,1,10,9,8,7,6,5,13,12,11,2,3,4,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30};
-
+static int baseord[NBND] = {0,1,2,3,4,5,5,7,8,8,10,11,11,13,14};
+static int mapord[NBND]  = {0,1,2,3,4,7,6,5,10,9,8,13,12,11,14};
 
 
 /*     Test for being in the unrolled Niggli cone */
@@ -1254,6 +1210,21 @@ static double g456dist(double v1[6], double v2[6]){
 #define CNCM_gdist(v1,v2) sqrt(CNCM_gdistsq(v1,v2))
 
 
+/* Compute the gdist distance when moving between +++ and --- */
+
+#define CNCM_gpmdistsq(v1,v2) \
+(CNCM_vtoppp(v1)*CNCM_vtoppp(v2)>0 && CNCM_vtommm(v1)*CNCM_vtommm(v2)>0)?(CNCM_gdistsq(v1,v2)): \
+    fabs( (v1[0]-v2[0])*(v1[0]-v2[0])+\
+        (v1[1]-v2[1])*(v1[1]-v2[1])+\
+        (v1[2]-v2[2])*(v1[2]-v2[2])+\
+        (v1[3]*v1[3] + v2[3]*v2[3] + v1[4]*v1[4] + v2[4]*v2[4] + v1[5]*v1[5] + v2[5]*v2[5] )+\
+    2.*(CNCM_min3( \
+        fabs(v1[3]*v2[3]) - (v1[4]*v2[4]) - (v1[5]*v2[5]), \
+        - (v1[3]*v2[3]) + fabs(v1[4]*v2[4]) - (v1[5]*v2[5]), \
+        - (v1[3]*v2[3]) - (v1[4]*v2[4]) + fabs(v1[5]*v2[5]))))
+#define CNCM_gpmdist(v1,v2) sqrt(CNCM_gpmdistsq(v1,v2))
+
+
 /*   Macro version of g456dist
  Compute the best distance between 2 G6 vectors
  allowing for cell-preserving sign changes in
@@ -1276,13 +1247,14 @@ fabs( CNCM_gdistsq(v1,v2)+\
 
 #define CNC_g456distsq_byelem(v11,v12,v13,v14,v15,v16,v21,v22,v23,v24,v25,v26) \
 fabs((v11-v21)*(v11-v21)+(v12-v22)*(v12-v22)+(v13-v23)*(v13-v23) + \
- (v14-v24)*(v14-v24)+(v15-v25)*(v15-v25)+(v16-v26)*(v16-v26) + \
+(v14-v24)*(v14-v24)+(v15-v25)*(v15-v25)+(v16-v26)*(v16-v26) + \
 4.*CNCM_min(CNCM_min(CNCM_min(0.,v14*v24+v15*v25),v14*v24+v16*v26),v15*v25+v16*v26))
 
 
 /* Compute the g456 distance when moving between +++ and --- */
 
 #define CNCM_g456pmdistsq(v1,v2) \
+(CNCM_vtoppp(v1)*CNCM_vtoppp(v2)>0 && CNCM_vtommm(v1)*CNCM_vtommm(v2)>0)?(CNCM_gdistsq(v1,v2)): \
 fabs( (v1[0]-v2[0])*(v1[0]-v2[0])+\
       (v1[1]-v2[1])*(v1[1]-v2[1])+\
       (v1[2]-v2[2])*(v1[2]-v2[2])+\
@@ -1307,7 +1279,8 @@ v14*v14+v24*v24 + v15*v15+v25*v25 + v16*v16+v26*v26 + \
           ( - fabs(v14*v24) - fabs(v15*v25) + fabs(v16*v26)))))
 
 
-#define CNCM_g123distsq(v1,v2) \
+#define CNCM_g123pmdistsq(v1,v2) \
+(CNCM_vtoppp(v1)*CNCM_vtoppp(v2)>0 && CNCM_vtommm(v1)*CNCM_vtommm(v2)>0)?(CNCM_gdistsq(v1,v2)): \
 (CNCM_min((CNCM_min3( CNC_g456distsq_byelem(v1[0],v1[1],v1[2],v1[3],v1[4],v1[5], \
                                          v2[0],v2[1],v2[2],v2[3],v2[4],v2[5]),\
 CNC_g456distsq_byelem(v1[0],v1[1],v1[2],v1[3],v1[4],v1[5], \
@@ -1321,7 +1294,8 @@ CNC_g456distsq_byelem(v1[0],v1[1],v1[2],v1[3],v1[4],v1[5], \
 CNC_g456distsq_byelem(v1[0],v1[1],v1[2],v1[3],v1[4],v1[5], \
                       v2[2],v2[1],v2[0],v2[5],v2[4],v2[3])))))
 
-#define CNCM_g123pmdistsq(v1,v2) \
+#define CNCM_g123pmpmdistsq(v1,v2) \
+(CNCM_vtoppp(v1)*CNCM_vtoppp(v2)>0 && CNCM_vtommm(v1)*CNCM_vtommm(v2)>0)?(CNCM_gdistsq(v1,v2)): \
 (CNCM_min((CNCM_min3( CNC_g456pmdistsq_byelem(v1[0],v1[1],v1[2],v1[3],v1[4],v1[5], \
                                          v2[0],v2[1],v2[2],v2[3],v2[4],v2[5]),\
 CNC_g456pmdistsq_byelem(v1[0],v1[1],v1[2],v1[3],v1[4],v1[5], \
@@ -1335,37 +1309,46 @@ CNC_g456pmdistsq_byelem(v1[0],v1[1],v1[2],v1[3],v1[4],v1[5], \
 CNC_g456pmdistsq_byelem(v1[0],v1[1],v1[2],v1[3],v1[4],v1[5], \
                       v2[2],v2[1],v2[0],v2[5],v2[4],v2[3])))))
 
-    
 
-#define CNCM_g123dist(v1,v2) sqrt(CNCM_g123distsq(v1,v2))
+
 #define CNCM_g123pmdist(v1,v2) sqrt(CNCM_g123pmdistsq(v1,v2))
 
 #define FASTER
-#ifdef FASTER
-#define CNCM_gtestdist(v1,v2) CNCM_g456dist(v1,v2)
-#define CNCM_gtestdistsq(v1,v2) CNCM_g456distsq(v1,v2)
+/* #define FASTEST */
+#ifdef FASTEST
+#define CNCM_gtestdist(v1,v2) CNCM_gpmdist(v1,v2)
+#define CNCM_gtestdistsq(v1,v2) CNCM_gpmdistsq(v1,v2)
 #else
-#define CNCM_gtestdist(v1,v2) CNCM_g123dist(v1,v2)
-#define CNCM_gtestdistsq(v1,v2) CNCM_g123distsq(v1,v2)
+#ifdef FASTER
+#define CNCM_gtestdist(v1,v2) CNCM_g456pmdist(v1,v2)
+#define CNCM_gtestdistsq(v1,v2) CNCM_g456pmdistsq(v1,v2)
+#else
+#define CNCM_gtestdist(v1,v2) CNCM_g123pmdist(v1,v2)
+#define CNCM_gtestdistsq(v1,v2) CNCM_g123pmdistsq(v1,v2)
+#endif
 #endif
 
-static double guncpmdistsq(double v1[6], double v2[6]){
 
+static double guncpmdistsq(double v1[6], double v2[6]){
+    
     double * plusvec;
     double * minusvec;
     double d6,d8,d9,dB,dC,dE;
     double p6[6],p8[6],p9[6],pB[6],pC[6],pE[6];
     double mp6[6],mp8[6],mp9[6],mpB[6],mpC[6],mpE[6];
-    double dist68sq, dist9Bsq, distCEsq, distsq;
+    double dist68sq, dist9Bsq, distCEsq, distsq, dist;
     
     
-    if (!isunc(v1) || !isunc(v2)) return 1.e38;
+    if (!isunc(v1) || !isunc(v2)) return CNCM_gdistsq(v1,v2);
     
     if (CNCM_vtoppp(v1)*CNCM_vtoppp(v2)> 0 && CNCM_vtommm(v1)*CNCM_vtommm(v2 ) > 0) {
         
-        return CNCM_g456distsq(v1,v2);
+        return CNCM_gtestdistsq(v1,v2);
         
     }
+    
+    /* We have one end in +++, one in ---
+       Call them plusvec and minusvec */
     
     if (CNCM_vtoppp(v1) < 0 || CNCM_vtommm(v1) < 0 ) {
         plusvec = v2;
@@ -1375,7 +1358,11 @@ static double guncpmdistsq(double v1[6], double v2[6]){
         minusvec = v2;
     }
     
-    distsq = CNCM_g456pmdistsq(plusvec,minusvec);
+    /* Get the minimum distance through 3, 4 and 5 */
+    
+    distsq = CNCM_gtestdistsq(plusvec,minusvec);
+    
+    /* now try for tunnels: 6-8, 9-B, C-E */
     
     d6 = fabs(plusvec[3] -plusvec[1])/sqrt(2.);
     d8 = fabs(minusvec[3]+minusvec[1])/sqrt(2.);
@@ -1383,6 +1370,8 @@ static double guncpmdistsq(double v1[6], double v2[6]){
     dB = fabs(minusvec[4]+minusvec[0])/sqrt(2.);
     dC = fabs(plusvec[5] -plusvec[0])/sqrt(2.);
     dE = fabs(minusvec[5]+minusvec[0])/sqrt(2.);
+    
+    /* p6 in +++ tunnels to mp6 in --- */
     
     p6[0] = plusvec[0];
     p6[1] = (plusvec[3]+plusvec[1])/2.;
@@ -1398,6 +1387,8 @@ static double guncpmdistsq(double v1[6], double v2[6]){
     mp6[4] = plusvec[5]-plusvec[4];
     mp6[5] = -plusvec[5];
     
+    /* p8 in --- tunnels to mp8 in +++ */
+    
     p8[0] = minusvec[0];
     p8[1] = -(minusvec[3]-minusvec[1])/2.;
     p8[2] = minusvec[2];
@@ -1412,6 +1403,7 @@ static double guncpmdistsq(double v1[6], double v2[6]){
     mp8[4] = -minusvec[5]-minusvec[4];
     mp8[5] = -minusvec[5];
     
+    /* p9 in +++ tunnels to mp9 in --- */
     
     p9[0] = (plusvec[4]+plusvec[0])/2.;
     p9[1] = plusvec[1];
@@ -1427,6 +1419,8 @@ static double guncpmdistsq(double v1[6], double v2[6]){
     mp9[4] = -(plusvec[4]+plusvec[0])/2.;
     mp9[5] = -plusvec[5];
     
+    /* pB in --- tunnels to mpB in +++ */
+    
     pB[0] = -(minusvec[4]-minusvec[0])/2.;
     pB[1] = minusvec[1];
     pB[2] = minusvec[2];
@@ -1440,6 +1434,9 @@ static double guncpmdistsq(double v1[6], double v2[6]){
     mpB[3] = -minusvec[5]-minusvec[3];
     mpB[4] = -(minusvec[4]-minusvec[0])/2.;
     mpB[5] = -minusvec[5];
+    
+    /* pC in +++ tunnels to mpC in --- */
+
     
     pC[0] = (plusvec[5]+plusvec[0])/2.;
     pC[1] = plusvec[1];
@@ -1456,6 +1453,9 @@ static double guncpmdistsq(double v1[6], double v2[6]){
     mpC[4] = -plusvec[4];
     mpC[5] = -(plusvec[5]+plusvec[0])/2.;
     
+    /* pE in --- tunnels to mpE in +++ */
+
+    
     pE[0] = -(minusvec[5]-minusvec[0])/2.;
     pE[1] = minusvec[1];
     pE[2] = minusvec[2];
@@ -1470,26 +1470,43 @@ static double guncpmdistsq(double v1[6], double v2[6]){
     mpE[4] = -minusvec[4];
     mpE[5] = -(minusvec[5]-minusvec[0])/2;
     
+    /* There are 2 types of routes to try
+       from plusvec to 6, 9 or C and from
+       minusvec to 8, B or E respectively
+       completing the path via the shortest
+       connection between the ends of the
+       tunnels, or just go plusvec to 6, 9 or C
+       and directly from the other end of the
+       tunnel to minusvec, etc. */
+    
+    dist = d6 + CNCM_gtestdist(mp6,minusvec);
+    dist = CNCM_min(dist,d9 + CNCM_gtestdist(mp9,minusvec));
+    dist = CNCM_min(dist,dC + CNCM_gtestdist(mpC,minusvec));
+    dist = CNCM_min(dist,d8 + CNCM_gtestdist(mp8,plusvec));
+    dist = CNCM_min(dist,dB + CNCM_gtestdist(mpB,plusvec));
+    dist = CNCM_min(dist,dE + CNCM_gtestdist(mpE,plusvec));
+    
+    distsq = CNCM_min(distsq,dist*dist);
 
-    dist68sq = CNCM_g456pmdistsq(p6,p8);
-    dist68sq = CNCM_min(dist68sq,CNCM_g456distsq(p6,mp8));
-    dist68sq = CNCM_min(dist68sq,CNCM_g456distsq(mp6,p8));
-    dist68sq = CNCM_min(dist68sq,CNCM_g456pmdistsq(mp6,mp8));
+    dist68sq = CNCM_gtestdistsq(p6,p8);
+    dist68sq = CNCM_min(dist68sq,CNCM_gtestdistsq(p6,mp8));
+    dist68sq = CNCM_min(dist68sq,CNCM_gtestdistsq(mp6,p8));
+    dist68sq = CNCM_min(dist68sq,CNCM_gtestdistsq(mp6,mp8));
     dist68sq += (d6+d8)*(d6+d8);    
     if (dist68sq < distsq) distsq = dist68sq;
 
-    dist9Bsq = CNCM_g456pmdistsq(p9,pB);
-    dist9Bsq = CNCM_min(dist9Bsq,CNCM_g456distsq(p9,mpB));
-    dist9Bsq = CNCM_min(dist9Bsq,CNCM_g456distsq(mp9,pB));
-    dist9Bsq = CNCM_min(dist9Bsq,CNCM_g456pmdistsq(mp9,mpB));
+    dist9Bsq = CNCM_gtestdistsq(p9,pB);
+    dist9Bsq = CNCM_min(dist9Bsq,CNCM_gtestdistsq(p9,mpB));
+    dist9Bsq = CNCM_min(dist9Bsq,CNCM_gtestdistsq(mp9,pB));
+    dist9Bsq = CNCM_min(dist9Bsq,CNCM_gtestdistsq(mp9,mpB));
     dist9Bsq += (d9+dB)*(d9+dB);
     if (dist9Bsq < distsq) distsq = dist9Bsq;
 
-    distCEsq = CNCM_g456pmdistsq(pC,pE);
-    distCEsq = CNCM_min(distCEsq,CNCM_g456distsq(pC,mpE));
-    distCEsq = CNCM_min(distCEsq,CNCM_g456distsq(mpC,pE));
-    distCEsq = CNCM_min(distCEsq,CNCM_g456pmdistsq(mpC,mpE));
-    distCEsq += (d6+d8)*(d6+d8);
+    distCEsq = CNCM_gtestdistsq(pC,pE);
+    distCEsq = CNCM_min(distCEsq,CNCM_gtestdistsq(pC,mpE));
+    distCEsq = CNCM_min(distCEsq,CNCM_gtestdistsq(mpC,pE));
+    distCEsq = CNCM_min(distCEsq,CNCM_gtestdistsq(mpC,mpE));
+    distCEsq += (dC+dE)*(dC+dE);
     if (distCEsq < distsq) distsq = distCEsq;
     
     return distsq;
@@ -1549,8 +1566,8 @@ static void twoPminusI(double pg[6], double g[6], double gout[6]) {
 #define NREFL_OUTER_FULL 1
 #define NREFL_OUTER_MIN 1
 #else
-#define NREFL_OUTER_FULL 6
-#define NREFL_OUTER_MIN 3
+#define NREFL_OUTER_FULL 24
+#define NREFL_OUTER_MIN 6
 #endif
 
 
@@ -1558,25 +1575,16 @@ static double bddist(double gvec[6],int bdnum) {
     
     double bdin;
     
-    int plusplusplus;
-    
     bdin = 1.;
-    
-    plusplusplus = 0;
-    
-    /* if (!isunc(gvec)) return 1.e38;*/
-    
-    if (gvec[3]*gvec[4]*gvec[5] >0.) plusplusplus = 1;
-
     
     if (bdnum < NBND) {
         
         switch(bdnum) {
             case(P_1): if (gvec[0]>gvec[1]) bdin = -1; break;
             case(P_2): if (gvec[1]>gvec[2]) bdin = -1; break;
-            case(P_3): if ((plusplusplus && gvec[3]<0.) || (!plusplusplus && gvec[3] > 0.) ) bdin = -1; break;
-            case(P_4): if ((plusplusplus && gvec[4]<0.) || (!plusplusplus && gvec[4] > 0.) )bdin = -1; break;
-            case(P_5): if ((plusplusplus && gvec[5]<0.) || (!plusplusplus && gvec[5] > 0.) )bdin = -1; break;
+            case(P_3): if (gvec[3]>0.) bdin = -1; break;
+            case(P_4): if (gvec[4]>0.) bdin = -1; break;
+            case(P_5): if (gvec[5]>0.) bdin = -1; break;
             case(P_6): if (gvec[3]>gvec[1]) bdin = -1; break;
             case(P_7): if (gvec[3]>gvec[1]) bdin = -1; break;
             case(P_8): if (-gvec[3]>gvec[1]) bdin = -1; break;
@@ -1586,7 +1594,7 @@ static double bddist(double gvec[6],int bdnum) {
             case(P_C): if (gvec[5]>gvec[0]) bdin = -1; break;
             case(P_D): if (gvec[5]>gvec[0]) bdin = -1; break;
             case(P_E): if (-gvec[5]>gvec[0]) bdin = -1; break;
-            case(P_F): if ((!plusplusplus) && gvec[0]+gvec[1]+gvec[3]+gvec[4]+gvec[5]< 0.) bdin = -1; break;;
+            case(P_F): if (gvec[0]+gvec[1]+gvec[3]+gvec[4]+gvec[5]< 0.) bdin = -1; break;;
                 
             default: bdin = 1.; break;
         }
@@ -1610,111 +1618,9 @@ static double bddist(double gvec[6],int bdnum) {
                 
             default: return DBL_MAX; break;
         }
-    } else {
-        switch(baseord[bdnum]) {
-            case(bdf_P_2F): return sqrt(fabs(2.*gvec[5]*gvec[5]/9.+4.*gvec[4]*gvec[5]/9.
-                                        +4.*gvec[3]*gvec[5]/9.+2.*gvec[2]*gvec[5]/9.
-                                        +2.*gvec[1]*gvec[5]/9.+4.*gvec[0]*gvec[5]/9.
-                                        +2.*gvec[4]*gvec[4]/9.+4.*gvec[3]*gvec[4]/9.
-                                        +2.*gvec[2]*gvec[4]/9.+2.*gvec[1]*gvec[4]/9.
-                                        +4.*gvec[0]*gvec[4]/9.+2.*gvec[3]*gvec[3]/9.
-                                        +2.*gvec[2]*gvec[3]/9.+2.*gvec[1]*gvec[3]/9.
-                                        +4.*gvec[0]*gvec[3]/9.+5.*gvec[2]*gvec[2]/9.
-                                        -8.*gvec[1]*gvec[2]/9.+2.*gvec[0]*gvec[2]/9.
-                                        +5.*gvec[1]*gvec[1]/9.+2.*gvec[0]*gvec[1]/9.
-                                        +2.*gvec[0]*gvec[0]/9.)); break;
-                
-            case(bdf_P_27): return sqrt(fabs(2.*gvec[3]*gvec[3]-2.*gvec[2]*gvec[3]
-                                        -2.*gvec[1]*gvec[3]+2.*gvec[2]*gvec[2]
-                                        -2.*gvec[1]*gvec[2]+2.*gvec[1]*gvec[1]))/sqrt(3.); break;
-                
-            case(bdf_P_2A): return sqrt(fabs(gvec[4]*gvec[4]-2.*gvec[0]*gvec[4]
-                                        +gvec[2]*gvec[2]-2.*gvec[1]*gvec[2]
-                                        +gvec[1]*gvec[1]+gvec[0]*gvec[0]))/sqrt(2.); break;
-                
-            case(bdf_P_2D): return sqrt(fabs(gvec[5]*gvec[5]-2.*gvec[0]*gvec[5]
-                                        +gvec[2]*gvec[2]-2.*gvec[1]*gvec[2]
-                                        +gvec[1]*gvec[1]+gvec[0]*gvec[0]))/sqrt(2.); break;
-                
-            case(bdf_P_269): return sqrt(fabs(gvec[4]*gvec[4]/2.-gvec[0]*gvec[4]
-                                         +2.*gvec[3]*gvec[3]/3.-2.*gvec[2]*gvec[3]/3.
-                                         -2.*gvec[1]*gvec[3]/3.+2.*gvec[2]*gvec[2]/3.
-                                         -2.*gvec[1]*gvec[2]/3.+2.*gvec[1]*gvec[1]/3.
-                                         +gvec[0]*gvec[0]/2.)); break;
-                
-            case(bdf_P_26C): return  sqrt(fabs(gvec[5]*gvec[5]/2.-gvec[0]*gvec[5]
-                                          +2.*gvec[3]*gvec[3]/3.-2.*gvec[2]*gvec[3]/3.
-                                          -2.*gvec[1]*gvec[3]/3.+2.*gvec[2]*gvec[2]/3.
-                                          -2.*gvec[1]*gvec[2]/3.+2.*gvec[1]*gvec[1]/3.
-                                          +gvec[0]*gvec[0]/2.)); break;
-                
-            case(bdf_P_28F): return sqrt(fabs(gvec[5]*gvec[5]/3+2.*gvec[4]*gvec[5]/3.
-                                         +2.*gvec[0]*gvec[5]/3.+gvec[4]*gvec[4]/3.
-                                         +2.*gvec[0]*gvec[4]/3.+2.*gvec[3]*gvec[3]/3.
-                                         +2.*gvec[2]*gvec[3]/3.+2.*gvec[1]*gvec[3]/3.
-                                         +2.*gvec[2]*gvec[2]/3.-2.*gvec[1]*gvec[2]/3.
-                                         +2.*gvec[1]*gvec[1]/3.+gvec[0]*gvec[0]/3.)); break;
-                
-            case(bdf_P_2BF): return sqrt(fabs(.4*gvec[5]*gvec[5]+.8*gvec[3]*gvec[5]
-                                         +.4*gvec[2]*gvec[5]+0.4*gvec[1]*gvec[5]
-                                         +.5*gvec[4]*gvec[4]+1.0*gvec[0]*gvec[4]
-                                         +.4*gvec[3]*gvec[3]+0.4*gvec[2]*gvec[3]
-                                         +.4*gvec[1]*gvec[3]+.6*gvec[2]*gvec[2]
-                                         -.8*gvec[1]*gvec[2]+.6*gvec[1]*gvec[1]
-                                         +0.5*gvec[0]*gvec[0])); break;
-                
-            case(bdf_P_2EF): return sqrt(fabs(0.5*gvec[5]*gvec[5]+1.0*gvec[0]*gvec[5]
-                                         +.4*gvec[4]*gvec[4]+.8*gvec[3]*gvec[4]
-                                         +.4*gvec[2]*gvec[4]+.4*gvec[1]*gvec[4]
-                                         +.4*gvec[3]*gvec[3]+.4*gvec[2]*gvec[3]
-                                         +.4*gvec[1]*gvec[3]+.6*gvec[2]*gvec[2]
-                                         -.8*gvec[1]*gvec[2]+.6*gvec[1]*gvec[1]
-                                         +.5*gvec[0]*gvec[0])); break;
-                
-            case(bdf_P_28E): return sqrt(fabs(gvec[5]*gvec[5]/2.+gvec[0]*gvec[5]
-                                         +2.*gvec[3]*gvec[3]/3.+2.*gvec[2]*gvec[3]/3.
-                                         +2.*gvec[1]*gvec[3]/3.+2.*gvec[2]*gvec[2]/3.
-                                         -2.*gvec[1]*gvec[2]/3.+2.*gvec[1]*gvec[1]/3.
-                                         +gvec[0]*gvec[0]/2.)); break;
-                
-            case(bdf_P_28B): return sqrt(fabs(gvec[4]*gvec[4]/2.+gvec[0]*gvec[4]
-                                         +2.*gvec[3]*gvec[3]/3.+2*gvec[2]*gvec[3]/3.
-                                         +2.*gvec[1]*gvec[3]/3.+2*gvec[2]*gvec[2]/3.
-                                         -2.*gvec[1]*gvec[2]/3.+2*gvec[1]*gvec[1]/3.
-                                         +gvec[0]*gvec[0]/2.)); break;
-                
-            case(bdf_P_69): return sqrt(fabs((gvec[0]-gvec[4])*(gvec[0]-gvec[4])
-                                        + (gvec[1]-gvec[3])*(gvec[1]-gvec[3])))/sqrt(2.); break;
-                
-            case(bdf_P_6C): return sqrt(fabs((gvec[0]-gvec[5])*(gvec[0]-gvec[5])
-                                        + (gvec[1]-gvec[3])*(gvec[1]-gvec[3])))/sqrt(2.); break;
-                
-            case(bdf_P_8B): return sqrt(fabs(0.5*gvec[4]*gvec[4]+1.0*gvec[0]*gvec[4]
-                                        +0.5*gvec[3]*gvec[3]+1.0*gvec[1]*gvec[3]
-                                        +0.5*gvec[1]*gvec[1]+0.5*gvec[0]*gvec[0])); break;
-                
-            case(bdf_P_8E): return sqrt(fabs(0.5*gvec[5]*gvec[5]+1.0*gvec[0]*gvec[5]
-                                        +0.5*gvec[3]*gvec[3]+1.0*gvec[1]*gvec[3]
-                                        +0.5*gvec[1]*gvec[1]+0.5*gvec[0]*gvec[0])); break;
-                
-            case(bdf_P_8F): return sqrt(fabs( 2.*(gvec[5]+gvec[4]+gvec[0])
-                                        *(gvec[5]+gvec[4]+gvec[0])
-                                             +3.*(gvec[3]+gvec[1])*(gvec[3]+gvec[1])))/sqrt(6.); break;
-                
-            case(bdf_P_BF): return sqrt(fabs( 2.*(gvec[5]+gvec[3]+gvec[1])*(gvec[5]+gvec[3]+gvec[1])
-                                        +3.*(gvec[4]+gvec[0])*(gvec[4]+gvec[0])))/sqrt(6.); break;
-                
-            case(bdf_P_EF): return sqrt(fabs( 3.*gvec[5]*gvec[5]+6.*gvec[0]*gvec[5]
-                                        +2.*gvec[4]*gvec[4] + 4.*gvec[3]*gvec[4]
-                                        +4.*gvec[1]*gvec[4] + 2.*gvec[3]*gvec[3]
-                                        +4.*gvec[1]*gvec[3] + 2.*gvec[1]*gvec[1]
-                                        +3.*gvec[0]*gvec[0]))/sqrt(6.); break;
-                
-                
-            default: return DBL_MAX; break;
-        }
-        
     }
+    
+    return DBL_MAX;
 }
 
 /* Get the minimum distance to the diagonals boundaries */
@@ -1723,7 +1629,6 @@ static double minbddist(double gvec[6]) {
     int ii;
     double dists[4];
     double minbd;
-    if (!isunc(gvec)) return 1.e38;
     dists[0] = CNCM_min(CNCM_min(fabs(gvec[1]-gvec[0]),
                     fabs(gvec[2]-gvec[1])),
                     fabs(gvec[2]-gvec[0]))/sqrt(2.);
@@ -1751,7 +1656,7 @@ static double minbddist(double gvec[6]) {
 
 static void bdmaps(double gvec[6],
             double dists[NBND],
-            int iord[NCASES],
+            int iord[NBND],
             double pgs[NBND][6],
             double rgs[NBND][6],
             double mpgs[NBND][6],
@@ -1761,7 +1666,7 @@ static void bdmaps(double gvec[6],
     
     int jj, itemp, igap, idone;
     
-    for (jj=0; jj < NCASES; jj++) {
+    for (jj=0; jj < NBND; jj++) {
         iord[jj] = jj;
     }
 
@@ -1835,24 +1740,14 @@ double NCDist_2bds(double gvec1[6],double rgvec1[6],
     int ii, jj;
     int signgvec1p,signgvec2p;
     int signgvec1m,signgvec2m;
-    int signmpg1p,signmpg2p;
-    int signmpg1m,signmpg2m;
-    
     
     signgvec1p = CNCM_vtoppp(gvec1);
     signgvec1m = CNCM_vtommm(gvec1);
     signgvec2p = CNCM_vtoppp(gvec2);
     signgvec2m = CNCM_vtommm(gvec2);
-    signmpg1p = CNCM_vtoppp(mpg1);
-    signmpg1m = CNCM_vtommm(mpg1);
-    signmpg2p = CNCM_vtoppp(mpg2);
-    signmpg2m = CNCM_vtommm(mpg2);
 
     
-    if ((ispbd[bd1]&&signgvec1p<0) && (ismbd[bd1]&&signgvec1m>0)) return dist;
-    if ((ispbd[bd2]&&signgvec2p<0) && (ismbd[bd2]&&signgvec2m>0)) return dist;
-    if ((ispmappedbd[bd1]&&signmpg1p<0) && (ismmappedbd[bd1]&&signmpg1m>0)) return dist;
-    if ((ispmappedbd[bd2]&&signmpg2p<0) && (ismmappedbd[bd2]&&signmpg2m>0)) return dist;
+    if (!isunc(gvec1)||!isunc(gvec2)||!isunc(pg1)||!isunc(pg2)||!isunc(mpg1)||!isunc(mpg2)) return dist;
     
     d11[0] = bddist(gvec1,bd1);
     d22[0] = bddist(gvec2,bd2);
@@ -1865,6 +1760,10 @@ double NCDist_2bds(double gvec1[6],double rgvec1[6],
                         guncpmdist(mpg1,mpg2)
                );
     dist = CNCM_min(dist,dist2);
+    
+    /* if ((ispbd[bd1]&&signgvec1p>0&&ispbd[bd2]&&signgvec2p>0)
+        ||(ismbd[bd1]&&signgvec1m<0&&ismbd[bd2]&&signgvec2m<0)) return dist;
+     */
     
     /* This is the general case, in which we must cross
        boundary 1 and boundary 2 
@@ -1906,7 +1805,7 @@ double NCDist_2bds(double gvec1[6],double rgvec1[6],
     d22[2] = d22[1];
     
     d11[3] = d11[2];
-    d12[3] = d11[2];
+    d12[3] = d12[2];
     d21[3] = d21[0];
     d22[3] = d22[0];
     
@@ -1917,11 +1816,19 @@ double NCDist_2bds(double gvec1[6],double rgvec1[6],
     
     for (jj = 0; jj < 4; jj++)  {
         
-        if (d11[jj]*d21[jj] <= 1.e-28 && d22[jj]*d12[jj] <= 1.e-28) {
+        if (d11[jj]*d21[jj] <= 1.e-38 && d22[jj]*d12[jj] <= 1.e-38) {
             /* (r)gvec1 and (r)gvec2 are on opposite sides of both
              boundaries*/
-            alpha1 = CNCM_min(1.,fabs(d11[jj])/(1.e-38+fabs(d11[jj])+fabs(d21[jj])));
-            alpha2 = CNCM_min(1.,fabs(d22[jj])/(1.e-38+fabs(d22[jj])+fabs(d12[jj])));
+            if (fabs(d11[jj]) < 1.e-38) {
+                alpha1 = 0.;
+            } else {
+                alpha1 = CNCM_min(1.,fabs(d11[jj])/(1.e-38+fabs(d11[jj])+fabs(d21[jj])));
+            }
+            if (fabs(d22[jj]) < 1.e-38) {
+                alpha2 = 0.;
+            } else {
+                alpha2 = CNCM_min(1.,fabs(d22[jj])/(1.e-38+fabs(d22[jj])+fabs(d12[jj])));
+            }
             s1 = alpha1*dg1g2[jj];
             s2 = alpha2*dg1g2[jj];
             for (ii=0; ii < 6; ii++){
@@ -1930,20 +1837,20 @@ double NCDist_2bds(double gvec1[6],double rgvec1[6],
             }
             imv6(bdint1,MS[bd1],mbdint1);
             imv6(bdint2,MS[bd2],mbdint2);
-            if (isunc(mbdint1)) s1 = CNCM_min(s1,CNCM_gdist(rgv1[jj],mbdint1));
+            s1 = CNCM_min(s1,CNCM_gdist(rgv1[jj],mbdint1));
             s1 = CNCM_min(s1,fabs(d11[jj])+guncpmdist(mpg1,bdint1));
             s1 = CNCM_min(s1,fabs(d11[jj])+guncpmdist(mpg1,mbdint1));
             if (s1 > dist) return dist;
-            if (isunc(mbdint2)) s2 = CNCM_min(s2,CNCM_gdist(rgv2[jj],mbdint2));
+            s2 = CNCM_min(s2,CNCM_gdist(rgv2[jj],mbdint2));
             s2 = CNCM_min(s2,fabs(d22[jj])+guncpmdist(mpg2,bdint2));
             s2 = CNCM_min(s2,fabs(d22[jj])+guncpmdist(mpg2,mbdint2));
             if (s1+s2 > dist) return dist;
             
             dbdi1bdi2 = CNCM_min(CNCM_min(CNCM_min(
-                                                   guncpmdist(bdint1,bdint2),
-                                                   guncpmdist(bdint1,mbdint2)),
-                                          guncpmdist(mbdint1,bdint2)),
-                                 guncpmdist(mbdint1,mbdint2));
+                        guncpmdist(bdint1,bdint2),
+                        guncpmdist(bdint1,mbdint2)),
+                        guncpmdist(mbdint1,bdint2)),
+                        guncpmdist(mbdint1,mbdint2));
             report_double_if_changed("rgv1[jj] and rgv2[jj] are on opposite sides of both: ", CNCM_min(dist,s1+s2+dbdi1bdi2)," ")
             also_if_changed_report_integer("jj = ",jj," ");
             also_if_changed_report_integer("bd1 = ",bd1," ");
@@ -1975,6 +1882,13 @@ double NCDist_2bds(double gvec1[6],double rgvec1[6],
             also_if_changed_report_double_vector("mbdint1 = ",mbdint1,"\n");
             also_if_changed_report_double_vector("mbdint2 = ",mbdint2,"\n");
             
+            also_if_changed_report_double("dbdi1bdi2 = ",dbdi1bdi2,", ");
+            also_if_changed_report_double("guncpmdist(bdint1,bdint2) = ",guncpmdist(bdint1,bdint2),", ");
+            also_if_changed_report_double("guncpmdist(bdint1,mbdint2) = ",guncpmdist(bdint1,mbdint2),", ");
+            also_if_changed_report_double("guncpmdist(mbdint1,bdint2) = ",guncpmdist(mbdint1,bdint2),", ");
+            also_if_changed_report_double("guncpmdist(mbdint1,mbdint2) = ",guncpmdist(mbdint1,mbdint2),"\n");
+            
+            
             dist = CNCM_min(dist,s1+s2+dbdi1bdi2);
         }
         
@@ -1983,6 +1897,7 @@ double NCDist_2bds(double gvec1[6],double rgvec1[6],
     return dist;
     
 }
+
 
 #define DCUT 0.9995
 #define fudge(d) DCUT*d
@@ -2000,7 +1915,7 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
     double pgs1[NBND][6], rgs1[NBND][6], mpgs1[NBND][6], mvecs1[NBND][6];
     double dists2[NBND];
     double pgs2[NBND][6], rgs2[NBND][6], mpgs2[NBND][6], mvecs2[NBND][6];
-    int iord1[NCASES],iord2[NCASES];
+    int iord1[NBND],iord2[NBND];
     double mindists1;
     double mindists2;
     int jx1, jx2;
@@ -2009,6 +1924,8 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
     double maxdist;
     int signgvec1p,signgvec2p;
     int signgvec1m,signgvec2m;
+    int signpg1p,signpg2p;
+    int signpg1m,signpg2m;
     int signmpg1p,signmpg2p;
     int signmpg1m,signmpg2m;
     
@@ -2021,7 +1938,7 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
     
     bdmaps(gvec1,dists1,iord1,pgs1,rgs1,mpgs1,mvecs1,maxdist,&ngood1);
     bdmaps(gvec2,dists2,iord2,pgs2,rgs2,mpgs2,mvecs2,maxdist,&ngood2);
-
+    
     mindists1 = minbddist(gvec1);
     mindists2 = minbddist(gvec2);
     
@@ -2032,73 +1949,63 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
             double d1;
             j1 = iord1[jx1];
             d1 = dists1[j1];
+            signpg1p = CNCM_vtoppp(pgs1[j1]);
+            signpg1m = CNCM_vtommm(pgs1[j1]);
             signmpg1p = CNCM_vtoppp(mpgs1[j1]);
             signmpg1m = CNCM_vtommm(mpgs1[j1]);
             
-            if (d1 < maxdist && ((ispbd[j1]&&signgvec1p>0) || (ismbd[j1]&&signgvec1m<0))
+            if (d1 < maxdist  && ((ispbd[j1]&&signgvec1p>0) || (ismbd[j1]&&signgvec1m<0))
+                && ((ispbd[j1]&&signpg1p>0) || (ismbd[j1]&&signpg1m<0))
                 && ((ispmappedbd[j1]&&signmpg1p>0) || (ismmappedbd[j1]&&signmpg1m<0))){
                 dist = CNCM_min(dist,guncpmdist(gvec2,mpgs1[j1])+d1);
                 report_double_if_changed("used dmpg1g2 mpgs1 endpoint: ", dist," ")
-                    also_if_changed_report_integer("pass = ",pass,"\n");
+                also_if_changed_report_integer("pass = ",pass,"\n");
                 also_if_changed_report_double("d1 = ",d1," ");
-                    also_if_changed_report_integer("j1 = ",j1," ");
+                also_if_changed_report_integer("j1 = ",j1," ");
                 also_if_changed_report("bdry =",prjnames[j1]," ");
-                also_if_changed_report_integer("CNCM_vtoppp(gvec2)*CNCM_vtoppp(mpgs1[j1]) = ",CNCM_vtoppp(gvec2)*CNCM_vtoppp(mpgs1[j1]),"\n");
-                also_if_changed_report_integer("CNCM_vtoppp(gvec2)*CNCM_vtoppp(pgs1[j1]) = ",CNCM_vtoppp(gvec2)*CNCM_vtoppp(pgs1[j1]),"\n");
-                also_if_changed_report_integer("CNCM_vtommm(gvec2)*CNCM_vtommm(mpgs1[j1]) = ",CNCM_vtoppp(gvec2)*CNCM_vtoppp(mpgs1[j1]),"\n");
-                also_if_changed_report_integer("CNCM_vtommm(gvec2)*CNCM_vtommm(pgs1[j1]) = ",CNCM_vtoppp(gvec2)*CNCM_vtoppp(pgs1[j1]),"\n");
-                    also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
-                    also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
-                    also_if_changed_report_double_vector("mpgs1 = ",mpgs1[j1],"\n");
-                also_if_changed_report_double("guncpmdist(gvec2,mpgs1[j1])",guncpmdist(gvec2,mpgs1[j1]),", ");
-                }
+                also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                also_if_changed_report_double_vector("mpgs1 = ",mpgs1[j1],"\n");
             }
+        }
         for (jx2 = 0; jx2 < ngood2; jx2++) {
             double d2;
             j2 = iord2[jx2];
             d2 = dists2[j2];
+            signpg2p = CNCM_vtoppp(pgs2[j2]);
+            signpg2m = CNCM_vtommm(pgs2[j2]);
             signmpg2p = CNCM_vtoppp(mpgs2[j2]);
             signmpg2m = CNCM_vtommm(mpgs2[j2]);
             if (d2 < maxdist && ((ispbd[j2]&&signgvec2p>0) || (ismbd[j2]&&signgvec2m<0))
+                && ((ispbd[j2]&&signpg2p>0) || (ismbd[j2]&&signpg2m<0))
                 && ((ispmappedbd[j2]&&signmpg2p>0) || (ismmappedbd[j2]&&signmpg2m<0))) {
                 dist = CNCM_min(dist,(guncpmdist(gvec1,mpgs2[j2])+d2));
-                /* dist = CNCM_min(dist,(guncpmdist(gvec1,pgs2[j2])+d2)); */
                 report_double_if_changed("used dpg1pg2 mpgs2 endpoint: ", dist," ");
-                    also_if_changed_report_integer("pass = ",pass,"\n");
-                    also_if_changed_report_integer("j2 = ",j2," ");
+                also_if_changed_report_integer("pass = ",pass,"\n");
+                also_if_changed_report_integer("j2 = ",j2," ");
                 also_if_changed_report("bdry =",prjnames[j2]," ");
-                    also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
-                    also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
-                    also_if_changed_report_double_vector("mpgs2 = ",mpgs2[j2],"\n");
-                also_if_changed_report_integer("signmpg2p = ",signmpg2p,"\n");
-                also_if_changed_report_integer("signmpg2m = ",signmpg2m,"\n");
-                also_if_changed_report_integer("ispmappedbd[j2] = ",ispmappedbd[j2],"\n");
-                also_if_changed_report_integer("ismmappedbd[j2] = ",ismmappedbd[j2],"\n");
+                also_if_changed_report_double_vector("gvec1 = ",gvec1," ");
+                also_if_changed_report_double_vector("gvec2 = ",gvec2,"\n");
+                also_if_changed_report_double_vector("mpgs2 = ",mpgs2[j2],"\n");
 
-                }
             }
+        }
         maxdist = fudge(dist);
         for (jx1 = 0; jx1 < NBND; jx1++) {
             double d1;
             j1 = iord1[jx1];
             d1 = dists1[j1];
-            signmpg1p = CNCM_vtoppp(mpgs1[j1]);
-            signmpg1m = CNCM_vtommm(mpgs1[j1]);
-            if (d1 < maxdist  && ((ispbd[j1]&&signgvec1p>0) || (ismbd[j1]&&signgvec1m<0))
-                && ((ispmappedbd[j1]&&signmpg1p>0) || (ismmappedbd[j1]&&signmpg1m<0))) {
+            if (d1 < maxdist && ((ispbd[j1]&&signgvec1p>0) || (ismbd[j1]&&signgvec1m<0))) {
                 for (jx2 = 0; jx2 < NBND; jx2++) {
                     double d2;
                     j2 = iord2[jx2];
                     d2 = dists2[j2];
-                    signmpg2p = CNCM_vtoppp(mpgs2[j2]);
-                    signmpg2m = CNCM_vtommm(mpgs2[j2]);
-                    if(d2 < maxdist && ((ispbd[j2]&&signgvec2p>0) || (ismbd[j2]&&signgvec2m<0))
-                       && ((ispmappedbd[j2]&&signmpg2p>0) || (ismmappedbd[j2]&&signmpg2m<0))) {
+                    if(d2 < maxdist && ((ispbd[j2]&&signgvec2p>0) || (ismbd[j2]&&signgvec2m<0))) {
                         
                         int savechanged;
                         savechanged = changed;
                         dist = NCDist_2bds(gvec1,rgs1[j1],pgs1[j1],mpgs1[j1],j1,
-                                                         gvec2,rgs2[j2],pgs2[j2],mpgs2[j2],j2,dist);
+                                           gvec2,rgs2[j2],pgs2[j2],mpgs2[j2],j2,dist);
                         changed = savechanged;
                         
                         also_if_changed_report_double("NCDist_2bds: ",dist,", ");
@@ -2120,8 +2027,8 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
                 }
             }
         }
-                    }
-
+    }
+    
     return dist;
 }
 
@@ -2145,12 +2052,8 @@ double NCDist(double gvec1[6],double gvec2[6]) {
     dist2 = minbddist(gvec2);
     distmin = CNCM_min(dist1,dist2);
     rpasses = NREFL_OUTER_MIN;
-    if (signgvec1p == signgvec2p && signgvec1m == signgvec2m) {
-    dist = CNCM_g123dist(gvec1,gvec2);
-    } else {
-        dist = CNCM_g123pmdist(gvec1,gvec2);
-    }
-    report_double("\n  Entered NCDist g123dist = ",dist,", ");
+    dist = guncpmdist(gvec1,gvec2);
+    report_double("\n  Entered NCDist gdist = ",dist,", ");
     report_integer(" pass = ",pass,"\n");
     dist = NCDist_pass(gvec1,gvec2,dist);
     lgv1 = CNCM_norm(gvec1);
