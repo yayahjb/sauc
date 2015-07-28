@@ -60,6 +60,7 @@
 //#include <stdlib.h>
 #include <limits.h>
 #include <time.h>
+#include <ctype.h>
 #include <iostream>
 #include <cstring>
 #define USE_ARMADILLO_LIBRARY
@@ -89,9 +90,11 @@ using namespace std;
 
 CNearTree <unitcell> * cellTree[4] = {NULL,NULL,NULL,NULL};
 CNearTree <unitcell>::iterator cellTree_itend[4];
-string filenames[5];
+string filenames[6];
+string CSDfilenames[2];
 
-const int NUM_COLUMNS = 9, NUM_ROWS = 200000, NUM_DUMP = 2;
+const int NUM_COLUMNS = 9, NUM_ROWS = 2000000, NUM_DUMP = 2;
+const int NUM_CSDDUMP = 1;
 //const int NUM_COLUMNS = 9, NUM_ROWS = 10000, NUM_DUMP = 2;
 //const int NUM_ROWS = 100;
 
@@ -100,9 +103,11 @@ double cellDArray[NUM_ROWS][6];
 string spaceArray[NUM_ROWS][1];
 string entryArray[NUM_ROWS][8];
 long entryhash[131072];
+long save_entryhash[131072];
 long entryhashlink[NUM_ROWS];
 long entryhashvalue[NUM_ROWS];
 long headhash[131072];
+long save_headhash[131072];
 long headhashlink[NUM_ROWS];
 long headhashvalue[NUM_ROWS];
 int zArray[NUM_ROWS][1];
@@ -112,6 +117,7 @@ arma::vec6 primredprobe;
 string probelattice;
 double avglen=1.;
 size_t num_rows=1;
+double crootvol;
 
 int nearest = 0, numRow = 0;
 int quitAlgorithm = 0, quitSimilar = 0, quitContinue = 0, endProgram = 0, choiceAlgorithm = 0, choiceSimilar = 0, choiceContinue = 0, goBack = 0,
@@ -175,7 +181,7 @@ vector<string> split(const string& str, char delim) {
 //*****************************************************************************
 void makeEntryDatabase(string filename)
 {
-    ifstream infile;
+    std::ifstream infile;
     string line,id,head,acc,cmpd,src,aut,res,exp;
     char * idasstr;
     numentries = 0;
@@ -202,8 +208,8 @@ void makeEntryDatabase(string filename)
         exp = values[7];
         /* if (numentries < 20) {
             for (ii=0; ii < values.size(); ii++)
-            cout << ii << " " << values[ii] << endl;
-            cout << id << head << acc << cmpd << src << aut << res << exp << endl;
+            std::cout << ii << " " << values[ii] << std::endl;
+            std::cout << id << head << acc << cmpd << src << aut << res << exp << std::endl;
         } */
         entryArray[numentries][0] = id;
         entryArray[numentries][1] = head;
@@ -260,9 +266,10 @@ long findHeadDatabase(string id) {
 //*****************************************************************************
 void makeDatabase(string filename)
 {
+    // DB ID,Angle Alpha,Angle Beta,Angle Gamma,Length A,Length B,Length C,Space Group,Z-number
 	string format;
 	int i;
-	ifstream infile;
+	std::ifstream infile;
 	infile.open(filename.c_str());
 	for (int i = 0; i < NUM_DUMP; i++)
 	{
@@ -354,7 +361,332 @@ void makeDatabase(string filename)
     if (i > 0)
         avglen /= double(3*i);
     num_rows = i;
+    std::cout << "avglen from PDB: " << avglen << std::endl;
 	infile.close();
+}
+
+/* This is a tokenizer for csv strings that unconditionally recognizes the character c
+   to separate fields, strips leading and trailing blanks and control characters
+   from tokens and also strips one layer of single or double quote marks. */
+
+void string_tokens(const std::string& str, std::vector<std::string>& tokens, const char c) {
+    size_t ic, iq, ieq, istart, iend, strlen, mode;
+    char qc;
+    istart = 0;
+    iend = 0;
+    tokens.clear();
+    
+    //std::cout << "tokenizing: " << str << std::endl;
+    //std::cout << "using separator: "<< c << std::endl;
+    
+    ic = 0;
+    while (ic < str.length()+1) {
+        if (ic == str.length() || str[ic] == c) {
+            iend = ic;
+            ic = iend+1;
+            // std::cout << "changed ic to :"<< ic << std::endl;
+            if (iend > istart) {
+                qc = '\0';
+                for (iq = istart; iq < iend; iq++) {
+                    /* scan for quoted string */
+                    if (str[iq]=='"' || str[iq]=='\'') {
+                        qc = str[iq];
+                        for (ieq = iend-1; ieq > iq; ieq--) {
+                            if (isblank(str[ieq])|| str[ieq] < 32) continue;
+                            if (str[ieq]==qc) {
+                                istart = iq+1;
+                                iend = ieq;
+                                break;
+                            } else {
+                                istart = iq+1;
+                                iend = ieq+1;
+                                break;
+                            }
+                        }
+                        break;
+                    /* blank-strip string */
+                    } else if (!isblank(str[iq]) && str[iq] >= 32 ){
+                        istart = iq;
+                        for (ieq = iend-1; ieq >= iq; ieq--) {
+                            if (isblank(str[ieq]) || str[ieq] < 32 ) continue;
+                            iend = ieq+1;
+                            // std::cout  << "token from " << istart << " to " << iend << std::endl;
+                            break;
+                        }
+                        break;
+                    }
+                }
+                if (iend > istart && istart < str.length()) {
+                    tokens.push_back(str.substr(istart,iend-istart));
+                } else {
+                    tokens.push_back(std::string(""));
+                }
+            } else {
+                tokens.push_back(std::string(""));
+            }
+            istart = ic;
+            iend = 0;
+        } else {
+            ic++;
+        }
+    }
+}
+
+
+
+//*****************************************************************************
+void makeCSDDatabase(string filename, string ckpfilename)
+{
+    // refcode, a, b, c, alpha, beta, gamma, spacegroup, centring, r_a, r_b, r_c, r_alpha, r_beta, r_gamma
+    
+    int i, ii, save_rows, save_entries;
+    std::ifstream infile;
+    std::ofstream serialout;
+    std::ifstream serialin;
+    std::string line;
+    std::vector<std::string> tokens;
+    long hash;
+    long hashnext;
+    bool gotckp = false;
+
+    serialin.open(ckpfilename.c_str(),std::ios::in);
+    save_rows = num_rows;
+    save_entries = numentries;
+    for (i=0; i < 131072; i++) {
+        save_entryhash[i] = entryhash[i];
+        save_headhash[i] = headhash[i];
+    }
+    
+    i = 0;
+    while (true) {
+        string token;
+        if (serialin.is_open()) {
+            std::cout << "Reading CSD database " << ckpfilename << std::endl;
+            serialin >> token;
+            if (!serialin.good()){
+                std::cout << ckpfilename << "failed to read initial token" << std::endl;
+                break;
+            } else if (token != string("CSDdatabase:")) {
+                std::cout << ckpfilename
+                << " badly formatted, no 'CSDdatabase:' token, instead have "
+                << token
+                << std::endl;
+                break;
+            }
+            while (serialin.good()) {
+                int row;
+                int entry;
+                string refcode;
+                double cell[6];
+                string space;
+                string ochar;
+                string cchar;
+                row = -9999999;
+                serialin >> ochar >> row >> entry >> refcode
+                    >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5]
+                    >> space >> cchar;
+                /* row -1 is terminator */
+                if (row == -1) {
+                    gotckp = true;
+                    break;
+                }
+                if (!serialin.good()
+                    || ochar !=string("{") or cchar != string("}")
+                    || refcode.length() < 6
+                    || cell[0] < 0.1 || cell[1] < 0.1 || cell[2] < 0.1
+                    || cell[3] < 5. || cell[4] < 5. || cell[5] < 5.
+                    || cell[3] > 175. || cell[4] > 175. || cell [5] > 175.
+                    || row != num_rows+i || entry != numentries+i ) {
+                    std::cout << ckpfilename  << " badly formatted row " << i << std::endl;
+                    break;
+                    
+                }
+                for (ii=0; ii<6; ii++) cellDArray[num_rows+i][ii] = cell[ii];
+                idArray[num_rows+i][0] = refcode;
+                entryArray[numentries+i][0] = refcode;
+                entryArray[numentries+i][1] = refcode.substr(0,6);
+                entryArray[numentries+i][2] = "";
+                entryArray[numentries+i][3] = "";
+                entryArray[numentries+i][4] = "";
+                entryArray[numentries+i][5] = "";
+                entryArray[numentries+i][6] = "";
+                entryArray[numentries+i][7] = "";
+                hash = hashvalue(entryArray[numentries+i][0]);
+                entryhashvalue[numentries+i] = hash;
+                hashnext = entryhash[hash];
+                entryhash[hash] = numentries+i;
+                entryhashlink[numentries+i] = hashnext;
+                hash = hashvalue(entryArray[numentries+i][1]);
+                headhashvalue[numentries+i] = hash;
+                hashnext = headhash[hash];
+                headhash[hash] = numentries+i;
+                headhashlink[numentries+i] = hashnext;
+                spaceArray[num_rows+i][0] = space;
+                zArray[num_rows+i][0] = -1;
+                i++;
+                
+            }
+        } else {
+            break;
+        }
+        break;
+    }
+    if (serialin.is_open()) serialin.close();
+    if (gotckp) {
+        numentries += i;
+        num_rows += i;
+        return;
+    }
+    
+    num_rows = save_rows;
+    numentries = save_entries;
+    for (i=0; i < 131072; i++) {
+        entryhash[i] = save_entryhash[i];
+        headhash[i] = save_headhash[i];
+    }
+
+    serialout.open(ckpfilename.c_str(),std::ios::out|std::ios::trunc);
+    if (serialout.is_open()) {
+        serialout <<  "CSDdatabase:" << std::endl;
+    }
+    
+    infile.open(filename.c_str());
+    for (int i = 0; i < NUM_CSDDUMP; i++)
+    {
+        std::getline (infile, line);
+        //std::cout << valueDump << std::endl;
+    }
+    avglen *= double(3*num_rows);
+    for (i = num_rows; i < NUM_ROWS; i++)
+    {
+        string value;
+        int istart, iend;
+        int goodcell;
+        
+        if (infile.eof()) break;
+        
+        std::getline(infile,line);
+        string_tokens(line, tokens, ',');
+        istart = 0;
+        
+        
+        if (!infile.good() || tokens.size() < 8) {
+            std::cout << "unable to process " << line << std::endl;
+            i --;
+            continue;
+        }
+        //if (i%10000 == 0 || tokens.size() < 15) {
+        //    std::cout << i << " tokens: " << tokens.size() << std::endl;
+        //}
+
+        
+        // for (ii = 0; ii < tokens.size(); ii++) std::cout << tokens[ii] << "|";
+        
+        // std::cout << std::endl;
+        
+        if (tokens[0].length()<6) {
+            std::cout << "unable to process, bad CSD refcode " << line << std::endl;
+            i --;
+            continue;
+        }
+        
+        // std::cout << idArray[i][0] << std::endl;
+        
+        // Read a, b, c, alpha, beta, gamma
+        
+        goodcell = 1;
+        
+        for (ii=0; ii < 6; ii++){
+            if (!infile.good()) break;
+            value = tokens[ii+1];
+            cellDArray[i][ii] = convertToDouble(value);
+            if (ii < 3) {
+                if ( cellDArray[i][ii] < 0.1) {
+                    std::cout << "unable to process "<< tokens[0] <<", bad cell edge  "<< value << std::endl;
+                    goodcell = 0;
+                    break;
+                }
+                avglen += cellDArray[i][ii];
+            } else {
+                if ( cellDArray[i][ii] < 5. || cellDArray[i][ii] > 175.) {
+                    std::cout << "unable to process "<< tokens[0] <<", bad cell angle  "<< value << std::endl;
+                    goodcell = 0;
+                    break;
+                }
+                
+            }
+            // std::cout << cellDArray[i][ii] << std::endl;
+        }
+        
+        if (!goodcell) {
+            i--;
+            continue;
+        }
+
+        if (serialout.is_open()) {
+            serialout << "{ " << i << " "
+            << numentries << " "
+            << tokens[0] << " "
+            << cellDArray[i][0] << " "
+            << cellDArray[i][1] << " "
+            << cellDArray[i][2] << " "
+            << cellDArray[i][3] << " "
+            << cellDArray[i][4] << " "
+            << cellDArray[i][5] << " "
+            << tokens[7]
+            << " }" << std::endl;
+        }
+        
+        idArray[i][0] = tokens[0];
+        entryArray[numentries][0] = tokens[0];
+        entryArray[numentries][1] = tokens[0].substr(0,6);
+        entryArray[numentries][2] = "";
+        entryArray[numentries][3] = "";
+        entryArray[numentries][4] = "";
+        entryArray[numentries][5] = "";
+        entryArray[numentries][6] = "";
+        entryArray[numentries][7] = "";
+        hash = hashvalue(entryArray[numentries][0]);
+        entryhashvalue[numentries] = hash;
+        hashnext = entryhash[hash];
+        entryhash[hash] = numentries;
+        entryhashlink[numentries] = hashnext;
+        hash = hashvalue(entryArray[numentries][1]);
+        headhashvalue[numentries] = hash;
+        hashnext = headhash[hash];
+        headhash[hash] = numentries;
+        headhashlink[numentries] = hashnext;
+        numentries++;
+
+        
+        if (!infile.good()) break;
+        spaceArray[i][0] = tokens[7];
+        //std::cout << spaceArray[i][0] << std::endl;
+        
+        zArray[i][0] = -1;
+        
+        //std::cout << "-----------------------------------------------" << std::endl;
+    }
+    if (i > 0)
+        avglen /= double(3*i);
+    std::cout << "avglen from PDB + CSD: " << avglen << std::endl;
+    num_rows = i;
+    infile.close();
+    if (serialout.is_open()) {
+        serialout << "{ " << -1 << " "
+        << -1 << " "
+        << "------" << " "
+        << 1. << " "
+        << 1. << " "
+        << 1. << " "
+        << 90. << " "
+        << 90. << " "
+        << 90. << " "
+        << "P1"
+        << " }" << std::endl;
+        serialout.close();
+    }
+
 }
 
 //*****************************************************************************
@@ -422,6 +754,7 @@ bool makeprimredprobe( void )
     primredprobe[4]<<" "<<
     primredprobe[5] << std::endl;
     std::cout << "Volume :" << Cell(redprimcell).Volume() << std::endl;
+    crootvol = pow(Cell(redprimcell).Volume(),1./3.);
     Reducer::Reduce((Cell(redprimcell).Inverse()).Cell2V6(),m,reducedBase,0.0);
     recipcell = (Cell(redprimcell).Inverse()).CellWithDegrees();
     
@@ -442,7 +775,7 @@ bool makeprimredprobe( void )
     << std::sqrt(1./reducedBase[1])*std::sqrt(6./7.)<<" "
     << std::sqrt(1./reducedBase[2])*std::sqrt(6./7.)<<" "
     << " "<<
-    pow(Cell(redprimcell).Volume(),1./3.)*std::sqrt(6./7.)<<std::endl;
+    crootvol*std::sqrt(6./7.)<<std::endl;
     if (latsym[0] == 'V' || latsym[0] == 'v') {
         std::cout << "raw G6 vector: "
         << primcell[0]<<" "
@@ -1104,14 +1437,14 @@ void SphereResults( std::ostream& out,
         numRow = (int)(*cell).getRow();
         entry = findEntryDatabase(idArray[numRow][0]);
         if (entry < 0) {
-            cout << "entry for "<< idArray[numRow][0] << " is negative" << endl;
+            std::cout << "entry for "<< idArray[numRow][0] << " is negative" << std::endl;
             myentries[ind] = -1;
             myfamilies[ind] = -1;
         } else {
             myentries[ind] = entry;
             myfamilies[ind] = findHeadDatabase(entryArray[entry][1]);
             if (myfamilies[ind] < 0 ) {
-                cout << "head for "<< entryArray[entry][1] << " is negative" << endl;
+                std::cout << "head for "<< entryArray[entry][1] << " is negative" << std::endl;
             }
         }
         ii = (myfamilies[ind])&0xFF;  /* hash code for families */
@@ -1151,7 +1484,7 @@ void SphereResults( std::ostream& out,
         }
     }
 
-    out << "Found " << family_size << " families organized by PDB header" << endl << endl;
+    out << "Found " << family_size << " families organized by PDB header or CSD Refcode" << std::endl << std::endl;
     
     for (ii = 0; ii < family_size; ii++) {
         long myfamily;
@@ -1164,8 +1497,15 @@ void SphereResults( std::ostream& out,
             const unitcell * const cell = & myvector[ind];
             numRow = (int)(*cell).getRow();
             if (sauc_javascript) {
+                if (idArray[numRow][0].length() > 4) {
+                    https://summary.ccdc.cam.ac.uk/structure-summary?refcode=MOBWUX01
+                    pdbid = "<b><a href=\"https://summary.ccdc.cam.ac.uk/structure-summary?refcode=" +
+                    idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
+                    
+                } else {
                pdbid = "<b><a href=\"http://www.rcsb.org/pdb/explore.do?structureId=" +
                        idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
+                }
             } else {
                pdbid = idArray[numRow][0];
             }
@@ -1183,7 +1523,7 @@ void SphereResults( std::ostream& out,
                       out << "<a href=\"javascript:open_close('famfloat"<< ii+1 << "');\">(expand/collapse)</a>";
                     }
                 }
-                out << endl;
+                out << std::endl;
             }
             if (familyordinal == 2 && sauc_javascript) {
                 out << "<div id=\"famfloat" << ii+1 <<
@@ -1198,8 +1538,13 @@ void SphereResults( std::ostream& out,
             cellDArray[numRow][3] << ", " <<
             cellDArray[numRow][4] << ", " <<
             cellDArray[numRow][5] << "], SG: " <<
-            spaceArray[numRow][0] << ", Z: " <<
+            spaceArray[numRow][0];
+            if (zArray[numRow][0] > 0) {
+            out << ", Z: " <<
             zArray[numRow][0] << " ";
+            } else {
+                out << ", ";
+            }
             out << " Prim. Red. Cell: ["<<
             (*cell).getData(0) << ", " <<
             (*cell).getData(1) << ", " <<
@@ -1209,11 +1554,15 @@ void SphereResults( std::ostream& out,
             (*cell).getData(5) << "]" << std::endl;
             entry = findEntryDatabase(idArray[numRow][0]);
             if (entry >= 0) {
-                out << "      " << "Compound: " << entryArray[entry][3] << endl;
-                out << "      " << "Source: " << entryArray[entry][4]
-                    << ", Res: " << entryArray[entry][6]
-                    << " " << entryArray[entry][7]
-                    << endl;
+                if (entryArray[entry][3].length() > 0)
+                    out << "      " << "Compound: " << entryArray[entry][3] << std::endl;
+                if (entryArray[entry][4].length() > 0)
+                    out << "      " << "Source: " << entryArray[entry][4];
+                if (entryArray[entry][6].length() > 0)
+                    out << ", Res: " << entryArray[entry][6];
+                if (entryArray[entry][7].length() > 0)
+                    out << " " << entryArray[entry][7];
+                out << std::endl;
             }
             ind = mythread[ind];
             while (ind >= 0) {
@@ -1224,7 +1573,7 @@ void SphereResults( std::ostream& out,
         if (myfamilycount[ii] > 1 && sauc_javascript) {
             out << "</div>";
         }
-        out << endl;
+        out << std::endl;
     }
         
 }
@@ -1315,10 +1664,16 @@ void findRange( void )
             "Alpha: " << cellDArray[i][3] << " " <<
             "Beta: "  << cellDArray[i][4] << " " <<
             "Gamma: " << cellDArray[i][5] << " " <<
-            "Space Group: " << spaceArray[i][0] << " " <<
-            "Z: " << zArray[i][0] << std::endl;
+            "Space Group: " << spaceArray[i][0];
+            
+            if (zArray[i][0] > 0) {
+                std::cout << ", Z: " <<
+                zArray[i][0] << std::endl;
+            } else {
+                std::cout << std::endl;
 		}
 	}
+}
 }
 
 //*****************************************************************************
@@ -1342,8 +1697,13 @@ int main ()
     filenames[2] = "PDBcellneartreeL2.dmp";
     filenames[3] = "PDBcellneartreeNCDist.dmp";
     filenames[4] = "PDBcellneartreeV7.dmp";
+    filenames[5] = "PDBcelldatabase.dmp";
+    CSDfilenames[0] = "CSDcelldatabase.csv";
+    CSDfilenames[1] = "CSDcelldatabase.dmp";
+
 	makeDatabase(filenames[0]);
     makeEntryDatabase("entries.idx");
+    makeCSDDatabase(CSDfilenames[0],CSDfilenames[1]);
     
 	unitcell cell;
     
@@ -1353,6 +1713,7 @@ int main ()
     std::cout << "redistribute it under the GPL or LGPL" << std::endl;
     std::cout << "See the program documentation for details" << std::endl;
     std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
+    std::cout << "Rev 0.9, 21 Jul 2015, Herbert J. Bernstein" << std::endl;
     
 	while (endProgram != 1)
 	{
@@ -1459,7 +1820,7 @@ int main ()
             {
                 cell.changeOperator(2);
                 cell.changeAlgorithm(3);
-                cell.changeScaledist(std::sqrt(std::sqrt(6.))/std::sqrt(avglen));
+                cell.changeScaledist(0.1);
                 quitAlgorithm = 1;
                 //Build Tree
                 if (!cellTree[choiceAlgorithm-1]) buildNearTree();
@@ -1516,8 +1877,19 @@ int main ()
             }
             else if (choiceSimilar == 2)
             {
+                string token;
+                int ll,ls;
                 if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Radius: ";
-                std::cin >> sphereRange; std::cin.clear();
+                std::cin >> token; std::cin.clear();
+                ll = token.length();
+                if (ll > 1 && token[ll-1]=='%') {
+                    sphereRange=convertToDouble(token.substr(0,ll-1))*crootvol/100.;
+                    cout << "crootvol: " << crootvol << endl;
+                    cout << "sphereRange: " << sphereRange << endl;
+                } else {
+                    sphereRange=convertToDouble(token);
+                }
+                //std::cin >> sphereRange; std::cin.clear();
                 std::cin.ignore(100000,'\n');
                 if (sauc_batch_mode) {
                     std::cout << "Sphere Radius: "<< sphereRange << std::endl;

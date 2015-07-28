@@ -49,6 +49,7 @@ echo ''`<center>''`
 echo "Search of Alternate Unit Cells"
 echo "<br />Copyright Keith J. McGill 2013"
 echo "<br />Rev 0.8, 24 Apr 2014 Mojgan Asadi, Herbert J. Bernstein"
+echo "<br />Rev 0.9, 21 Jul 2015 Herbert J. Bernstein"
 echo ''`</center>''`
 echo "<p>"
 echo "<center>"
@@ -84,8 +85,13 @@ else
         echo "Range"
 endif
 if ($Similarity == 2) then
+if ($UsePercent == "yes") then
+        echo ${RangeSphere}% >> /tmp/instr$$
+        echo "| Radius of S: " ${RangeSphere}%" |"
+else
 	echo ${RangeSphere} >> /tmp/instr$$
-	echo "| Radius of S: " $RangeSphere " |"
+	echo "| Radius of S: " ${RangeSphere} " |"
+endif
 else if ($Similarity == 3) then
 	echo ${RangeA} >> /tmp/instr$$
 	echo "| Range of A: " $RangeA

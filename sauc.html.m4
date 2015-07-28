@@ -130,6 +130,7 @@ Search of Alternate Unit Cells
 <br />Copyright Keith J. McGill 2013, 2014
 <br /><br />Keith J McGill, Mojgan Asadi, Maria T. Karakasheva, Lawrence C. Andrews, Herbert J. Bernstein
 <br /><br />Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein
+<br /><br />Rev 0.9, 21 July 2015, Herbert J. Bernstein
 <br /><br />Dowling College and Micro Encoder Inc.
 <br />Work Supported In Part By NIGMS
 <br /><br />Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
@@ -220,8 +221,11 @@ VALUE="90.0" SIZE="9"></td>
 Similarity:</th>
 <tr><td>
 <input type="radio" name="Similarity" value="1" />Nearest<br />
-<input type="radio" name="Similarity" value="2" /checked>Sphere<br />
-Radius of S<td><br /><br /><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere"VALUE="2.5" SIZE="9"></td>
+<input type="radio" name="Similarity" value="2" checked />Sphere<br />
+Radius of S</td>
+<td colspan=2><br /><br /><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere"VALUE="2.5" SIZE="9">
+&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="yes" checked />%
+&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="no" />Angstroms</td>
 </td></tr>
 <tr><td>
 <input type="radio" name="Similarity" value="3" />Range<br />
@@ -357,6 +361,10 @@ or a
 
 <a name="Rev_0.8"></a>
 <h2>Revison 0.8</h2>
+<p>
+Revision 0.9 of 21 July 2015 adds support for searching cell from the Cambridge Structural Database
+from Cambridge Crystallographic Data Centre as a development effort in support of image identification
+for synchrotrons.  The current version is experimental.
 <p>
 Revision 0.8 of 24 April 2014 has revised output, following the suggestions of Graeme Winter and 
 the good example of Nearest-Cell (Ramraj et al., 2011) in giving some of the provenance of the
