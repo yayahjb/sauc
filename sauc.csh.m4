@@ -49,7 +49,7 @@ echo ''`<center>''`
 echo "Search of Alternate Unit Cells"
 echo "<br />Copyright Keith J. McGill 2013"
 echo "<br />Rev 0.8, 24 Apr 2014 Mojgan Asadi, Herbert J. Bernstein"
-echo "<br />Rev 0.9, 21 Jul 2015 Herbert J. Bernstein"
+echo "<br />Rev 0.9.0, 14 Aug 2015 Herbert J. Bernstein"
 echo ''`</center>''`
 echo "<p>"
 echo "<center>"
@@ -75,6 +75,13 @@ else if ($Algorithm == 3) then
 else
 	echo "V7"
 endif
+if ($Similarity == 1) then
+  if ($NumHits != 1) then
+    set Similarity="2"
+    set RangeSphere="0"
+    set UsePercent="no"
+  endif
+endif
 echo ${Similarity} >> /tmp/instr$$
 echo "| Similarity: "
 if ($Similarity == 1) then
@@ -86,11 +93,11 @@ else
 endif
 if ($Similarity == 2) then
 if ($UsePercent == "yes") then
-        echo ${RangeSphere}% >> /tmp/instr$$
-        echo "| Radius of S: " ${RangeSphere}%" |"
+        echo ${RangeSphere}% ${NumHits} >> /tmp/instr$$
+        echo "| Radius of S: " ${RangeSphere}%", Max Hits: " ${NumHits} " |"
 else
-	echo ${RangeSphere} >> /tmp/instr$$
-	echo "| Radius of S: " ${RangeSphere} " |"
+	echo ${RangeSphere}  ${NumHits} >> /tmp/instr$$
+	echo "| Radius of S: " ${RangeSphere}", Max Hits: " ${NumHits} " |"
 endif
 else if ($Similarity == 3) then
 	echo ${RangeA} >> /tmp/instr$$

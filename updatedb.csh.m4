@@ -25,8 +25,8 @@ if ( -e crystal.idx ) then
     set check_update=1
   else
     set check_update=0
-    make sauc
-    ./sauc < rebuild.inp
+    make 'SAUCEXE()`
+    ./'SAUCEXE()` < rebuild.inp
     touch resultL1
     touch resultL2
     touch resultNCDist

@@ -183,7 +183,6 @@ void makeEntryDatabase(string filename)
 {
     std::ifstream infile;
     string line,id,head,acc,cmpd,src,aut,res,exp;
-    char * idasstr;
     numentries = 0;
     long hash;
     long hashnext;
@@ -370,7 +369,7 @@ void makeDatabase(string filename)
    from tokens and also strips one layer of single or double quote marks. */
 
 void string_tokens(const std::string& str, std::vector<std::string>& tokens, const char c) {
-    size_t ic, iq, ieq, istart, iend, strlen, mode;
+    size_t ic, iq, ieq, istart, iend;
     char qc;
     istart = 0;
     iend = 0;
@@ -560,7 +559,7 @@ void makeCSDDatabase(string filename, string ckpfilename)
     for (i = num_rows; i < NUM_ROWS; i++)
     {
         string value;
-        int istart, iend;
+        int istart;
         int goodcell;
         
         if (infile.eof()) break;
@@ -839,7 +838,6 @@ void buildNearTree( void )
     size_t            NodeVisits;       // number of node visits
 #endif
     CNearTree<unitcell>::NearTreeNode<unitcell> * curntn;
-	int count = 0;
         int objno = 0;
     bool gotckp = false;
     
@@ -1187,7 +1185,7 @@ void buildNearTree( void )
     
     cellTree[choiceAlgorithm-1] = new CNearTree <unitcell> ();
     
-	for (int i = 0; i < num_rows; i++)
+	for (int i = 0; i < (int)num_rows; i++)
 	{
         Cell rawcell(cellDArray[i][0], cellDArray[i][1], cellDArray[i][2], cellDArray[i][3], cellDArray[i][4], cellDArray[i][5]);
         mc = rawcell.LatSymMat66((spaceArray[i][0]).substr(0,1));
@@ -1346,28 +1344,54 @@ void NearestInputReport( std::ostream& out, const arma::vec6& probeArray, const 
 }
 
 //*****************************************************************************
-void findNearest( void )
+void findNearest( int k, double distance )
 {
     vector <unitcell> myvector;
     vector <size_t> myindices;
     vector <double> mydistances;
     long spheredata;
+    double dtest;
 
-    
+    std::cout << "entering findNearest " << k << distance << std::endl;  
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
     NearestInputReport( std::cout, probeArray, primredprobe );
 
-	std::cout << std::endl;
-    spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(1,3., myvector,
-                                                                     myindices,mydistances,unknownCell);
-    if (spheredata == 0) {
-        spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(1,30., myvector,
-                                                                     myindices,mydistances,unknownCell);
-        if (spheredata == 0) {
-            spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(1,1.e38, myvector,
-                                                                             myindices,mydistances,unknownCell);
-        }
+    std::cout <<  "crootvol: " << crootvol << std::endl;
+    dtest = distance;
+    if (distance > crootvol*.025 || distance <= 0.) dtest = crootvol*.025;
+    if (distance > 0. && dtest > distance) dtest = distance;
 
+    std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
+    spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
+                                                                     myindices,mydistances,unknownCell);
+    std::cout <<"returned spheredata " << spheredata << std::endl;
+    if (spheredata <  k && (dtest < distance || distance <= 0.) )  {
+	dtest = distance;
+	if (dtest <= 0.) dtest = crootvol;
+	std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
+        spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
+                                                                     myindices,mydistances,unknownCell);
+	std::cout <<"returned spheredata " << spheredata << std::endl;
+
+        if (spheredata <  (k+1)/2 && (dtest < distance || distance <= 0.) )  {
+		dtest = crootvol*2.;
+		std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
+		spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
+                                                                             myindices,mydistances,unknownCell);
+		std::cout <<"returned spheredata " << spheredata << std::endl;
+
+	    if (spheredata <  1 )  {
+		    dtest = crootvol*5.;
+		    std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
+		    spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
+	                                                        myindices,mydistances,unknownCell);
+		    std::cout <<"returned spheredata " << spheredata << std::endl;
+	        if (spheredata < 1) {
+                    spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,1.e38, myvector,
+                                                                myindices,mydistances,unknownCell);
+    }
+	    }
+        }
     }
     if (spheredata != 0) {
         std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
@@ -1388,7 +1412,8 @@ void findNearest( void )
                 std::cout << " ";
                 std::ofstream output( filename.c_str() );
                 NearestInputReport( output, probeArray, primredprobe );
-                SphereResults( output, myvector, myindices, mydistances, unknownCell);                output.close();
+                SphereResults( output, myvector, myindices, mydistances, unknownCell);
+		output.close();
                 if (sauc_batch_mode)
                     std::cout << "Output saved to: " << filename << std::endl;
             }
@@ -1421,7 +1446,7 @@ void SphereResults( std::ostream& out,
     mythread.assign(myvector.size(),-1L);     /* links on hashed headers */
     long ind, family_size;
     long nextthread, prevthread, firstthread, numhit, thread[257];
-    int ii, jj;
+    int ii;
     family_size=0;
     for (ii=0; ii < 257; ii++) thread[ii] = -1;
     out << "\nSphere Results " << myvector.size() << " Cells" <<std::endl;
@@ -1498,7 +1523,6 @@ void SphereResults( std::ostream& out,
             numRow = (int)(*cell).getRow();
             if (sauc_javascript) {
                 if (idArray[numRow][0].length() > 4) {
-                    https://summary.ccdc.cam.ac.uk/structure-summary?refcode=MOBWUX01
                     pdbid = "<b><a href=\"https://summary.ccdc.cam.ac.uk/structure-summary?refcode=" +
                     idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
                     
@@ -1648,7 +1672,7 @@ void findRange( void )
     "Beta: "  << probeArray[4] << " " <<
     "Gamma: " << probeArray[5] << std::endl;
 	std::cout << "\nRange Results\n";
-	for (int i = 0; i < num_rows; i++)
+	for (int i = 0; i < (int)num_rows; i++)
 	{
 		if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
 			(probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
@@ -1713,7 +1737,7 @@ int main ()
     std::cout << "redistribute it under the GPL or LGPL" << std::endl;
     std::cout << "See the program documentation for details" << std::endl;
     std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
-    std::cout << "Rev 0.9, 21 Jul 2015, Herbert J. Bernstein" << std::endl;
+    std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
     
 	while (endProgram != 1)
 	{
@@ -1872,15 +1896,20 @@ int main ()
             }
             if (choiceSimilar == 1)
             {
-                findNearest();
+                findNearest(1,0.);
                 quitSimilar = 1;
             }
             else if (choiceSimilar == 2)
             {
                 string token;
-                int ll,ls;
-                if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Radius: ";
-                std::cin >> token; std::cin.clear();
+                string sradline;
+                int limit, klimit;
+                int ll;
+		klimit = 10;
+                if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Radius and Optional Limit K: ";
+                std::getline(std::cin,sradline);
+                std::stringstream ssradline(sradline);
+                ssradline >> token;
                 ll = token.length();
                 if (ll > 1 && token[ll-1]=='%') {
                     sphereRange=convertToDouble(token.substr(0,ll-1))*crootvol/100.;
@@ -1889,12 +1918,15 @@ int main ()
                 } else {
                     sphereRange=convertToDouble(token);
                 }
-                //std::cin >> sphereRange; std::cin.clear();
-                std::cin.ignore(100000,'\n');
-                if (sauc_batch_mode) {
-                    std::cout << "Sphere Radius: "<< sphereRange << std::endl;
+                if (ssradline >> limit) {
+                  if (limit >= 1) klimit = limit;
+                } else {
+                  klimit = 100000;
                 }
-                findSphere(100000);
+                if (sauc_batch_mode) {
+                    std::cout << "Sphere Radius: "<< sphereRange << " Limit: " << klimit << std::endl;
+                }
+                findNearest(klimit,sphereRange);
                 quitSimilar = 1;
             }
             else if (choiceSimilar == 3)

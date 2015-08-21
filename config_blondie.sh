@@ -1,7 +1,7 @@
 #!/bin/sh
 HTTPDSERVER=http://blondie.ddns.net:8083;export HTTPDSERVER
-HTDOCS=/var/www/sauc;export HTDOCS;
-SEARCHURL=http://blondie.ddns.net:8083/sauc/;export SEARCHURL;
+HTDOCS=/var/www/sauc-0.9.0;export HTDOCS;
+SEARCHURL=http://blondie.ddns.net:8083/sauc-0.9.0/;export SEARCHURL;
 CGIPATH=http://blondie.ddns.net:8083/cgi-bin;export CGIPATH;
 CGIBIN=/var/www/cgi-bin;export CGIBIN;
 CGIMETHOD=GET;export CGIMETHOD;

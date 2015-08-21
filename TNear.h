@@ -6508,11 +6508,11 @@ public:
                         colcount = 1;
 #endif
                         tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                        if( tClosest.size( ) > k) K_Resize( k, t, tClosest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -6538,11 +6538,12 @@ public:
                         colcount = 1;
 #endif
                         tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                        if (k == 1 && dDR < dRadius) dRadius = dDR;
+                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -6691,11 +6692,12 @@ public:
                         colcount = 1;
 #endif
                         tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
-                        if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                        if (k == 1 && dDL < dRadius) dRadius = dDL;
+                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -6721,11 +6723,12 @@ public:
                         colcount = 1;
 #endif
                         tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
-                        if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                        if (k == 1 && dDR < dRadius) dRadius = dDR;
+                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -6896,11 +6899,12 @@ public:
                         colcount = 1;
 #endif
                         tFarthest.insert( tFarthest.end(), std::make_pair( -dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                        if (k == 1 && dDL > dRadius) dRadius = dDL;
+                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), std::make_pair( -dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -6927,11 +6931,12 @@ public:
                         colcount = 1;
 #endif
                         tFarthest.insert( tFarthest.end(), std::make_pair( -dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                        if (k == 1 && dDR > dRadius) dRadius = dDR;
+                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), std::make_pair( -dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7085,11 +7090,12 @@ public:
                         colcount = 1;
 #endif
                         tFarthest.insert( tFarthest.end(), make_triple( -dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft) );
-                        if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                        if (k == 1 && dDL > dRadius) dRadius = dDL;
+                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), make_triple( -dDL, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7115,11 +7121,12 @@ public:
                         colcount = 1;
 #endif
                         tFarthest.insert( tFarthest.end(), make_triple( -dDR, m_ObjectStore[pt->m_ptRight], pt->m_pt_Right ) );
-                        if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                        if (k == 1 && dDR > dRadius) dRadius = dDR;
+                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), make_triple( -dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
-                            if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
                             
 #ifdef CNEARTREE_INSTRUMENTED
@@ -7281,11 +7288,12 @@ public:
                         colcount = 1;
 #endif
                         tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                        if (k == 1 && dDR < dRadius) dRadius = dDR;
+                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7322,11 +7330,12 @@ public:
                         colcount = 1;
 #endif
                         tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                        if (k == 1 && dDL < dRadius) dRadius = dDL;
+                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[m_ObjectCollide[collide]] ));
-                            if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7408,11 +7417,12 @@ public:
                         colcount = 1;
 #endif
                         tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
-                        if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                        if (k == 1 && dDR < dRadius) dRadius = dDR;
+                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide]) );
-                            if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7449,11 +7459,12 @@ public:
                         colcount = 1;
 #endif
                         tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
-                        if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                        if (k == 1 && dDL < dRadius) dRadius = dDL;
+                        if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
-                            if( tClosest.size( ) > 2*k ) K_Resize( k, t, tClosest, dRadius );
+                            if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7558,11 +7569,12 @@ public:
                         colcount = 1;
 #endif
                         tFarthest.insert( tFarthest.end(), std::make_pair( -dDR, m_ObjectStore[pt->m_ptRight] ) );
-                        if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                        if (k == 1 && dDR > dRadius) dRadius = dDR;
+                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), std::make_pair( -dDR, m_ObjectStore[m_ObjectCollide[collide]]) );
-                            if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7599,11 +7611,12 @@ public:
                         colcount = 1;
 #endif
                         tFarthest.insert( tFarthest.end(), std::make_pair( -dDL, m_ObjectStore[pt->m_ptLeft] ) );
-                        if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                        if (k == 1 && dDL > dRadius) dRadius = dDL;
+                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), std::make_pair( -dDL, m_ObjectStore[m_ObjectCollide[collide]]) );
-                            if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7687,11 +7700,12 @@ public:
                         colcount = 1;
 #endif
                         tFarthest.insert( tFarthest.end(), make_triple( -dDR, m_ObjectStore[pt->m_ptRight], pt->m_pt_Right ) );
-                        if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                        if (k == 1 && dDR > dRadius) dRadius = dDR;
+                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), make_triple( -dDR, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide]) );
-                            if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7728,11 +7742,12 @@ public:
                         colcount = 1;
 #endif
                         tFarthest.insert( tFarthest.end(), make_triple( -dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft) );
-                        if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                        if (k == 1 && dDL > dRadius) dRadius = dDL;
+                        if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tFarthest.insert( tFarthest.end(), make_triple( -dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide]) );
-                            if( tFarthest.size( ) > 2*k ) K_Resize( k, t, tFarthest, dRadius );
+                            if( tFarthest.size( ) > k ) K_Resize( k, t, tFarthest, dRadius );
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7826,7 +7841,8 @@ public:
             if (target > k ) target = k;
             std::sort( tClosest.begin(), tClosest.end(), &K_Sorter2 );
             tClosest.resize( target );
-            dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].second );
+            dRadius = tClosest[tClosest.size()-1].first;
+	    if (dRadius < 0.) dRadius = -dRadius;
         }  // end K_Resize
         void K_Resize( const size_t k, const TNode& t, std::vector<triple<DistanceTypeNode, T, size_t> >& tClosest, DistanceTypeNode& dRadius )
         {
@@ -7834,7 +7850,8 @@ public:
             if (target > k ) target = k;
             std::sort( tClosest.begin(), tClosest.end(), &K_Sorter3 );
             tClosest.resize( target );
-            dRadius = DistanceBetween( t, tClosest[tClosest.size()-1].GetSecond() );
+            dRadius = tClosest[tClosest.size()-1].GetFirst();
+	    if (dRadius < 0.) dRadius = -dRadius;
         }  // end K_Resize
         
         

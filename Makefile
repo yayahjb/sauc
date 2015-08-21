@@ -7,6 +7,7 @@
 #  1 July 2012
 #  Rev 13 July 2013
 #  Rev 21 April 2014
+#  Rev 142 August 2015
 #
 #  Modify the following definitions for your system
 #
@@ -20,9 +21,13 @@
 #
 HTTPDSERVER	?=	HOST.DOMAIN/~$(USER)
 #
+#  SAUCVERSION is used to allow multiple co-existing versions
+#
+SAUCVERSION = 0.9.0
+#
 #  SEARCHURL IS THE URL FOR NEW SEARCH
 #
-SEARCHURL	?=	http://$(HTTPDSERVER)/sauc#search
+SEARCHURL	?=	http://$(HTTPDSERVER)/sauc-$(SAUCVERSION)#search
 #
 #  BINDEST is the installation directory for the executable
 #  of sauc
@@ -37,16 +42,16 @@ CGIBIN		?=	$(HOME)/public_html/cgi-bin
 CGIMETHOD	?=	POST
 #
 #  CGIBINEXT is the external name of the directory for the
-#  cgi-bin script sauc.csh
+#  cgi-bin script $(SAUCCGI)
 CGIBINEXT	?=	/cgi-bin
 #
 #  HTDOCS is the installation directory for the HTML document
-#  sauc.html
-HTDOCS		?=	$(HOME)/public_html/sauc
+#  $(SAUCHTML)
+HTDOCS		?=	$(HOME)/public_html/sauc-$(SAUCVERSION)
 #
 #  HTDOCSEXT is the external name of the directory for the 
-#  HTML document sauc.html
-HTDOCSEXT   ?=   /sauc
+#  HTML document $(SAUCHTML)
+HTDOCSEXT   ?=   /sauc-$(SAUCVERSION)
 #
 #  PDBCELLINDEXURL is the URL from which to retrieve the
 #  fixed-field PDB cell index
@@ -76,20 +81,50 @@ MATHSCRIBEURL = http://$(HTTPDSERVER)$(HTDOCSEXT)/$(MATHSCRIBEPATH)
 #
 # SAUC URLS
 #
-SAUCVERSION = 0.8.1
 SAUCTARBALLURL = http://downloads.sf.net/iterate/sauc-$(SAUCVERSION).tar.gz
 SAUCZIPURL = http://downloads.sf.net/iterate/sauc-$(SAUCVERSION).zip
+SAUCHTML = sauc-$(SAUCVERSION).html
+SAUCCGI = sauc-$(SAUCVERSION).csh
+SAUCEXE = sauc-$(SAUCVERSION).exe
+
 
 
 CGIPATH		?=	http://$(HTTPDSERVER)$(CGIBINEXT)
-BINPATH		?=	$(BINDEST)/sauc
+BINPATH		?=	$(BINDEST)/$(SAUCEXE)
 HTFLAGS 	=	-DCGIBIN=$(CGIPATH) \
 		-DHTTPDSERVER=$(HTTPDSERVER) \
 		-DMATHSCRIBEURL=$(MATHSCRIBEURL) \
 		-DSAUCTARBALLURL=$(SAUCTARBALLURL) \
 		-DSAUCZIPURL=$(SAUCZIPURL) \
 		-DHTDOCS=$(HTDOCS) \
-		-DCGIMETHOD=$(CGIMETHOD)
+		-DCGIMETHOD=$(CGIMETHOD) \
+        -DSAUCHTML=$(SAUCHTML) \
+        -DSAUCCGI=$(SAUCCGI) \
+        -DSAUCEXE=$(SAUCEXE)
+
+CGIFLAGS    =   -DSEARCHURL=$(SEARCHURL) \
+        -DBINPATH=$(BINPATH) \
+        -DSEARCHURL=$(SEARCHURL)\
+        -DHTDOCS=$(HTDOCS)\
+        -DCGIMETHOD=$(CGIMETHOD)\
+        -DSAUCHTML=$(SAUCHTML) \
+        -DSAUCCGI=$(SAUCCGI) \
+        -DSAUCEXE=$(SAUCEXE)
+
+UPDFLAGS    =   -DSAUCDIR=$(PWD) \
+        -DHTTPDSERVER=$(HTTPDSERVER) \
+        -DSEARCHURL=$(SEARCHURL)\
+        -DCGIPATH=$(CGIPATH)\
+        -DHTDOCS=$(HTDOCS)\
+        -DCGIBIN=$(CGIBIN)\
+        -DCGIMETHOD=$(CGIMETHOD)\
+        -DBINDEST=$(BINDEST)\
+        -DPDBCELLINDEXURL=$(PDBCELLINDEXURL)\
+        -DPDBENTRIESURL=$(PDBENTRIESURL)\
+        -DSAUCHTML=$(SAUCHTML) \
+        -DSAUCCGI=$(SAUCCGI) \
+        -DSAUCEXE=$(SAUCEXE)
+
 
 SAVEDB		=	./save
 NEWDB		=	./newdb
@@ -127,64 +162,50 @@ edit:
 		@/bin/echo "**************************************"
 
 #
-edit_done:	sauc sauc.html sauc.csh updatedb.csh
+edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh
 		touch edit
 #
 clean:
 		-@rm -f edit
-		-@rm -f sauc.html
-		-@rm -f sauc
+		-@rm -f $(SAUCHTML)
+		-@rm -f $(SAUCEXE)
 		-@rm -f *.o
-		-@rm -f sauc.csh
+		-@rm -f $(SAUCCGI)
 		-@rm -f *.bak
 #
-sauc.html:	sauc.html.m4 Makefile $(MATHSCRIBEPATH) gpl.txt lgpl.txt
-		m4 $(HTFLAGS) < sauc.html.m4 > sauc.html
+$(SAUCHTML):	sauc.html.m4 Makefile $(MATHSCRIBEPATH) gpl.txt lgpl.txt
+		m4 $(HTFLAGS) < sauc.html.m4 > $(SAUCHTML)
 #
-sauc.csh:	sauc.csh.m4 Makefile edit
-		m4 -DSEARCHURL=$(SEARCHURL) \
-		-DBINPATH=$(BINPATH) \
-		-DSEARCHURL=$(SEARCHURL)\
-		-DHTDOCS=$(HTDOCS)\
-		-DCGIMETHOD=$(CGIMETHOD)\
-		< sauc.csh.m4 > sauc.csh
+$(SAUCCGI):	sauc.csh.m4 Makefile edit
+		m4 $(CGIFLAGS) < sauc.csh.m4 > $(SAUCCGI)
 #
 updatedb.csh:	updatedb.csh.m4 Makefile edit
-		m4 -DSAUCDIR=$(PWD) \
-		-DHTTPDSERVER=$(HTTPDSERVER) \
-                -DSEARCHURL=$(SEARCHURL)\
-                -DCGIPATH=$(CGIPATH)\
-		-DHTDOCS=$(HTDOCS)\
-		-DCGIBIN=$(CGIBIN)\
-		-DCGIMETHOD=$(CGIMETHOD)\
-		-DBINDEST=$(BINDEST)\
-		-DPDBCELLINDEXURL=$(PDBCELLINDEXURL)\
-		-DPDBENTRIESURL=$(PDBENTRIESURL)\
-		< updatedb.csh.m4 > updatedb.csh
+		m4 $(UPDFLAGS) < updatedb.csh.m4 > updatedb.csh
 		chmod 755 updatedb.csh
 #
-install:	edit sauc sauc.csh sauc.html \
+install:	edit $(SAUCEXE) $(SAUCCGI) $(SAUCHTML) \
 		$(MATHSCRIBEPATH) gpl.txt lgpl.txt \
 		entries.idx
 		-mkdir -p $(BINDEST)
 		-mkdir -p $(CGIBIN)
 		-mkdir -p $(HTDOCS)
-		chmod 755 sauc
-		chmod 755 sauc.csh
-		cp sauc $(BINDEST)
-		cp sauc.csh $(CGIBIN)
-		chmod 755 $(CGIBIN)/sauc.csh
-		cp sauc.html $(HTDOCS)
+		chmod 755 $(SAUCEXE)
+		chmod 755 $(SAUCCGI)
+		cp $(SAUCEXE) $(BINDEST)
+		cp $(SAUCEXE) $(CGIBIN)
+		cp $(SAUCCGI) $(CGIBIN)
+		chmod 755 $(CGIBIN)/$(SAUCCGI)
+		cp $(SAUCHTML) $(HTDOCS)
 		cp gpl.txt $(HTDOCS)
 		cp lgpl.txt $(HTDOCS)
 		cp *.csv $(HTDOCS)
 		cp *.dmp $(HTDOCS)
 		cp entries.idx $(HTDOCS)
-		ln -f -s $(HTDOCS)/sauc.html $(HTDOCS)/index.html
+		ln -f -s $(HTDOCS)/$(SAUCHTML) $(HTDOCS)/index.html
 		cp -r $(MATHSCRIBEPATH) $(HTDOCS)/$(MATHSCRIBEPATH)
 
 #		
-sauc: \
+$(SAUCEXE): \
 	BasicDistance.cpp    \
 	BasicDistance.h    \
 	Cell.cpp \
@@ -199,7 +220,7 @@ sauc: \
 	rhrand.h \
 	triple.h \
 	TNear.h
-	$(CXX) $(CXXFLAGS) -o sauc \
+	$(CXX) $(CXXFLAGS) -o $(SAUCEXE) \
 	BasicDistance.cpp    \
 	Cell.cpp \
 	sauc.cpp \

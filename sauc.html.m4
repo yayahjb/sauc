@@ -67,6 +67,26 @@ function pfloat(pfield){
     return true;
 }
 
+function pint(ifield){
+    // validate for positive int   
+    var charsAllowed="0123456789";
+    var allowed;
+    var nonzero;
+    nonzero = false;
+    for(var i=0;i<ifield.value.length;i++){       
+        allowed=false;
+        for(var j=0;j<charsAllowed.length;j++){
+            if( ifield.value.charAt(i)==charsAllowed.charAt(j) ){ 
+               allowed=true;
+               if (j > 0) nonzero = true;
+               break;
+            }
+        }
+        if(allowed==false){ ifield.value = ifield.value.replace(ifield.value.charAt(i),""); i--; }
+    }
+    return nonzero;
+}
+
 function gfloat(field){
     // validate for float   
     var charsAllowed="0123456789.+-";
@@ -134,7 +154,7 @@ Search of Alternate Unit Cells
 <br /><br />Dowling College and Micro Encoder Inc.
 <br />Work Supported In Part By NIGMS
 <br /><br />Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
-<FORM method='CGIMETHOD()` ACTION="'CGIBIN()`/sauc.csh">
+<FORM method='CGIMETHOD()` ACTION="'CGIBIN()`/'SAUCCGI()`">
 </center>
 <font size="-1">
 A crystallographic cell is a representation of a lattice, but each lattice can be represented
@@ -219,8 +239,9 @@ VALUE="90.0" SIZE="9"></td>
 </tr>
 <th align="left">
 Similarity:</th>
-<tr><td>
-<input type="radio" name="Similarity" value="1" />Nearest<br />
+<tr><td colspan=2>
+<input type="radio" name="Similarity" value="1" />Nearest&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" onchange="pint(this)" NAME="NumHits"VALUE="10" SIZE="9">
+&nbsp;&nbsp;&nbsp;&nbsp;Hits<br />
 <input type="radio" name="Similarity" value="2" checked />Sphere<br />
 Radius of S</td>
 <td colspan=2><br /><br /><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere"VALUE="2.5" SIZE="9">
@@ -359,14 +380,15 @@ or a
 <a href="http://arxiv.org/abs/1307.1811">arxiv.org/abs/1307.1811</a>.
 <p>
 
-<a name="Rev_0.8"></a>
-<h2>Revison 0.8</h2>
+<a name="Rev_0.9"></a>
+<h2>Revison 0.9</h2>
 <p>
-Revision 0.9 of 21 July 2015 adds support for searching cell from the Cambridge Structural Database
+Revision 0.9 of 11 August 2015 adds support for searching cell from the Cambridge Structural Database
 from Cambridge Crystallographic Data Centre as a development effort in support of image identification
-for synchrotrons.  The current version is experimental.
+for synchrotrons.  The current version is experimental.  Support for specifying the sphere radius as
+a percentage and for specifying a limit on the number of hits are provided.
 <p>
-Revision 0.8 of 24 April 2014 has revised output, following the suggestions of Graeme Winter and 
+Revision 0.8 of 24 April 2014 had revised output, following the suggestions of Graeme Winter and
 the good example of Nearest-Cell (Ramraj et al., 2011) in giving some of the provenance of the
 cell and organizing long output lists into collapsed lists of families.  Unlike Nearest-Cell
 we have chosen to organize the families on the PDB HEADER field, rather than the sequence.
