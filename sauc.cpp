@@ -112,6 +112,7 @@ long headhashlink[NUM_ROWS];
 long headhashvalue[NUM_ROWS];
 int zArray[NUM_ROWS][1];
 int numentries;
+int noCSD;
 double probeArray[6];
 arma::vec6 primredprobe;
 string probelattice;
@@ -434,7 +435,7 @@ void string_tokens(const std::string& str, std::vector<std::string>& tokens, con
 
 
 //*****************************************************************************
-void makeCSDDatabase(string filename, string ckpfilename)
+int makeCSDDatabase(string filename, string ckpfilename)
 {
     // refcode, a, b, c, alpha, beta, gamma, spacegroup, centring, r_a, r_b, r_c, r_alpha, r_beta, r_gamma
     
@@ -534,7 +535,7 @@ void makeCSDDatabase(string filename, string ckpfilename)
     if (gotckp) {
         numentries += i;
         num_rows += i;
-        return;
+        return 0;
     }
     
     num_rows = save_rows;
@@ -544,12 +545,13 @@ void makeCSDDatabase(string filename, string ckpfilename)
         headhash[i] = save_headhash[i];
     }
 
+    infile.open(filename.c_str());
+    if (infile.fail()) return -1;
     serialout.open(ckpfilename.c_str(),std::ios::out|std::ios::trunc);
     if (serialout.is_open()) {
         serialout <<  "CSDdatabase:" << std::endl;
     }
     
-    infile.open(filename.c_str());
     for (int i = 0; i < NUM_CSDDUMP; i++)
     {
         std::getline (infile, line);
@@ -668,6 +670,7 @@ void makeCSDDatabase(string filename, string ckpfilename)
     }
     if (i > 0)
         avglen /= double(3*i);
+    
     std::cout << "avglen from PDB + CSD: " << avglen << std::endl;
     num_rows = i;
     infile.close();
@@ -685,6 +688,8 @@ void makeCSDDatabase(string filename, string ckpfilename)
         << " }" << std::endl;
         serialout.close();
     }
+
+    return 0;
 
 }
 
@@ -1358,26 +1363,27 @@ void findNearest( int k, double distance )
 
     std::cout <<  "crootvol: " << crootvol << std::endl;
     dtest = distance;
-    if (distance > crootvol*.025 || distance <= 0.) dtest = crootvol*.025;
+    // if (distance > crootvol*.025 || distance <= 0.) dtest = crootvol*.025;
+    if (distance <= 0.) dtest = 1.e38;
     if (distance > 0. && dtest > distance) dtest = distance;
 
     std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
     spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
                                                                      myindices,mydistances,unknownCell);
     std::cout <<"returned spheredata " << spheredata << std::endl;
-    if (spheredata <  k && (dtest < distance || distance <= 0.) )  {
+    /*if (spheredata <  k && (dtest < distance || distance <= 0.) )  {
 	dtest = distance;
 	if (dtest <= 0.) dtest = crootvol;
 	std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
         spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
-                                                                     myindices,mydistances,unknownCell);
+			myindices,mydistances,unknownCell);
 	std::cout <<"returned spheredata " << spheredata << std::endl;
 
         if (spheredata <  (k+1)/2 && (dtest < distance || distance <= 0.) )  {
 		dtest = crootvol*2.;
 		std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
 		spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
-                                                                             myindices,mydistances,unknownCell);
+					                        myindices,mydistances,unknownCell);
 		std::cout <<"returned spheredata " << spheredata << std::endl;
 
 	    if (spheredata <  1 )  {
@@ -1389,10 +1395,10 @@ void findNearest( int k, double distance )
 	        if (spheredata < 1) {
                     spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,1.e38, myvector,
                                                                 myindices,mydistances,unknownCell);
-    }
+		}
 	    }
         }
-    }
+    }*/
     if (spheredata != 0) {
         std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
         SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
@@ -1509,8 +1515,12 @@ void SphereResults( std::ostream& out,
         }
     }
 
-    out << "Found " << family_size << " families organized by PDB header or CSD Refcode" << std::endl << std::endl;
-    
+    if (noCSD) {
+        out << "Found " << family_size << " families organized by PDB header" << std::endl << std::endl;
+    } else {
+        out << "Found " << family_size << " families organized by PDB header or CSD Refcode" << std::endl << std::endl;
+    }    
+
     for (ii = 0; ii < family_size; ii++) {
         long myfamily;
         long familyordinal;
@@ -1527,8 +1537,8 @@ void SphereResults( std::ostream& out,
                     idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
                     
                 } else {
-               pdbid = "<b><a href=\"http://www.rcsb.org/pdb/explore.do?structureId=" +
-                       idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
+                    pdbid = "<b><a href=\"http://www.rcsb.org/pdb/explore.do?structureId=" +
+                    idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
                 }
             } else {
                pdbid = idArray[numRow][0];
@@ -1695,9 +1705,9 @@ void findRange( void )
                 zArray[i][0] << std::endl;
             } else {
                 std::cout << std::endl;
+            }
 		}
 	}
-}
 }
 
 //*****************************************************************************
@@ -1727,7 +1737,7 @@ int main ()
 
 	makeDatabase(filenames[0]);
     makeEntryDatabase("entries.idx");
-    makeCSDDatabase(CSDfilenames[0],CSDfilenames[1]);
+    noCSD = makeCSDDatabase(CSDfilenames[0],CSDfilenames[1]);
     
 	unitcell cell;
     
@@ -1738,6 +1748,7 @@ int main ()
     std::cout << "See the program documentation for details" << std::endl;
     std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
     std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
+    std::cout << "Rev 0.9.1, 16 Mar 2016, Herbert J. Bernstein" << std::endl;
     
 	while (endProgram != 1)
 	{

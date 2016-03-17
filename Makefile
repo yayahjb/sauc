@@ -23,7 +23,7 @@ HTTPDSERVER	?=	HOST.DOMAIN/~$(USER)
 #
 #  SAUCVERSION is used to allow multiple co-existing versions
 #
-SAUCVERSION = 0.9.0
+SAUCVERSION = 0.9.5
 #
 #  SEARCHURL IS THE URL FOR NEW SEARCH
 #
@@ -59,7 +59,7 @@ PDBCELLINDEXURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
 PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #
 #  Default compile flag definition to select debug mode under unix
-CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
+CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -I /usr/local/include -L /usr/local/lib
 CXX	?=	g++
 #
 #  Fortran compile (needed for database updates)
