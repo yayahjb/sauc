@@ -1,7 +1,7 @@
 #!/bin/sh
 HTTPDSERVER=iterate.sf.net;export HTTPDSERVER
-HTDOCS=/home/project-web/iterate/htdocs/sauc;export HTDOCS;
-SEARCHURL=http://iterate.sf.net/sauc;export SEARCHURL;
+HTDOCS=/home/project-web/iterate/htdocs/sauc-0.9.5;export HTDOCS;
+SEARCHURL=http://iterate.sf.net/sauc-0.9.5;export SEARCHURL;
 CGIPATH=http://iterate.sf.net/cgi-bin;export CGIPATH;
 CGIBIN=/home/project-web/iterate/cgi-bin;export CGIBIN;
 CGIMETHOD=GET;export CGIMETHOD;

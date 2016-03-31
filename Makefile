@@ -245,12 +245,12 @@ $(NEWDB)/crystal.idx: $(NEWDB)
 $(NEWDB)/entries.idx: $(NEWDB)
 	(cd $(NEWDB); wget -N $(PDBENTRIESURL) )
 
-updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2csv $(SAVEDB) $(NEWDB) sauc
+updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2csv $(SAVEDB) $(NEWDB) $(SAUCEXE)
 	-cp PDBcelldatabase.csv $(SAVEDB)/
 	-cp *.dmp $(SAVEDB)/
 	-(cd $(NEWDB);rm -f *.dmp result*)
 	(cd $(NEWDB);../idx2csv < crystal.idx > PDBcelldatabase.csv)
-	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../sauc < ../rebuild.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../$(SAUCEXE) < ../rebuild.inp)
 	(cd $(NEWDB);grep "1O51" resultL1)
 	(cd $(NEWDB);grep "1O51" resultL2)
 	(cd $(NEWDB);grep "1O51" resultNCDist)

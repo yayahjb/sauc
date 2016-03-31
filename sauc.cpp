@@ -7,6 +7,7 @@
    rev 24 Jun 2013 -- HJB
    rev  6 Jul 2013 -- HJB
    rev 22 Apr 2014 -- HJB
+   rev 20 Mar 2016 -- HJB
  
      *******************************************************
          You may redistribute this program under the terms
@@ -192,7 +193,7 @@ void makeEntryDatabase(string filename)
     for (ii=0; ii < 131072; ii++) entryhash[ii] = headhash[ii] = -1;
     for (ii=0; ii < NUM_ROWS; ii++) entryhashlink[ii] = headhashlink[ii] = -1;
     
-	infile.open(filename.c_str());
+    infile.open(filename.c_str());
     getline(infile,line);
     getline(infile,line);
     while (getline(infile,line)) {
@@ -276,10 +277,10 @@ void makeDatabase(string filename)
 		getline (infile, valueDump, 'r');
 		//std::cout << valueDump << std::endl;
 	}
-    avglen = 0.;
+	avglen = 0.;
 	for (i = 0; i < NUM_ROWS; i++)
 	{
-		string value;
+	string value;
         
         //if (i%100 == 0) std::cout << i << std::endl;
         if (!infile.good()) break;
@@ -449,6 +450,10 @@ int makeCSDDatabase(string filename, string ckpfilename)
     long hashnext;
     bool gotckp = false;
 
+    infile.open(filename.c_str());
+    if (infile.fail()) return -1;
+
+
     serialin.open(ckpfilename.c_str(),std::ios::in);
     save_rows = num_rows;
     save_entries = numentries;
@@ -535,6 +540,7 @@ int makeCSDDatabase(string filename, string ckpfilename)
     if (gotckp) {
         numentries += i;
         num_rows += i;
+        if (infile.is_open()) infile.close();
         return 0;
     }
     
@@ -545,8 +551,6 @@ int makeCSDDatabase(string filename, string ckpfilename)
         headhash[i] = save_headhash[i];
     }
 
-    infile.open(filename.c_str());
-    if (infile.fail()) return -1;
     serialout.open(ckpfilename.c_str(),std::ios::out|std::ios::trunc);
     if (serialout.is_open()) {
         serialout <<  "CSDdatabase:" << std::endl;
@@ -1735,7 +1739,7 @@ int main ()
     CSDfilenames[0] = "CSDcelldatabase.csv";
     CSDfilenames[1] = "CSDcelldatabase.dmp";
 
-	makeDatabase(filenames[0]);
+    makeDatabase(filenames[0]);
     makeEntryDatabase("entries.idx");
     noCSD = makeCSDDatabase(CSDfilenames[0],CSDfilenames[1]);
     
