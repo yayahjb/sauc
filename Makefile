@@ -23,7 +23,7 @@ HTTPDSERVER	?=	HOST.DOMAIN/~$(USER)
 #
 #  SAUCVERSION is used to allow multiple co-existing versions
 #
-SAUCVERSION = 0.9.5
+SAUCVERSION = 1.0.0
 #
 #  SEARCHURL IS THE URL FOR NEW SEARCH
 #
@@ -59,8 +59,12 @@ PDBCELLINDEXURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
 PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #
 #  Default compile flag definition to select debug mode under unix
-CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -I /usr/local/include -L /usr/local/lib
+#CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp -lpthread
+CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
+CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
 CXX	?=	g++
+CC	?=	gcc
+
 #
 #  Fortran compile (needed for database updates)
 FC	=	gfortran
@@ -198,7 +202,7 @@ install:	edit $(SAUCEXE) $(SAUCCGI) $(SAUCHTML) \
 		cp $(SAUCHTML) $(HTDOCS)
 		cp gpl.txt $(HTDOCS)
 		cp lgpl.txt $(HTDOCS)
-		cp *.csv $(HTDOCS)
+		cp *.tsv $(HTDOCS)
 		cp *.dmp $(HTDOCS)
 		cp entries.idx $(HTDOCS)
 		ln -f -s $(HTDOCS)/$(SAUCHTML) $(HTDOCS)/index.html
@@ -219,13 +223,27 @@ $(SAUCEXE): \
 	unitcell.h \
 	rhrand.h \
 	triple.h \
-	TNear.h
+	TNear.h \
+	pststrmgr.c \
+	pststrmgr.h
+	$(CC) $(CFLAGS) -c pststrmgr.c
 	$(CXX) $(CXXFLAGS) -o $(SAUCEXE) \
 	BasicDistance.cpp    \
 	Cell.cpp \
 	sauc.cpp \
 	Reducer.cpp \
-	V7.cpp
+	V7.cpp \
+	pststrmgr.o 
+
+sauc_psm_files_create: \
+	sauc_psm_files_create.c \
+	sauc_psm_files_create.h \
+	    pststrmgr.c \
+	    pststrmgr.h
+	$(CC) $(CFLAGS) -c pststrmgr.c
+	$(CC) $(CFLAGS) -o sauc_psm_files_create \
+	sauc_psm_files_create.c \
+	pststrmgr.o
 
 
 $(MATHSCRIBETARBALL):
@@ -236,8 +254,8 @@ $(MATHSCRIBEPATH): $(MATHSCRIBETARBALL)
 	chmod -R 755 $(MATHSCRIBEPATH)
 	touch $(MATHSCRIBEPATH)
 	    
-idx2csv:    idx2csv.f
-	$(FC) -o idx2csv idx2csv.f
+idx2tsv:    idx2tsv.f
+	$(FC) -o idx2tsv idx2tsv.f
 
 $(NEWDB)/crystal.idx: $(NEWDB)
 	(cd $(NEWDB); wget -N $(PDBCELLINDEXURL) )
@@ -245,12 +263,12 @@ $(NEWDB)/crystal.idx: $(NEWDB)
 $(NEWDB)/entries.idx: $(NEWDB)
 	(cd $(NEWDB); wget -N $(PDBENTRIESURL) )
 
-updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2csv $(SAVEDB) $(NEWDB) $(SAUCEXE)
-	-cp PDBcelldatabase.csv $(SAVEDB)/
+updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) $(NEWDB) sauc
+	-cp PDBcelldatabase.tsv $(SAVEDB)/
 	-cp *.dmp $(SAVEDB)/
 	-(cd $(NEWDB);rm -f *.dmp result*)
-	(cd $(NEWDB);../idx2csv < crystal.idx > PDBcelldatabase.csv)
-	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../$(SAUCEXE) < ../rebuild.inp)
+	(cd $(NEWDB);../idx2tsc < crystal.idx > PDBcelldatabase.tsv)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../sauc < ../rebuild.inp)
 	(cd $(NEWDB);grep "1O51" resultL1)
 	(cd $(NEWDB);grep "1O51" resultL2)
 	(cd $(NEWDB);grep "1O51" resultNCDist)
@@ -260,7 +278,7 @@ updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2csv $(SAVEDB) $(NEWDB)
 
 last_update:	$(NEWDB)/last_update updatedb
 	cp $(NEWDB)/*.dmp .
-	cp $(NEWDB)/*.csv .
+	cp $(NEWDB)/*.tsv .
 	cp $(NEWDB)/last_update .
 	cp $(NEWDB)/entries.idx .
 	touch last_update

@@ -14,8 +14,9 @@ double Scaledist = 1.;
 
 class unitcell
 {
-	double numRow;
+	size_t numRow;
 	double cellD[12];
+    char db;
  
 public:
 	unitcell()
@@ -33,27 +34,65 @@ public:
 		cellD[10] = 0.;
 		cellD[11] = 0.;
 		numRow = -1;
+        db = 'p';
 
-		
 	}
-	unitcell(const double val0, const double val1, const double val2, const double val3, 
-                 const double val4, const double val5, const double val6, const double val7, 
-                 const double val8, const double val9, const double val10, const double val11, 
-                 const double val12)
+	unitcell(const double a1, const double b1, const double c1, const double alpha1,
+                 const double beta1, const double gamma1, const double a2, const double b2,
+                 const double c2, const double alpha2, const double beta2, const double gamma2,
+                 const size_t row)
 	{
-		cellD[0] = val0;
-		cellD[1] = val1;
-		cellD[2] = val2;
-		cellD[3] = val3;
-		cellD[4] = val4;
-		cellD[5] = val5;
-		cellD[6] = val6;
-		cellD[7] = val7;
-		cellD[8] = val8;
-		cellD[9] = val9;
-		cellD[10] = val10;
-		cellD[11] = val11;
-		numRow = val12;
+		cellD[0] = a1;
+		cellD[1] = b1;
+		cellD[2] = c1;
+		cellD[3] = alpha1;
+		cellD[4] = beta1;
+		cellD[5] = gamma1;
+		cellD[6] = a2;
+		cellD[7] = b2;
+		cellD[8] = c2;
+		cellD[9] = alpha2;
+		cellD[10] = beta2;
+		cellD[11] = gamma2;
+		numRow = row;
+        db = 'p';
+	}
+    unitcell(const double a1, const double b1, const double c1, const double alpha1,
+             const double beta1, const double gamma1, const double a2, const double b2,
+             const double c2, const double alpha2, const double beta2, const double gamma2,
+             const size_t row, const char dbid)
+    {
+        cellD[0] = a1;
+        cellD[1] = b1;
+        cellD[2] = c1;
+        cellD[3] = alpha1;
+        cellD[4] = beta1;
+        cellD[5] = gamma1;
+        cellD[6] = a2;
+        cellD[7] = b2;
+        cellD[8] = c2;
+        cellD[9] = alpha2;
+        cellD[10] = beta2;
+        cellD[11] = gamma2;
+        numRow = row;
+        db = dbid;
+    }
+	unitcell(const double val[6], const size_t row)
+	{
+		cellD[0] = val[0];
+		cellD[1] = val[1];
+		cellD[2] = val[2];
+		cellD[3] = val[3];
+		cellD[4] = val[4];
+		cellD[5] = val[5];
+		cellD[6] = 0.;
+		cellD[7] = 0.;
+		cellD[8] = 0.;
+		cellD[9] = 0.;
+		cellD[10] = 0.;
+		cellD[11] = 0.;
+		numRow = row;
+        db = 'p';
 	}
 	unitcell(const double val[6], const double row)
 	{
@@ -69,9 +108,29 @@ public:
 		cellD[9] = 0.;
 		cellD[10] = 0.;
 		cellD[11] = 0.;
+        numRow = (size_t)(row+.5);
+        db = 'p';
+    }
+
+    unitcell(const double val[6], const size_t row, const char dbid)
+    {
+        cellD[0] = val[0];
+        cellD[1] = val[1];
+        cellD[2] = val[2];
+        cellD[3] = val[3];
+        cellD[4] = val[4];
+        cellD[5] = val[5];
+        cellD[6] = 0.;
+        cellD[7] = 0.;
+        cellD[8] = 0.;
+        cellD[9] = 0.;
+        cellD[10] = 0.;
+        cellD[11] = 0.;
 		numRow = row;
+        db = dbid;
 	}
     
+    /* deprecated version of getCell from before introduction of db is*/
     void getCell(double cell[6], double * row ) {
         int ii;
         for (ii=0; ii < 6; ii++) {
@@ -80,15 +139,31 @@ public:
         *row = numRow;
     }
 
+
+    void getCell(double cell[6], double * row, char * dbid ) {
+        int ii;
+        for (ii=0; ii < 6; ii++) {
+            cell[ii] = cellD[ii];
+        }
+        *row = numRow;
+        *dbid = db;
+    }
+
 	double getData(const int index) const
 	{
 		return cellD[index];
 	}
 
-	double getRow() const
+	size_t getRow() const
 	{
 		return numRow;
 	}
+
+    char getDBID() const
+    {
+        return db;
+    }
+
 
 	void changeAlgorithm(int numAlg) const
 	{

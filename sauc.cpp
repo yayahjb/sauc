@@ -7,7 +7,9 @@
    rev 24 Jun 2013 -- HJB
    rev  6 Jul 2013 -- HJB
    rev 22 Apr 2014 -- HJB
+   rev 20 Jan 2015 -- HJB
    rev 20 Mar 2016 -- HJB
+   rev 17 Nov 2016 -- HJB
  
      *******************************************************
          You may redistribute this program under the terms
@@ -57,8 +59,8 @@
  
  */
 
-//#include <stdio.h>
-//#include <stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <limits.h>
 #include <time.h>
 #include <ctype.h>
@@ -75,10 +77,40 @@
 #include "V7.h"
 #include "Cell.h"
 #include "Reducer.h"
+#include "pststrmgr.h"
 #define ARMA_DONT_USE_BLAS
 #define ARMA_DONT_USE_LAPACK
 #include <armadillo>
 #include <vector>
+
+#include "sauc_psm_files_create.h"
+
+/* Template for an array class so we can have 6D vectors
+   of arrays */
+
+template< typename T > class sixarray {
+private:
+    size_t length;
+    T      xxarray[6];
+public:
+    // constructors
+    sixarray ( void) {
+        xxarray[0] = xxarray[1] = xxarray[2]
+        = xxarray[3] = xxarray[4] = xxarray[5] = 0;
+    }
+    
+    sixarray ( T a, T b, T c, T d, T e, T f) {
+        xxarray[0] = a;
+        xxarray[1] = b;
+        xxarray[2] = c;
+        xxarray[3] = d;
+        xxarray[4] = e;
+        xxarray[5] = f;
+    }
+    
+    T operator[] ( const size_t index ) {return xxarray[index];}
+};
+
 
 /* Forward Declaration */
 void SphereResults( std::ostream& out,
@@ -91,34 +123,37 @@ using namespace std;
 
 CNearTree <unitcell> * cellTree[4] = {NULL,NULL,NULL,NULL};
 CNearTree <unitcell>::iterator cellTree_itend[4];
-string filenames[6];
-string CSDfilenames[2];
+string sauc_NT_ckp_names[4] =
+{
+    "sauc_NT_L1_ckp.dmp",
+    "sauc_NT_L2_ckp.dmp",
+    "sauc_NT_NCDist_ckp.dmp",
+    "sauc_NT_V7_ckp.dmp"
+};
 
-const int NUM_COLUMNS = 9, NUM_ROWS = 2000000, NUM_DUMP = 2;
-const int NUM_CSDDUMP = 1;
-//const int NUM_COLUMNS = 9, NUM_ROWS = 10000, NUM_DUMP = 2;
-//const int NUM_ROWS = 100;
+PSM_localpsm_handle PDBentries=NULL;
+PSM_localpsm_handle PDBcells=NULL;
+PSM_localpsm_handle CSDcells=NULL;
+PSM_localpsm_handle CODentries=NULL;
 
-string idArray[NUM_ROWS][1];
-double cellDArray[NUM_ROWS][6];
-string spaceArray[NUM_ROWS][1];
-string entryArray[NUM_ROWS][8];
-long entryhash[131072];
-long save_entryhash[131072];
-long entryhashlink[NUM_ROWS];
-long entryhashvalue[NUM_ROWS];
-long headhash[131072];
-long save_headhash[131072];
-long headhashlink[NUM_ROWS];
-long headhashvalue[NUM_ROWS];
-int zArray[NUM_ROWS][1];
-int numentries;
-int noCSD;
+
+const int PDB_DBTYPE = '\1';
+const int CSD_DBTYPE = '\2';
+const int COD_DBTYPE = '\3';
+
+
+string PDB_loaded;
+string CSD_loaded;
+string COD_loaded;
+vector <char> cellDB;
+vector <sixarray<double> > cellDArray;
+vector <std::string> spaceArray;
+vector <int> zArray;
+vector <std::string> idArray;
 double probeArray[6];
 arma::vec6 primredprobe;
 string probelattice;
 double avglen=1.;
-size_t num_rows=1;
 double crootvol;
 
 int nearest = 0, numRow = 0;
@@ -156,7 +191,7 @@ inline long hashvalue(string str) {
     for(ii=0;ii<str.length();ii++) {
         hash = ((hash << 4)| (hash>>28))^((unsigned long)(tolower(strasstr[ii]))-32);
     }
-    return (long) (hash&0x10000);
+    return (long) (hash&0x1FFFF);
 }
 
 vector<string> split(const string& str, char delim) {
@@ -180,523 +215,267 @@ vector<string> split(const string& str, char delim) {
     return values;
 }
 
-//*****************************************************************************
-void makeEntryDatabase(string filename)
-{
-    std::ifstream infile;
-    string line,id,head,acc,cmpd,src,aut,res,exp;
-    numentries = 0;
-    long hash;
-    long hashnext;
-    long ii;
-    
-    for (ii=0; ii < 131072; ii++) entryhash[ii] = headhash[ii] = -1;
-    for (ii=0; ii < NUM_ROWS; ii++) entryhashlink[ii] = headhashlink[ii] = -1;
-    
-    infile.open(filename.c_str());
-    getline(infile,line);
-    getline(infile,line);
-    while (getline(infile,line)) {
-        line += "\t\t\t\t\t\t\t\t";
-        vector<string> values = split(line,'\t');
-        id = values[0];
-        head = values[1];
-        acc = values[2];
-        cmpd = values[3];
-        src = values[4];
-        aut = values[5];
-        res = values[6];
-        exp = values[7];
-        /* if (numentries < 20) {
-            for (ii=0; ii < values.size(); ii++)
-            std::cout << ii << " " << values[ii] << std::endl;
-            std::cout << id << head << acc << cmpd << src << aut << res << exp << std::endl;
-        } */
-        entryArray[numentries][0] = id;
-        entryArray[numentries][1] = head;
-        entryArray[numentries][2] = acc;
-        entryArray[numentries][3] = cmpd;
-        entryArray[numentries][4] = src;
-        entryArray[numentries][5] = aut;
-        entryArray[numentries][6] = res;
-        entryArray[numentries][7] = exp;
-        hash = hashvalue(id);
-        entryhashvalue[numentries] = hash;
-        hashnext = entryhash[hash];
-        entryhash[hash] = numentries;
-        entryhashlink[numentries] = hashnext;
-        hash = hashvalue(head);
-        headhashvalue[numentries] = hash;
-        hashnext = headhash[hash];
-        headhash[hash] = numentries;
-        headhashlink[numentries] = hashnext;
-        numentries++;
-    }
-
-}
-
-long findEntryDatabase(string id) {
-    long hash=hashvalue(id);
-    long hashnext;
-    
-    hashnext = entryhash[hash];
-    while (hashnext >= 0) {
-        if (!strcasecmp(id.c_str(),entryArray[hashnext][0].c_str())) {
-            return hashnext;
-        }
-        hashnext = entryhashlink[hashnext];
-    }
-    return -1L;
-}
-
-long findHeadDatabase(string id) {
-    long hash=hashvalue(id);
-    long hashnext;
-    
-    hashnext = headhash[hash];
-    while (hashnext >= 0) {
-        if (!strcasecmp(id.c_str(),entryArray[hashnext][1].c_str())) {
-            return hashnext;
-        }
-        hashnext = headhashlink[hashnext];
-    }
-    return hashnext;
-}
-
+/* Make an mmap file from a PDB, COD or CSD text file,
+   or pick up one that is already there*/
 
 //*****************************************************************************
-void makeDatabase(string filename)
+PSM_localpsm_handle make_psmfile(const char * mmapfilename, const char* textfilename,
+                 size_t numhash, size_t * fieldnumbers,
+                 size_t skip_lines, char sepchar, int CSDflag)
 {
-    // DB ID,Angle Alpha,Angle Beta,Angle Gamma,Length A,Length B,Length C,Space Group,Z-number
-	string format;
-	int i;
-	std::ifstream infile;
-	infile.open(filename.c_str());
-	for (int i = 0; i < NUM_DUMP; i++)
-	{
-		getline (infile, valueDump, 'r');
-		//std::cout << valueDump << std::endl;
-	}
-	avglen = 0.;
-	for (i = 0; i < NUM_ROWS; i++)
-	{
-	string value;
-        
-        //if (i%100 == 0) std::cout << i << std::endl;
-        if (!infile.good()) break;
-		getline (infile, value, ',');
-        if (value.length()<3) break;
-		//std::cout << value << std::endl;
-		idArray[i][0] = string(value, 2, value.length()-3);
-		//std::cout << idArray[i][0] << std::endl;
-        
-        if (!infile.good()) break;
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][3] = convertToDouble(value);
-		//std::cout << cellDArray[i][3] << std::endl;
-        
-        if (!infile.good()) break;
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][4] = convertToDouble(value);
-		//std::cout << cellDArray[i][4] << std::endl;
-        
-        if (!infile.good()) break;
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][5] = convertToDouble(value);
-		//std::cout << cellDArray[i][5] << std::endl;
-        
-        if (!infile.good()) break;
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][0] = convertToDouble(value);
-        avglen += cellDArray[i][0];
-		//std::cout << cellDArray[i][0] << std::endl;
-        
-        if (!infile.good()) break;
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][1] = convertToDouble(value);
-        avglen += cellDArray[i][1];
-		//std::cout << cellDArray[i][1] << std::endl;
-        
-        if (!infile.good()) break;
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		value = string(value, 1, value.length()-2);
-		//std::cout << value << std::endl;
-		cellDArray[i][2] = convertToDouble(value);
-        avglen += cellDArray[i][2];
-		//std::cout << cellDArray[i][2] << std::endl;
-        
-        if (!infile.good()) break;
-		getline (infile, value, ',');
-		//std::cout << value << std::endl;
-		spaceArray[i][0] = string(value, 1, value.length()-2);
-		//std::cout << spaceArray[i][0] << std::endl;
-        
-        if (!infile.good()) break;
-		getline (infile, valueDump, '"');
-        if (!infile.good()) break;
-		getline (infile, value, '"');
-		//std::cout << value << std::endl;
-		value = string(value, 0, value.length());
-		//std::cout << value << std::endl;
-		zArray[i][0] = convertToInt(value);
-		//std::cout << zArray[i][0] << std::endl;
-        
-		//std::cout << "-----------------------------------------------" << std::endl;
-	}
-    if (i > 0)
-        avglen /= double(3*i);
-    num_rows = i;
-    std::cout << "avglen from PDB: " << avglen << std::endl;
-	infile.close();
+    FILE * infile;
+    char * nextline;
+    size_t linelen;
+    char buffer [1040];
+    PSM_localpsm_handle localpsm_handle;
+    size_t ii;
+    
+    if ((localpsm_handle = PSM_mmap_file(mmapfilename))) {
+    
+        return localpsm_handle;
+
 }
 
-/* This is a tokenizer for csv strings that unconditionally recognizes the character c
-   to separate fields, strips leading and trailing blanks and control characters
-   from tokens and also strips one layer of single or double quote marks. */
+    
+    localpsm_handle = PSM_localpsm_handle_create_wh(numhash,
+                                                    fieldnumbers,
+                                                    sepchar );
+    infile = fopen(textfilename,"rb");
 
-void string_tokens(const std::string& str, std::vector<std::string>& tokens, const char c) {
-    size_t ic, iq, ieq, istart, iend;
-    char qc;
-    istart = 0;
-    iend = 0;
-    tokens.clear();
+    if (!infile) return 0;
     
-    //std::cout << "tokenizing: " << str << std::endl;
-    //std::cout << "using separator: "<< c << std::endl;
+    for (ii = 0; ii < skip_lines; ii++) {
+        nextline = fgetln(infile,&linelen);
+        }
+    while ((nextline = fgetln(infile,&linelen))) {
+        if (!CSDflag) {
+            PSM_addstrn(localpsm_handle,nextline,linelen);
+        } else {
+            /* for CSD add an extra copy of the first 6 characters
+             of the refcode as a family ID */
+            size_t llen;
+            llen = linelen;
+            if (linelen > 1023) llen = 1023;
+            strncpy(buffer,nextline,llen);
+            buffer[llen++] = sepchar;
+            for (ii = 0; ii < 6 && buffer[ii]!=sepchar && buffer[ii]!=0; ii++) {
+                buffer[llen++] = buffer[ii];
+    }
+            buffer[llen] = '\0';
+            PSM_addstrn(localpsm_handle,buffer,llen);
+}
+	}
+        
+    fclose(infile);
+        
+    if (PSM_write_file(localpsm_handle,mmapfilename)) {
+        
+        return 0;
+        
+    }
+        
+    return localpsm_handle;
+        
+}
+        
+int load_cellDSGZArrays(void) {
+        
+    PSM_string* PDBcells_fields;
+    PSM_string* CODentries_fields;
+    PSM_string* CSDcells_fields;
+    string pdbid;
+    string codid;
+    string csdref;
+    string SG;
+    double a;
+    double b;
+    double c;
+    double alpha;
+    double beta;
+    double gamma;
+    int Z;
+    size_t ii;
+        
+    PDBcells_fields   = (PSM_string*)malloc(PDBcells_numfields*sizeof(PSM_string));
+    CODentries_fields = (PSM_string*)malloc(CODentries_numfields*sizeof(PSM_string));
+    CSDcells_fields   = (PSM_string*)malloc(CSDcells_numfields*sizeof(PSM_string));
+        
+    if (PDBcells) {
+
+        std::cout << "Processing " << PDBcells->str_index_len << " PDB cells " << std::endl;
+
+        for (ii = 0; ii < PDBcells->str_index_len; ii++){
+            if (ii%20000 == 0) std::cout<< "processing PDB" << ii << std::endl;
+            if (PSM_split_psm_string(PDBcells,PDBcells_fields,PDBcells_numfields,
+                                     PDBcells->str_index[ii],PDBcells_sep_char)) {
+                pdbid = std::string(PDBcells->chars+PDBcells_fields[PDBcells_id].offset,
+                                    PDBcells_fields[PDBcells_id].length);
+                SG = std::string(PDBcells->chars+PDBcells_fields[PDBcells_space_group].offset,
+                                 PDBcells_fields[PDBcells_space_group].length);
+                a=atof(std::string(PDBcells->chars+PDBcells_fields[PDBcells_cell_length_a].offset,
+                                   PDBcells_fields[PDBcells_cell_length_a].length).c_str());
+                b=atof(std::string(PDBcells->chars+PDBcells_fields[PDBcells_cell_length_b].offset,
+                                   PDBcells_fields[PDBcells_cell_length_b].length).c_str());
+                c=atof(std::string(PDBcells->chars+PDBcells_fields[PDBcells_cell_length_c].offset,
+                                   PDBcells_fields[PDBcells_cell_length_c].length).c_str());
+                alpha=atof(std::string(PDBcells->chars+PDBcells_fields[PDBcells_cell_angle_alpha].offset,
+                                       PDBcells_fields[PDBcells_cell_angle_alpha].length).c_str());
+                beta=atof(std::string(PDBcells->chars+PDBcells_fields[PDBcells_cell_angle_beta].offset,
+                                      PDBcells_fields[PDBcells_cell_angle_beta].length).c_str());
+                gamma=atof(std::string(PDBcells->chars+PDBcells_fields[PDBcells_cell_angle_gamma].offset,
+                                       PDBcells_fields[PDBcells_cell_angle_gamma].length).c_str());
+                Z = atoi(std::string(PDBcells->chars+PDBcells_fields[PDBcells_Z].offset,
+                                     PDBcells_fields[PDBcells_Z].length).c_str());
     
-    ic = 0;
-    while (ic < str.length()+1) {
-        if (ic == str.length() || str[ic] == c) {
-            iend = ic;
-            ic = iend+1;
-            // std::cout << "changed ic to :"<< ic << std::endl;
-            if (iend > istart) {
-                qc = '\0';
-                for (iq = istart; iq < iend; iq++) {
-                    /* scan for quoted string */
-                    if (str[iq]=='"' || str[iq]=='\'') {
-                        qc = str[iq];
-                        for (ieq = iend-1; ieq > iq; ieq--) {
-                            if (isblank(str[ieq])|| str[ieq] < 32) continue;
-                            if (str[ieq]==qc) {
-                                istart = iq+1;
-                                iend = ieq;
-                                break;
+                /* std::cout << "cell read " << a << b << c << alpha << beta << gamma << Z << SG << std::endl; */
+    
+                if (pdbid.length() == 4 && a > 1. && b > 1. && c > 1.
+                    && alpha >= 5. && alpha <= 175.
+                    && beta  >= 5. && beta  <= 175.
+                    && gamma >= 5. && gamma <= 175.) {
+                    cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
+                    zArray.push_back(Z);
+                    idArray.push_back(pdbid);
+                    spaceArray.push_back(SG);
+                    cellDB.push_back(PDB_DBTYPE);
                             } else {
-                                istart = iq+1;
-                                iend = ieq+1;
-                                break;
+                    std::cout << "Rejected "<< pdbid <<" ["<<a<<","<<b<<","<<c<<","<<alpha<<","<<beta<<","<<gamma<<"] "<<SG <<std::endl;
                             }
                         }
-                        break;
-                    /* blank-strip string */
-                    } else if (!isblank(str[iq]) && str[iq] >= 32 ){
-                        istart = iq;
-                        for (ieq = iend-1; ieq >= iq; ieq--) {
-                            if (isblank(str[ieq]) || str[ieq] < 32 ) continue;
-                            iend = ieq+1;
-                            // std::cout  << "token from " << istart << " to " << iend << std::endl;
-                            break;
                         }
-                        break;
                     }
-                }
-                if (iend > istart && istart < str.length()) {
-                    tokens.push_back(str.substr(istart,iend-istart));
-                } else {
-                    tokens.push_back(std::string(""));
-                }
-            } else {
-                tokens.push_back(std::string(""));
+
+    if (CODentries) {
+
+        std::cout << "Processing " << CODentries->str_index_len << " COD cells " << std::endl;
+
+        for (ii = 0; ii < CODentries->str_index_len; ii++){
+            if (ii%20000 == 0) std::cout<< "processing COD" << ii << std::endl;
+            if (PSM_split_psm_string(CODentries,CODentries_fields,CODentries_numfields,
+                                     CODentries->str_index[ii],CODentries_sep_char)) {
+                codid = std::string(CODentries->chars+CODentries_fields[CODentries_id].offset,
+                                    CODentries_fields[CODentries_id].length);
+                SG = std::string(CODentries->chars+CODentries_fields[CODentries_symmetry_space_group_name_H_M].offset,
+                                 CODentries_fields[CODentries_symmetry_space_group_name_H_M].length);
+                a=atof(std::string(CODentries->chars+CODentries_fields[CODentries_cell_length_a].offset,
+                                   CODentries_fields[CODentries_cell_length_a].length).c_str());
+                b=atof(std::string(CODentries->chars+CODentries_fields[CODentries_cell_length_b].offset,
+                                   CODentries_fields[CODentries_cell_length_b].length).c_str());
+                c=atof(std::string(CODentries->chars+CODentries_fields[CODentries_cell_length_c].offset,
+                                   CODentries_fields[CODentries_cell_length_c].length).c_str());
+                alpha=atof(std::string(CODentries->chars+CODentries_fields[CODentries_cell_angle_alpha].offset,
+                                       CODentries_fields[CODentries_cell_angle_alpha].length).c_str());
+                beta=atof(std::string(CODentries->chars+CODentries_fields[CODentries_cell_angle_beta].offset,
+                                      CODentries_fields[CODentries_cell_angle_beta].length).c_str());
+                gamma=atof(std::string(CODentries->chars+CODentries_fields[CODentries_cell_angle_gamma].offset,
+                                       CODentries_fields[CODentries_cell_angle_gamma].length).c_str());
+                Z = atoi(std::string(CODentries->chars+CODentries_fields[CODentries_cell_formula_units_Z].offset,
+                                     CODentries_fields[CODentries_cell_formula_units_Z].length).c_str());
+    
+                if (codid.length() >= 6 && a > 1. && b > 1. && c > 1.
+                    && alpha >= 5. && alpha <= 175.
+                    && beta  >= 5. && beta  <= 175.
+                    && gamma >= 5. && gamma <= 175.) {
+                    cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
+                    zArray.push_back(Z);
+                    idArray.push_back(codid);
+                    spaceArray.push_back(SG);
+                    cellDB.push_back(COD_DBTYPE);
+    }
             }
-            istart = ic;
-            iend = 0;
-        } else {
-            ic++;
-        }
-    }
-}
-
-
-
-//*****************************************************************************
-int makeCSDDatabase(string filename, string ckpfilename)
-{
-    // refcode, a, b, c, alpha, beta, gamma, spacegroup, centring, r_a, r_b, r_c, r_alpha, r_beta, r_gamma
-    
-    int i, ii, save_rows, save_entries;
-    std::ifstream infile;
-    std::ofstream serialout;
-    std::ifstream serialin;
-    std::string line;
-    std::vector<std::string> tokens;
-    long hash;
-    long hashnext;
-    bool gotckp = false;
-
-    infile.open(filename.c_str());
-    if (infile.fail()) return -1;
-
-
-    serialin.open(ckpfilename.c_str(),std::ios::in);
-    save_rows = num_rows;
-    save_entries = numentries;
-    for (i=0; i < 131072; i++) {
-        save_entryhash[i] = entryhash[i];
-        save_headhash[i] = headhash[i];
-    }
-    
-    i = 0;
-    while (true) {
-        string token;
-        if (serialin.is_open()) {
-            std::cout << "Reading CSD database " << ckpfilename << std::endl;
-            serialin >> token;
-            if (!serialin.good()){
-                std::cout << ckpfilename << "failed to read initial token" << std::endl;
-                break;
-            } else if (token != string("CSDdatabase:")) {
-                std::cout << ckpfilename
-                << " badly formatted, no 'CSDdatabase:' token, instead have "
-                << token
-                << std::endl;
-                break;
-            }
-            while (serialin.good()) {
-                int row;
-                int entry;
-                string refcode;
-                double cell[6];
-                string space;
-                string ochar;
-                string cchar;
-                row = -9999999;
-                serialin >> ochar >> row >> entry >> refcode
-                    >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5]
-                    >> space >> cchar;
-                /* row -1 is terminator */
-                if (row == -1) {
-                    gotckp = true;
-                    break;
                 }
-                if (!serialin.good()
-                    || ochar !=string("{") or cchar != string("}")
-                    || refcode.length() < 6
-                    || cell[0] < 0.1 || cell[1] < 0.1 || cell[2] < 0.1
-                    || cell[3] < 5. || cell[4] < 5. || cell[5] < 5.
-                    || cell[3] > 175. || cell[4] > 175. || cell [5] > 175.
-                    || row != num_rows+i || entry != numentries+i ) {
-                    std::cout << ckpfilename  << " badly formatted row " << i << std::endl;
-                    break;
-                    
-                }
-                for (ii=0; ii<6; ii++) cellDArray[num_rows+i][ii] = cell[ii];
-                idArray[num_rows+i][0] = refcode;
-                entryArray[numentries+i][0] = refcode;
-                entryArray[numentries+i][1] = refcode.substr(0,6);
-                entryArray[numentries+i][2] = "";
-                entryArray[numentries+i][3] = "";
-                entryArray[numentries+i][4] = "";
-                entryArray[numentries+i][5] = "";
-                entryArray[numentries+i][6] = "";
-                entryArray[numentries+i][7] = "";
-                hash = hashvalue(entryArray[numentries+i][0]);
-                entryhashvalue[numentries+i] = hash;
-                hashnext = entryhash[hash];
-                entryhash[hash] = numentries+i;
-                entryhashlink[numentries+i] = hashnext;
-                hash = hashvalue(entryArray[numentries+i][1]);
-                headhashvalue[numentries+i] = hash;
-                hashnext = headhash[hash];
-                headhash[hash] = numentries+i;
-                headhashlink[numentries+i] = hashnext;
-                spaceArray[num_rows+i][0] = space;
-                zArray[num_rows+i][0] = -1;
-                i++;
-                
-            }
-        } else {
-            break;
-        }
-        break;
-    }
-    if (serialin.is_open()) serialin.close();
-    if (gotckp) {
-        numentries += i;
-        num_rows += i;
-        if (infile.is_open()) infile.close();
-        return 0;
-    }
-    
-    num_rows = save_rows;
-    numentries = save_entries;
-    for (i=0; i < 131072; i++) {
-        entryhash[i] = save_entryhash[i];
-        headhash[i] = save_headhash[i];
-    }
-
-    serialout.open(ckpfilename.c_str(),std::ios::out|std::ios::trunc);
-    if (serialout.is_open()) {
-        serialout <<  "CSDdatabase:" << std::endl;
-    }
-    
-    for (int i = 0; i < NUM_CSDDUMP; i++)
-    {
-        std::getline (infile, line);
-        //std::cout << valueDump << std::endl;
-    }
-    avglen *= double(3*num_rows);
-    for (i = num_rows; i < NUM_ROWS; i++)
-    {
-        string value;
-        int istart;
-        int goodcell;
-        
-        if (infile.eof()) break;
-        
-        std::getline(infile,line);
-        string_tokens(line, tokens, ',');
-        istart = 0;
-        
-        
-        if (!infile.good() || tokens.size() < 8) {
-            std::cout << "unable to process " << line << std::endl;
-            i --;
-            continue;
-        }
-        //if (i%10000 == 0 || tokens.size() < 15) {
-        //    std::cout << i << " tokens: " << tokens.size() << std::endl;
-        //}
-
-        
-        // for (ii = 0; ii < tokens.size(); ii++) std::cout << tokens[ii] << "|";
-        
-        // std::cout << std::endl;
-        
-        if (tokens[0].length()<6) {
-            std::cout << "unable to process, bad CSD refcode " << line << std::endl;
-            i --;
-            continue;
-        }
-        
-        // std::cout << idArray[i][0] << std::endl;
-        
-        // Read a, b, c, alpha, beta, gamma
-        
-        goodcell = 1;
-        
-        for (ii=0; ii < 6; ii++){
-            if (!infile.good()) break;
-            value = tokens[ii+1];
-            cellDArray[i][ii] = convertToDouble(value);
-            if (ii < 3) {
-                if ( cellDArray[i][ii] < 0.1) {
-                    std::cout << "unable to process "<< tokens[0] <<", bad cell edge  "<< value << std::endl;
-                    goodcell = 0;
-                    break;
-                }
-                avglen += cellDArray[i][ii];
-            } else {
-                if ( cellDArray[i][ii] < 5. || cellDArray[i][ii] > 175.) {
-                    std::cout << "unable to process "<< tokens[0] <<", bad cell angle  "<< value << std::endl;
-                    goodcell = 0;
-                    break;
                 }
                 
-            }
-            // std::cout << cellDArray[i][ii] << std::endl;
-        }
-        
-        if (!goodcell) {
-            i--;
-            continue;
-        }
-
-        if (serialout.is_open()) {
-            serialout << "{ " << i << " "
-            << numentries << " "
-            << tokens[0] << " "
-            << cellDArray[i][0] << " "
-            << cellDArray[i][1] << " "
-            << cellDArray[i][2] << " "
-            << cellDArray[i][3] << " "
-            << cellDArray[i][4] << " "
-            << cellDArray[i][5] << " "
-            << tokens[7]
-            << " }" << std::endl;
-        }
-        
-        idArray[i][0] = tokens[0];
-        entryArray[numentries][0] = tokens[0];
-        entryArray[numentries][1] = tokens[0].substr(0,6);
-        entryArray[numentries][2] = "";
-        entryArray[numentries][3] = "";
-        entryArray[numentries][4] = "";
-        entryArray[numentries][5] = "";
-        entryArray[numentries][6] = "";
-        entryArray[numentries][7] = "";
-        hash = hashvalue(entryArray[numentries][0]);
-        entryhashvalue[numentries] = hash;
-        hashnext = entryhash[hash];
-        entryhash[hash] = numentries;
-        entryhashlink[numentries] = hashnext;
-        hash = hashvalue(entryArray[numentries][1]);
-        headhashvalue[numentries] = hash;
-        hashnext = headhash[hash];
-        headhash[hash] = numentries;
-        headhashlink[numentries] = hashnext;
-        numentries++;
-
-        
-        if (!infile.good()) break;
-        spaceArray[i][0] = tokens[7];
-        //std::cout << spaceArray[i][0] << std::endl;
-        
-        zArray[i][0] = -1;
-        
-        //std::cout << "-----------------------------------------------" << std::endl;
-    }
-    if (i > 0)
-        avglen /= double(3*i);
+    if (CSDcells) {
     
-    std::cout << "avglen from PDB + CSD: " << avglen << std::endl;
-    num_rows = i;
-    infile.close();
-    if (serialout.is_open()) {
-        serialout << "{ " << -1 << " "
-        << -1 << " "
-        << "------" << " "
-        << 1. << " "
-        << 1. << " "
-        << 1. << " "
-        << 90. << " "
-        << 90. << " "
-        << 90. << " "
-        << "P1"
-        << " }" << std::endl;
-        serialout.close();
+        std::cout << "Processing " << CSDcells->str_index_len << " CSD cells " << std::endl;
+
+        for (ii = 0; ii < CSDcells->str_index_len; ii++){
+            if (ii%20000 == 0) std::cout<< "processing CSD" << ii << std::endl;
+            if (PSM_split_psm_string(CSDcells,CSDcells_fields,CSDcells_numfields,
+                                     CSDcells->str_index[ii],CSDcells_sep_char)) {
+                csdref = std::string(CSDcells->chars+CSDcells_fields[CSDcells_refcode].offset,
+                                     CSDcells_fields[CSDcells_refcode].length);
+                SG = std::string(CSDcells->chars+CSDcells_fields[CSDcells_space_group].offset,
+                                 CSDcells_fields[CSDcells_space_group].length);
+                a=atof(std::string(CSDcells->chars+CSDcells_fields[CSDcells_cell_length_a].offset,
+                                   CSDcells_fields[CSDcells_cell_length_a].length).c_str());
+                b=atof(std::string(CSDcells->chars+CSDcells_fields[CSDcells_cell_length_b].offset,
+                                   CSDcells_fields[CSDcells_cell_length_b].length).c_str());
+                c=atof(std::string(CSDcells->chars+CSDcells_fields[CSDcells_cell_length_c].offset,
+                                   CSDcells_fields[CSDcells_cell_length_c].length).c_str());
+                alpha=atof(std::string(CSDcells->chars+CSDcells_fields[CSDcells_cell_angle_alpha].offset,
+                                       CSDcells_fields[CSDcells_cell_angle_alpha].length).c_str());
+                beta=atof(std::string(CSDcells->chars+CSDcells_fields[CSDcells_cell_angle_beta].offset,
+                                      CSDcells_fields[CSDcells_cell_angle_beta].length).c_str());
+                gamma=atof(std::string(CSDcells->chars+CSDcells_fields[CSDcells_cell_angle_gamma].offset,
+                                       CSDcells_fields[CSDcells_cell_angle_gamma].length).c_str());
+                Z = 0;
+    
+                if (csdref.length() >= 6 && a > 1. && b > 1. && c > 1.
+                    && alpha >= 5. && alpha <= 175.
+                    && beta  >= 5. && beta  <= 175.
+                    && gamma >= 5. && gamma <= 175.) {
+                    cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
+                    zArray.push_back(Z);
+                    idArray.push_back(csdref);
+                    spaceArray.push_back(SG);
+                    cellDB.push_back(CSD_DBTYPE);
+    }
+        }
+        }
     }
 
+    std::cout << "Processed " << cellDB.size() << " database entries " << std::endl;
     return 0;
+        
+        }
+        
+int make_mmapfiles(void) {
+        
+    size_t PDBcfieldnumbers[1] = {PDBcells_id+1};
+    size_t PDBefieldnumbers[2] = {PDBentries_id+1,PDBentries_head+1};
+    size_t CSDfieldnumbers[2] = {CSDcells_refcode+1,
+        CSDcells_refcode_family+1};
+    size_t CODfieldnumbers[2] = {CODentries_id+1,CODentries_chemical_formula_sum+1};
+    size_t numdb;
+        
+    PDBentries = make_psmfile(PDBentries_mmap_file, PDBentries_raw_file,
+                              2, PDBefieldnumbers,
+                              PDBentries_skip_lines, PDBentries_sep_char, 0);
+    PDBcells = make_psmfile(PDBcells_mmap_file, PDBcells_raw_file,
+                            1, PDBcfieldnumbers,
+                            PDBcells_skip_lines, PDBcells_sep_char, 0);
+    CSDcells = make_psmfile(CSDcells_mmap_file, CSDcells_raw_file,
+                            2, CSDfieldnumbers,
+                            CSDcells_skip_lines, CSDcells_sep_char, 1);
+    CODentries = make_psmfile(CODentries_mmap_file, CODentries_raw_file,
+                              2, CODfieldnumbers,
+                              CODentries_skip_lines, CODentries_sep_char, 0);
+    if (PDBcells != 0) {
+        numdb++;
+        std::cout << "PDB cells available" << PDBcells->str_index_len <<std::endl;
+                }
+    if (PDBentries != 0 ) {
+        numdb++;
+        std::cout << "PDB entries available" << PDBentries->str_index_len <<std::endl;
+                }
+    if (CSDcells != 0 ) {
+        numdb++;
+        std::cout << "CSD data available:" << CSDcells->str_index_len << std::endl;
+            }
+    if (CODentries != 0 ) {
+        numdb++;
+        std::cout << "COD data available:" << CODentries->str_index_len << std::endl;
+        }
+        
+    return (numdb > 0)?0:1;
 
-}
+        }
+        
 
+        
+        
 //*****************************************************************************
 bool makeprimredprobe( void )
 {
@@ -827,6 +606,7 @@ void buildNearTree( void )
     size_t sv;
     double cell[6];
     double row;
+        char dbid;
     unitcell ucell;
     std::vector<long> * DelayedIndices; // objects queued for insertion, possibly in random order
     std::vector<unitcell>  * ObjectStore;    // all inserted objects go here
@@ -850,31 +630,31 @@ void buildNearTree( void )
         int objno = 0;
     bool gotckp = false;
     
-    serialin.open(filenames[choiceAlgorithm].c_str(),std::ios::in);
+        serialin.open(sauc_NT_ckp_names[choiceAlgorithm-1].c_str(),std::ios::in);
     objno = 0;
     while (true) {
         string token;
         int Algorithm = 0;
         if (serialin.is_open()) {
-            std::cout << "Reading database " << filenames[choiceAlgorithm] << std::endl;
+                std::cout << "Reading database " << sauc_NT_ckp_names[choiceAlgorithm-1] << std::endl;
             serialin >> token; if (!serialin.good() ||
                                    (token != string("Algorithm:")
                                     && token != string("Metric:"))) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'Metric' or 'Algorithm:' token" << std::endl;
+                                           std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'Metric' or 'Algorithm:' token" << std::endl;
                 break;
             }
             serialin >> Algorithm;
             if (!serialin.good() || algorithm != choiceAlgorithm) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, algorithm value wrong" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, algorithm value wrong" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DelayedIndices:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DelayedIndices:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DelayedIndices:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no DelayedIndices '{' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no DelayedIndices '{' token" << std::endl;
                 break;
             }
             DelayedIndices = new std::vector<long>();
@@ -885,52 +665,53 @@ void buildNearTree( void )
                 DelayedIndices->push_back(atol(token.c_str()));
             }
             if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted DelayedIndices" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DelayedIndices" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("ObjectStore:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'ObjectStore:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'ObjectStore:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no ObjectStore '{' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no ObjectStore '{' token" << std::endl;
                 break;
             }
             ObjectStore = new std::vector<unitcell>();
             while (serialin.good()) {
                 double cell[6];
                 double row;
+                    char dbid;
                 serialin >> token;
                 if (token == string("}")) break;
                 if (!serialin.good() || token != string("{")) {
-                    std::cout << filenames[choiceAlgorithm] << " badly formatted, missing ObjectStore '{' token" << std::endl;
+                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, missing ObjectStore '{' token" << std::endl;
                     break;
                 }
-                serialin >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5] >> row;
+                    serialin >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5] >> row >> dbid;
                 objno++;
                 if (!serialin.good()) {
-                    std::cout << filenames[choiceAlgorithm] << " badly formatted, bad object: " << objno  << std::endl;
+                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, bad object: " << objno  << std::endl;
                     break;
                 }
-                ObjectStore->push_back(unitcell(cell,row));
+                    ObjectStore->push_back(unitcell(cell,row,dbid));
                 serialin >> token; if (!serialin.good() || token != string("}")) {
-                    std::cout << filenames[choiceAlgorithm] << " badly formatted, missing ObjectStore '}' token" << std::endl;
+                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, missing ObjectStore '}' token" << std::endl;
                     break;
                 }
                 
             }
             if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted ObjectStore" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted ObjectStore" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("ObjectCollide:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'ObjectCollide:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'ObjectCollide:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no ObjectCollide '{' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no ObjectCollide '{' token" << std::endl;
                 break;
             }
             ObjectCollide = new std::vector<size_t>();
@@ -947,26 +728,26 @@ void buildNearTree( void )
                 }
             }
             if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted ObjectCollide" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted ObjectCollide" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DeepestDepth:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DeepestDepth:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DeepestDepth:' token" << std::endl;
                 break;
             }
             
             serialin >> DeepestDepth; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted DeepestDepth" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DeepestDepth" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("NearTreeNodes:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'NearTreeNodes:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'NearTreeNodes:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNodes '{' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNodes '{' token" << std::endl;
                 break;
             }
             NearTreeNodes = new std::vector< CNearTree<unitcell>::NearTreeNode<unitcell> * >;
@@ -992,7 +773,7 @@ void buildNearTree( void )
                 if (token == string("}")) break;
                 
                 if (token != string("{")) {
-                    std::cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNode '{' token " << token << std::endl;
+                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNode '{' token " << token << std::endl;
                     break;
                 }
                 
@@ -1073,7 +854,7 @@ void buildNearTree( void )
                 }
 #endif
                 serialin >> token; if (!serialin.good() || token != string("}")) {
-                    std::cout << filenames[choiceAlgorithm] << " badly formatted, no NearTreeNode '}' token: " << token <<std::endl;
+                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNode '}' token: " << token <<std::endl;
                     break;
                 }
                 
@@ -1095,78 +876,78 @@ void buildNearTree( void )
                 
             }
             if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted NearTreeNodes" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted NearTreeNodes" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("Flags:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'Flags:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'Flags:' token" << std::endl;
                 break;
             }
             
             serialin >> Flags; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted Flags" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted Flags" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DiamEstimate:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DiamEstimate:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DiamEstimate:' token" << std::endl;
                 break;
             }
             
             serialin >> DiamEstimate; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted DiamEstimate" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DiamEstimate" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("SumSpacings:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'SumSpacings:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'SumSpacings:' token" << std::endl;
                 break;
             }
             
             serialin >> SumSpacings; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted SumSpacings" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted SumSpacings" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("SumSpacingsSq:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'SumSpacingsSq:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'SumSpacingsSq:' token" << std::endl;
                 break;
             }
             
             serialin >> SumSpacingsSq; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted SumSpacings" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted SumSpacings" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DimEstimate:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DimEstimate:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DimEstimate:' token" << std::endl;
                 break;
             }
             
             serialin >> DimEstimate; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted DimEstimate" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DimEstimate" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DimEstimateEsd:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'DimEstimateEsd:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DimEstimateEsd:' token" << std::endl;
                 break;
             }
             
             serialin >> DimEstimateEsd; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted DimEstimateEsd" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DimEstimateEsd" << std::endl;
                 break;
             }
             
 #ifdef CNEARTREE_INSTRUMENTED
             serialin >> token; if (!serialin.good() || token != string("NodeVisits:")) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted, no 'NodeVisits:' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'NodeVisits:' token" << std::endl;
                 break;
             }
             
             serialin >> NodeVisits; if (!serialin.good()) {
-                std::cout << filenames[choiceAlgorithm] << " badly formatted NodeVisits" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted NodeVisits" << std::endl;
                 break;
             }
 #endif
@@ -1194,20 +975,23 @@ void buildNearTree( void )
     
     cellTree[choiceAlgorithm-1] = new CNearTree <unitcell> ();
     
-	for (int i = 0; i < (int)num_rows; i++)
+        std::cout << "processing " << (int)(cellDArray.size()) << " cells" << std::endl;
+        
+        for (int i = 0; i < (int)(cellDArray.size()); i++)
 	{
         Cell rawcell(cellDArray[i][0], cellDArray[i][1], cellDArray[i][2], cellDArray[i][3], cellDArray[i][4], cellDArray[i][5]);
-        mc = rawcell.LatSymMat66((spaceArray[i][0]).substr(0,1));
+            if (i%20000 == 0) std::cout << "processing cell " << i << std::endl;
+            mc = rawcell.LatSymMat66((spaceArray[i]).substr(0,1));
         primcell = mc*(rawcell.Cell2V6());
         if (!Reducer::Reduce(primcell,m,redprimcell,0.0)){
-            std::cout << "Reduction failed for "<<idArray[i][0]<<" "<<
+                std::cout << "Reduction failed for "<<idArray[i]<<" "<<
             cellDArray[i][3]<<" "<<
             cellDArray[i][4]<<" "<<
             cellDArray[i][5]<<" "<<
             cellDArray[i][0]<<" "<<
             cellDArray[i][1]<<" "<<
             cellDArray[i][2]<<" "<<
-            spaceArray[i][0] << std::endl;
+                spaceArray[i] << std::endl;
             std::cout << "Primitive G6 " << primcell[0]<<" "<<
             primcell[1]<<" "<<
             primcell[2]<<" "<<
@@ -1218,12 +1002,17 @@ void buildNearTree( void )
         searchcell = Cell(redprimcell).CellWithDegrees();
         unitcell cellData(searchcell[0],searchcell[1],searchcell[2],
                           searchcell[3],searchcell[4],searchcell[5],
-                          0,0,0,0,0,0, (double)i);
+                              0,0,0,0,0,0, (double)i, cellDB[i]);
         cellTree[choiceAlgorithm-1]->insert(cellData);
         
 	}
+        
+        std::cout << "Neartree loaded, dumping checkpoint " << std::endl;
+        std::cout << "CompleteDelayed Insert" << std::endl;
+        
     cellTree[choiceAlgorithm-1]->CompleteDelayedInsert();
     cellTree_itend[choiceAlgorithm-1] = cellTree[choiceAlgorithm-1]->end();
+        std::cout << "Get_Checkpoint" << std::endl;
     cellTree[choiceAlgorithm-1]->Get_Checkpoint(&DelayedIndices,
                                                 &ObjectStore,
                                                 &ObjectCollide,
@@ -1240,7 +1029,8 @@ void buildNearTree( void )
                                                 , &NodeVisits
 #endif
                                                 );
-    serialout.open(filenames[choiceAlgorithm].c_str(),std::ios::out|std::ios::trunc);
+        std::cout << "Dump" << std::endl;
+        serialout.open(sauc_NT_ckp_names[choiceAlgorithm-1].c_str(),std::ios::out|std::ios::trunc);
     if (serialout.is_open()) {
         serialout << "Metric: "<< choiceAlgorithm << std::endl;
         serialout << "DelayedIndices: { ";
@@ -1254,14 +1044,22 @@ void buildNearTree( void )
         serialout << "ObjectStore: { ";
         for (si = 0; si < ObjectCollide->size(); si++) {
             ucell = (*ObjectStore)[si];
-            ucell.getCell(cell,&row);
+                ucell.getCell(cell,&row, &dbid);
+                /* std::cout << "{ " << cell[0] << " "
+                << cell[1] << " "
+                << cell[2] << " "
+                << cell[3] << " "
+                << cell[4] << " "
+                << cell[5] << " "
+                << " " << row << " " << dbid << " }"  << std::endl; */
+                
             serialout << "{ " << cell[0] << " "
             << cell[1] << " "
             << cell[2] << " "
             << cell[3] << " "
             << cell[4] << " "
             << cell[5] << " "
-            << " " << row << " }"  << std::endl;
+                << " " << row << " " << dbid << " }"  << std::endl;
         }
         serialout << " }" << std::endl;
         
@@ -1327,7 +1125,7 @@ void buildNearTree( void )
         delete BaseNode;
         
     } else {
-        std::cout << "unable to save database checkpoint file "<<filenames[choiceAlgorithm] << std::endl;
+            std::cout << "unable to save database checkpoint file "<<sauc_NT_ckp_names[choiceAlgorithm-1] << std::endl;
     }
 }
 
@@ -1447,6 +1245,7 @@ void SphereResults( std::ostream& out,
     vector<long> myfamilylist;
     vector<long> myfamilycount;
     vector<long> mythread;
+        int numRow;
     myentries.assign(myvector.size(),-1L);   /* The entry with this PDB ID */
     myfamilies.assign(myvector.size(),-1L);  /* The base entry with the same header */
     myfamiliesordinal.assign(myvector.size(),-1L);/* ordinal in the family list */
@@ -1468,18 +1267,33 @@ void SphereResults( std::ostream& out,
         myentries[ind] = myfamilies[ind] = myfamiliesordinal[ind] = myfamilylist[ind] = myfamilycount[ind] = mythread[ind] = -1;
     }
     for (ind=0; ind < (long)myvector.size(); ind++) {
+            char dbtype;
         const unitcell * const cell = & myvector[ind];
+            std::string dbname;
         numRow = (int)(*cell).getRow();
-        entry = findEntryDatabase(idArray[numRow][0]);
+            dbtype = cellDB[numRow];
+            entry =  PSM_getstrindex_by_key(
+                                            (dbtype==PDB_DBTYPE)?PDBentries:
+                                            ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                            idArray[numRow].c_str(),0);
         if (entry < 0) {
-            std::cout << "entry for "<< idArray[numRow][0] << " is negative" << std::endl;
+                std::cout << "entry for "<< idArray[numRow] << " is negative, row " << numRow << std::endl;
             myentries[ind] = -1;
             myfamilies[ind] = -1;
         } else {
+                if (dbtype==PDB_DBTYPE) dbname = std::string("PDB");
+                else if (dbtype==CSD_DBTYPE) dbname = std::string("CSD");
+                else dbname = std::string("COD");
             myentries[ind] = entry;
-            myfamilies[ind] = findHeadDatabase(entryArray[entry][1]);
+                if (dbtype == PDB_DBTYPE)
+                myfamilies[ind] = PSM_getstrindex_by_key((dbtype==PDB_DBTYPE)?PDBentries:
+                                                         ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                                         idArray[numRow].c_str(),0);
             if (myfamilies[ind] < 0 ) {
-                std::cout << "head for "<< entryArray[entry][1] << " is negative" << std::endl;
+                    std::cout << "head for "<< idArray[numRow] <<
+                    " row " << numRow <<
+                    " in " << dbname <<
+                    " is negative" << std::endl;
             }
         }
         ii = (myfamilies[ind])&0xFF;  /* hash code for families */
@@ -1519,13 +1333,16 @@ void SphereResults( std::ostream& out,
         }
     }
 
-    if (noCSD) {
-        out << "Found " << family_size << " families organized by PDB header" << std::endl << std::endl;
-    } else {
-        out << "Found " << family_size << " families organized by PDB header or CSD Refcode" << std::endl << std::endl;
-    }    
+        out << "Found " << family_size << " families organized by PDB header or CSD Refcode or COD formula" << std::endl << std::endl;
 
     for (ii = 0; ii < family_size; ii++) {
+            char dbtype;
+            std::string dbname;
+            size_t numfields;
+            ssize_t compoundfield;
+            ssize_t sourcefield;
+            ssize_t resfield;
+            ssize_t expfield;
         long myfamily;
         long familyordinal;
         ind = myfamilylist[ii];
@@ -1536,22 +1353,27 @@ void SphereResults( std::ostream& out,
             const unitcell * const cell = & myvector[ind];
             numRow = (int)(*cell).getRow();
             if (sauc_javascript) {
-                if (idArray[numRow][0].length() > 4) {
+                    if (idArray[numRow].length() > 4) {
                     pdbid = "<b><a href=\"https://summary.ccdc.cam.ac.uk/structure-summary?refcode=" +
-                    idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
+                        idArray[numRow] + "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
                     
                 } else {
                     pdbid = "<b><a href=\"http://www.rcsb.org/pdb/explore.do?structureId=" +
-                    idArray[numRow][0] + "\" target=\"_blank\">" + idArray[numRow][0] + "</a></b>";
+                        idArray[numRow] + "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
                 }
             } else {
-               pdbid = idArray[numRow][0];
+                    pdbid = idArray[numRow];
             }
             familyordinal++;
             if (familyordinal == 1) {
-                entry = findEntryDatabase(idArray[numRow][0]);
+                    char dbtype;
+                    dbtype = cellDB[numRow];
+                    entry = PSM_getstrindex_by_key(
+                                                   (dbtype==PDB_DBTYPE)?PDBentries:
+                                                   ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                                   idArray[numRow].c_str(),0);
                 if (entry >= 0) {
-                    out << ii+1 << ": "<< entryArray[entry][1];
+                        out << ii+1 << ": "<< idArray[numRow].c_str() ;
                 } else {
                     out << ii+1 << ": Unidentified Header";
                 }
@@ -1577,9 +1399,9 @@ void SphereResults( std::ostream& out,
             cellDArray[numRow][4] << ", " <<
             cellDArray[numRow][5] << "], SG: " <<
             spaceArray[numRow][0];
-            if (zArray[numRow][0] > 0) {
+                if (zArray[numRow] > 0) {
             out << ", Z: " <<
-            zArray[numRow][0] << " ";
+                    zArray[numRow] << " ";
             } else {
                 out << ", ";
             }
@@ -1590,16 +1412,66 @@ void SphereResults( std::ostream& out,
             (*cell).getData(3) << ", " <<
             (*cell).getData(4) << ", " <<
             (*cell).getData(5) << "]" << std::endl;
-            entry = findEntryDatabase(idArray[numRow][0]);
+                dbtype = cellDB[numRow];
+                entry =  PSM_getstrindex_by_key(
+                                                (dbtype==PDB_DBTYPE)?PDBentries:
+                                                ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                                idArray[numRow].c_str(),0);
             if (entry >= 0) {
-                if (entryArray[entry][3].length() > 0)
-                    out << "      " << "Compound: " << entryArray[entry][3] << std::endl;
-                if (entryArray[entry][4].length() > 0)
-                    out << "      " << "Source: " << entryArray[entry][4];
-                if (entryArray[entry][6].length() > 0)
-                    out << ", Res: " << entryArray[entry][6];
-                if (entryArray[entry][7].length() > 0)
-                    out << " " << entryArray[entry][7];
+                    PSM_localpsm_handle psm_handle;
+                    if (dbtype==PDB_DBTYPE) {
+                        dbname = std::string("PDB");
+                        psm_handle = PDBentries;
+                        numfields = PDBentries_numfields;
+                        compoundfield = PDBentries_cmpd;
+                        sourcefield = PDBentries_src;
+                        resfield = PDBentries_res;
+                        expfield = PDBentries_exp;
+                        
+                    }
+                    else if (dbtype==CSD_DBTYPE) {
+                        dbname = std::string("CSD");
+                        psm_handle = CSDcells;
+                        numfields = CSDcells_numfields;
+                        compoundfield = CSDcells_refcode_family;
+                        sourcefield = -1;
+                        resfield = -1;
+                        expfield = -1;
+
+                    }
+                    else {
+                        dbname = std::string("COD");
+                        psm_handle = CODentries;
+                        numfields = CODentries_numfields;
+                        compoundfield = CODentries_chemical_formula_sum;;
+                        sourcefield = CODentries_chemical_name_common;
+                        resfield = -1;
+                        expfield = -1;
+                    }
+
+                    PSM_string entryArray[16];
+                    PSM_split_psm_string(psm_handle,entryArray,numfields,
+                                         psm_handle->str_index[entry],psm_handle->split_char);
+                    if (compoundfield >= 0 && entryArray[compoundfield].length > 0) {
+                        char * compound=PSM_getstrfield(psm_handle,entryArray[(size_t)compoundfield]);
+                        out << "      " <<  compound << std::endl;
+                        free(compound);
+                    }
+                    if (sourcefield >= 0 && entryArray[PDBentries_src].length > 0) {
+                        char * source=PSM_getstrfield(psm_handle,entryArray[(size_t)sourcefield]);
+                        out << "      " <<  source;
+                        free(source);
+                    }
+                    if (resfield >= 0 && entryArray[resfield].length > 0) {
+                        char * res=PSM_getstrfield(psm_handle,entryArray[(size_t)resfield ]);
+                        out << " " << res;
+                        free(res);
+                    }
+                    if (expfield >= 0 && entryArray[expfield].length> 0) {
+                        char * exp=PSM_getstrfield(psm_handle,entryArray[(size_t)expfield]);
+                        out << " " << exp;
+                        free(exp);
+                    }
                 out << std::endl;
             }
             ind = mythread[ind];
@@ -1686,7 +1558,7 @@ void findRange( void )
     "Beta: "  << probeArray[4] << " " <<
     "Gamma: " << probeArray[5] << std::endl;
 	std::cout << "\nRange Results\n";
-	for (int i = 0; i < (int)num_rows; i++)
+        for (int i = 0; i < (int)(cellDArray.size()); i++)
 	{
 		if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
 			(probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
@@ -1695,18 +1567,18 @@ void findRange( void )
 			(probeArray[4] + numRangeBeta ) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta ) <= cellDArray[i][4] &&
 			(probeArray[5] + numRangeGamma) >= cellDArray[i][5] && (probeArray[5] - numRangeGamma) <= cellDArray[i][5])
 		{
-			std::cout << "PDBID: " << idArray[i][0] << " " <<
+                std::cout << "PDBID: " << idArray[i] << " " <<
             "A: "     << cellDArray[i][0] << " " <<
             "B: "     << cellDArray[i][1] << " " <<
             "C: "     << cellDArray[i][2] << " " <<
             "Alpha: " << cellDArray[i][3] << " " <<
             "Beta: "  << cellDArray[i][4] << " " <<
             "Gamma: " << cellDArray[i][5] << " " <<
-            "Space Group: " << spaceArray[i][0];
+                "Space Group: " << spaceArray[i];
             
-            if (zArray[i][0] > 0) {
+                if (zArray[i] > 0) {
                 std::cout << ", Z: " <<
-                zArray[i][0] << std::endl;
+                    zArray[i] << std::endl;
             } else {
                 std::cout << std::endl;
             }
@@ -1714,10 +1586,33 @@ void findRange( void )
 	}
 }
 
+    /* EntryArray holds:
+     
+     entryArray[i][0] = id;   ID code
+     entryArray[i][1] = head; header
+     entryArray[i][2] = acc;  accession date
+     entryArray[i][3] = cmpd; compound
+     entryArray[i][4] = src;  source
+     entryArray[i][5] = aut;  author list
+     entryArray[i][6] = res;  resolution
+     entryArray[i][7] = exp;  experiment type (if not X-ray).
+     
+     */
+        
+        
+        
 //*****************************************************************************
 int main ()
 {
     
+        std::cout << "sauc Copyright (C) Keith McGill 2013, 2014" << std::endl;
+        std::cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
+        std::cout << "This is free software, and you are welcome to" << std::endl;
+        std::cout << "redistribute it under the GPL or LGPL" << std::endl;
+        std::cout << "See the program documentation for details" << std::endl;
+        std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
+        std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
+
     // Check for sauc html run
     
     if (std::getenv("SAUC_BATCH_MODE")) {
@@ -1728,31 +1623,10 @@ int main ()
         sauc_javascript = 1;
     }
 
-    //Create Database
-    
-    filenames[0] = "PDBcelldatabase.csv";
-    filenames[1] = "PDBcellneartreeL1.dmp";
-    filenames[2] = "PDBcellneartreeL2.dmp";
-    filenames[3] = "PDBcellneartreeNCDist.dmp";
-    filenames[4] = "PDBcellneartreeV7.dmp";
-    filenames[5] = "PDBcelldatabase.dmp";
-    CSDfilenames[0] = "CSDcelldatabase.csv";
-    CSDfilenames[1] = "CSDcelldatabase.dmp";
-
-    makeDatabase(filenames[0]);
-    makeEntryDatabase("entries.idx");
-    noCSD = makeCSDDatabase(CSDfilenames[0],CSDfilenames[1]);
-    
+        make_mmapfiles();
+        load_cellDSGZArrays();
 	unitcell cell;
     
-    std::cout << "sauc Copyright (C) Keith McGill 2013, 2014" << std::endl;
-    std::cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
-    std::cout << "This is free software, and you are welcome to" << std::endl;
-    std::cout << "redistribute it under the GPL or LGPL" << std::endl;
-    std::cout << "See the program documentation for details" << std::endl;
-    std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
-    std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
-    std::cout << "Rev 0.9.1, 16 Mar 2016, Herbert J. Bernstein" << std::endl;
     
 	while (endProgram != 1)
 	{

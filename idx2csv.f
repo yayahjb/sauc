@@ -20,9 +20,9 @@ C
 C      Write the header for the csv file
 C
        write(6,"(3a)"),
-     *   "PDB ID,Angle Alpha,Angle Beta,Angle Gamma,",
-     *   "Length A,Length B,Length C,",
-     *   "Space Group,Z-number"
+     *   "PDBID,Angle_Alpha,Angle_Beta,Angle_Gamma,",
+     *   "Length_A,Length_B,Length_C,",
+     *   "Space_Group,Z-number"
 C
 C      skip lines that do not have "CRYST1" in col 9--14
 C

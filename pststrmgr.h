@@ -66,6 +66,7 @@ extern "C" {
     
     
 #include <sys/types.h>
+#include <ctype.h>
     
     /*  There are two related but distinct data structurs used
      
@@ -80,13 +81,20 @@ extern "C" {
      char 56 - 56+sizeof(size_t)-1:  size_t character buffer length
      char 56+sizeof(size_t) - 511: reserved for future use
      
-     char 512 ff -- the character buffer, followed by the string index
+     char 512 ff -- the character buffer, 
+                    followed by the string index,
+                    followed by the field numbers
+                    followed by the hash table hashhead tables
+                    followed by the hash table hashlink tables
+                    followed by the hash table hashvalue tables
      
      */
     
 #define PSM_64BIT_BOSIGNATURE 0x0706050403020100L
 #define PSM_32BIT_BOSIGNATURE 0x03020100L
-#define PSM_FILE_SIGNATURE "#PSM V. 1.0.0"
+#define PSM_FILE_SIGNATURE "#PSM V. 1.0.1"
+#define PSM_HASHTABLE_SIZE 0x20000L
+#define PSM_HASHTABLE_MAXSTR 512
     
     typedef union {
         char     char_version[16];
@@ -96,10 +104,14 @@ extern "C" {
     typedef struct {
         char            idstring[14];
         unsigned char   sosize_t;
+        char            split_char;
         padded_size_t   boflag;
         padded_size_t   index_len;
         padded_size_t   chars_len;
+        padded_size_t   numhashtables;
+        padded_size_t   maxfieldno;
     } PSM_header;
+    
     
     typedef struct {
         size_t length;      // The length of the string in bytes;
@@ -107,19 +119,57 @@ extern "C" {
     } PSM_string;
     
     typedef struct {
+        size_t    numhashtables;    /* the number of hash tables for the strings*/
+        size_t  * fieldnumbers;     /* the fields (from 1) on which to hash */
+        size_t    maxfieldno;
         size_t    str_index_cap;    /* the maximum number of strings */
         size_t    str_index_len;    /* the actual number of strings */
         PSM_string * str_index;     /* pointer to the string index array */
+        PSM_string * split_str;     /* pointer to a scratch array for field strings */
         size_t    chars_cap;        /* the maximum number of characters in all strings*/
         size_t    chars_len;        /* the actual number of characters in all strings*/
+        char      split_char;       /* the character on which to split fields */
+        unsigned char pad[15];      /* just to realign */
+        ssize_t * hashhead;         /* hash tables for strings */
+        ssize_t * hashlink;         /* hashlink tables for strings */
+        ssize_t * hashvalue;        /* hashvalue table for strings */
         char    * chars;            /* the array of characters */
+
     } PSM_localpsm_handle_struct;
     
     typedef PSM_localpsm_handle_struct * PSM_localpsm_handle;
     
+#define PSM_hashhead_entry(handle,table,hash) \
+    *(handle->hashhead+((hash)+(table)*PSM_HASHTABLE_SIZE))
+#define PSM_hashlink_entry(handle,table,hash_link) \
+    *((handle->hashlink)+((hash_link)+(table)*(handle->str_index_cap)))
+#define PSM_hashvalue_entry(handle,table,item) \
+    *(handle->hashvalue+((item)+(table)*(handle->str_index_cap)))
     
     typedef PSM_string * PSM_string_handle;
     
+    /* static inline hashvalue of the first n characters of a string*/
+    
+    static inline ssize_t PSM_str_hashvalue(const char * str, size_t n) {
+        size_t ii;
+        size_t hash;
+        const char * pstr;
+        hash = 0;
+        pstr = str;
+        ii = n;
+        while (*pstr && ii) {
+            hash = ((hash << 4)| (hash>>28))^((size_t)(tolower(*pstr))-32);
+            pstr++;
+            ii --;
+        }
+        return (size_t) (hash&(PSM_HASHTABLE_SIZE-1));
+    }
+    
+    /* create a local persistent string manager handle with hashtables */
+    
+    PSM_localpsm_handle PSM_localpsm_handle_create_wh(size_t numhash,
+                                                      size_t * fieldnumbers,
+                                                      char split_char);
     
     /* create a local persistent string manager handle */
     
@@ -180,18 +230,58 @@ extern "C" {
     size_t PSM_localpsm_set_string_index_length (PSM_localpsm_handle handle,
                                                  const size_t length);
     
+    /* Splits a PSM_string into an array of nfields PSM_strings on the basis
+     of a separator character c.  Returns split_string on success, NULL on
+     failure
+     */
     
+    PSM_string * PSM_split_psm_string(PSM_localpsm_handle handle,
+                                      PSM_string* split_string,
+                                      size_t nfields,
+                                      PSM_string str,
+                                      char c);
+
     /* Add a string to a persistent string
      Returns either a handle to the newly created PSM_string
      or NULL for failure */
     
     PSM_string_handle PSM_addstr(PSM_localpsm_handle handle, char * str);
     
+    /* Add a length-limited string to a persistent string
+     Returns either a handle to the newly created PSM_string
+     or NULL for failure */
+    
+    PSM_string_handle PSM_addstrn(PSM_localpsm_handle handle,
+                                  char * str,
+                                  size_t strsize);
+    
     /* get a string from a persistent string
      Returns a newly allocated string that must be freed by the user
      */
     
     char * PSM_getstr(PSM_localpsm_handle handle, size_t offset);
+    
+    /* get a string from a persistent string field
+     Returns a newly allocated string that must be freed by the user
+     */
+    
+    char * PSM_getstrfield(PSM_localpsm_handle handle, PSM_string field);
+
+    
+    /* get a string by key from a particular hash table
+     
+     Returns a newly allocated string that must be freed by the user
+     */
+    
+    char * PSM_getstr_by_key(PSM_localpsm_handle handle, const char * key, size_t table);
+    
+    /* get the index of a persistent string by key from a particular
+     hash table
+     
+     */
+    
+    ssize_t PSM_getstrindex_by_key(PSM_localpsm_handle handle, const char * key, size_t table);
+
     
     int PSM_write_file(PSM_localpsm_handle handle,const char * filepath);
     
