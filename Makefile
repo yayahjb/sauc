@@ -59,7 +59,6 @@ PDBCELLINDEXURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
 PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #
 #  Default compile flag definition to select debug mode under unix
-#CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp -lpthread
 CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
 CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
 CXX	?=	g++
@@ -102,32 +101,32 @@ HTFLAGS 	=	-DCGIBIN=$(CGIPATH) \
 		-DSAUCZIPURL=$(SAUCZIPURL) \
 		-DHTDOCS=$(HTDOCS) \
 		-DCGIMETHOD=$(CGIMETHOD) \
-        -DSAUCHTML=$(SAUCHTML) \
-        -DSAUCCGI=$(SAUCCGI) \
-        -DSAUCEXE=$(SAUCEXE)
+	    -DSAUCHTML=$(SAUCHTML) \
+	    -DSAUCCGI=$(SAUCCGI) \
+	    -DSAUCEXE=$(SAUCEXE)
 
 CGIFLAGS    =   -DSEARCHURL=$(SEARCHURL) \
-        -DBINPATH=$(BINPATH) \
-        -DSEARCHURL=$(SEARCHURL)\
-        -DHTDOCS=$(HTDOCS)\
-        -DCGIMETHOD=$(CGIMETHOD)\
-        -DSAUCHTML=$(SAUCHTML) \
-        -DSAUCCGI=$(SAUCCGI) \
-        -DSAUCEXE=$(SAUCEXE)
+	    -DBINPATH=$(BINPATH) \
+	    -DSEARCHURL=$(SEARCHURL)\
+	    -DHTDOCS=$(HTDOCS)\
+	    -DCGIMETHOD=$(CGIMETHOD)\
+	    -DSAUCHTML=$(SAUCHTML) \
+	    -DSAUCCGI=$(SAUCCGI) \
+	    -DSAUCEXE=$(SAUCEXE)
 
 UPDFLAGS    =   -DSAUCDIR=$(PWD) \
-        -DHTTPDSERVER=$(HTTPDSERVER) \
-        -DSEARCHURL=$(SEARCHURL)\
-        -DCGIPATH=$(CGIPATH)\
-        -DHTDOCS=$(HTDOCS)\
-        -DCGIBIN=$(CGIBIN)\
-        -DCGIMETHOD=$(CGIMETHOD)\
-        -DBINDEST=$(BINDEST)\
-        -DPDBCELLINDEXURL=$(PDBCELLINDEXURL)\
-        -DPDBENTRIESURL=$(PDBENTRIESURL)\
-        -DSAUCHTML=$(SAUCHTML) \
-        -DSAUCCGI=$(SAUCCGI) \
-        -DSAUCEXE=$(SAUCEXE)
+	    -DHTTPDSERVER=$(HTTPDSERVER) \
+	    -DSEARCHURL=$(SEARCHURL)\
+	    -DCGIPATH=$(CGIPATH)\
+	    -DHTDOCS=$(HTDOCS)\
+	    -DCGIBIN=$(CGIBIN)\
+	    -DCGIMETHOD=$(CGIMETHOD)\
+	    -DBINDEST=$(BINDEST)\
+	    -DPDBCELLINDEXURL=$(PDBCELLINDEXURL)\
+	    -DPDBENTRIESURL=$(PDBENTRIESURL)\
+	    -DSAUCHTML=$(SAUCHTML) \
+	    -DSAUCCGI=$(SAUCCGI) \
+	    -DSAUCEXE=$(SAUCEXE)
 
 
 SAVEDB		=	./save
@@ -214,6 +213,7 @@ $(SAUCEXE): \
 	BasicDistance.h    \
 	Cell.cpp \
 	Cell.h \
+	fgetln.c \
 	sauc.cpp \
 	NCDist.h \
 	Reducer.cpp \
@@ -230,6 +230,7 @@ $(SAUCEXE): \
 	$(CXX) $(CXXFLAGS) -o $(SAUCEXE) \
 	BasicDistance.cpp    \
 	Cell.cpp \
+	fgetln.c \
 	sauc.cpp \
 	Reducer.cpp \
 	V7.cpp \
@@ -239,10 +240,11 @@ sauc_psm_files_create: \
 	sauc_psm_files_create.c \
 	sauc_psm_files_create.h \
 	    pststrmgr.c \
-	    pststrmgr.h
+	    pststrmgr.h \
+	fgetln.c
 	$(CC) $(CFLAGS) -c pststrmgr.c
 	$(CC) $(CFLAGS) -o sauc_psm_files_create \
-	sauc_psm_files_create.c \
+	sauc_psm_files_create.c fgetln.c \
 	pststrmgr.o
 
 

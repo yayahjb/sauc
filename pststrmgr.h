@@ -103,7 +103,7 @@ extern "C" {
     
     typedef struct {
         char            idstring[14];
-        unsigned char   sosize_t;
+        unsigned char    sosize_t;
         char            split_char;
         padded_size_t   boflag;
         padded_size_t   index_len;
@@ -145,7 +145,7 @@ extern "C" {
     *((handle->hashlink)+((hash_link)+(table)*(handle->str_index_cap)))
 #define PSM_hashvalue_entry(handle,table,item) \
     *(handle->hashvalue+((item)+(table)*(handle->str_index_cap)))
-    
+ 
     typedef PSM_string * PSM_string_handle;
     
     /* static inline hashvalue of the first n characters of a string*/
@@ -157,6 +157,7 @@ extern "C" {
         hash = 0;
         pstr = str;
         ii = n;
+        if (ii > PSM_HASHTABLE_MAXSTR) ii = PSM_HASHTABLE_MAXSTR;
         while (*pstr && ii) {
             hash = ((hash << 4)| (hash>>28))^((size_t)(tolower(*pstr))-32);
             pstr++;

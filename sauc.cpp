@@ -1,24 +1,23 @@
 /* sauc.cpp  -- Search of Alternate Unit Cells
  (C) Copyright Keith McGill 2013
  
-   rev 27 Mar 2013 -- HJB
-   rev 26 May 2013 -- LCA
-   rev 27 May 2013 -- HJB
-   rev 24 Jun 2013 -- HJB
-   rev  6 Jul 2013 -- HJB
-   rev 22 Apr 2014 -- HJB
-   rev 20 Jan 2015 -- HJB
-   rev 20 Mar 2016 -- HJB
-   rev 17 Nov 2016 -- HJB
+ rev 27 Mar 2013 -- HJB
+ rev 26 May 2013 -- LCA
+ rev 27 May 2013 -- HJB
+ rev 24 Jun 2013 -- HJB
+ rev  6 Jul 2013 -- HJB
+ rev 22 Apr 2014 -- HJB
+ rev 20 Jan 2015 -- HJB
+ rec 12 Noc 2016 -- HJB
  
-     *******************************************************
-         You may redistribute this program under the terms
-         of the GPL.
-         
-         Alternatively you may redistribute this functions
-         and subroutines of this program as an API under the
-         terms of the LGPL
-     *******************************************************
+ *******************************************************
+ You may redistribute this program under the terms
+ of the GPL.
+ 
+ Alternatively you may redistribute this functions
+ and subroutines of this program as an API under the
+ terms of the LGPL
+ *******************************************************
  *************************** GPL NOTICES ******************************
  *                                                                    *
  * This program is free software; you can redistribute it and/or      *
@@ -85,8 +84,10 @@
 
 #include "sauc_psm_files_create.h"
 
+char *fgetln(FILE *stream, size_t *len);
+
 /* Template for an array class so we can have 6D vectors
-   of arrays */
+ of arrays */
 
 template< typename T > class sixarray {
 private:
@@ -165,6 +166,7 @@ string valueDump;
 int sauc_batch_mode = 0;
 int sauc_javascript = 0;
 
+
 //*****************************************************************************
 double convertToDouble(string value)
 {
@@ -177,7 +179,7 @@ double convertToDouble(string value)
 //*****************************************************************************
 int convertToInt(string zvalue)
 {
-	int number = 0;
+    int number = 0;
     istringstream issvalue(zvalue);
     if (!(issvalue >> number)) number = 0;
     return number;
@@ -188,7 +190,7 @@ inline long hashvalue(string str) {
     unsigned long hash;
     const char * strasstr = str.c_str();
     hash = 0;
-    for(ii=0;ii<str.length();ii++) {
+    for(ii=0;ii < PSM_HASHTABLE_MAXSTR && ii<str.length();ii++) {
         hash = ((hash << 4)| (hash>>28))^((unsigned long)(tolower(strasstr[ii]))-32);
     }
     return (long) (hash&0x1FFFF);
@@ -215,13 +217,21 @@ vector<string> split(const string& str, char delim) {
     return values;
 }
 
+inline std::string PSM_getstringfield(PSM_localpsm_handle handle, PSM_string field) {
+    if (field.offset < 0 || field.offset >= handle->chars_len
+        || field.offset+field.length-1 < 0 || field.offset+field.length-1 >= handle->chars_len)
+        return std::string("__UNK__");
+    return std::string(handle->chars+field.offset,field.length);
+}
+
+
 /* Make an mmap file from a PDB, COD or CSD text file,
-   or pick up one that is already there*/
+ or pick up one that is already there*/
 
 //*****************************************************************************
 PSM_localpsm_handle make_psmfile(const char * mmapfilename, const char* textfilename,
-                 size_t numhash, size_t * fieldnumbers,
-                 size_t skip_lines, char sepchar, int CSDflag)
+                                 size_t numhash, size_t * fieldnumbers,
+                                 size_t skip_lines, char sepchar, int CSDflag)
 {
     FILE * infile;
     char * nextline;
@@ -231,22 +241,22 @@ PSM_localpsm_handle make_psmfile(const char * mmapfilename, const char* textfile
     size_t ii;
     
     if ((localpsm_handle = PSM_mmap_file(mmapfilename))) {
-    
+        
         return localpsm_handle;
-
-}
-
+        
+    }
+    
     
     localpsm_handle = PSM_localpsm_handle_create_wh(numhash,
                                                     fieldnumbers,
                                                     sepchar );
     infile = fopen(textfilename,"rb");
-
+    
     if (!infile) return 0;
     
     for (ii = 0; ii < skip_lines; ii++) {
         nextline = fgetln(infile,&linelen);
-        }
+    }
     while ((nextline = fgetln(infile,&linelen))) {
         if (!CSDflag) {
             PSM_addstrn(localpsm_handle,nextline,linelen);
@@ -260,26 +270,26 @@ PSM_localpsm_handle make_psmfile(const char * mmapfilename, const char* textfile
             buffer[llen++] = sepchar;
             for (ii = 0; ii < 6 && buffer[ii]!=sepchar && buffer[ii]!=0; ii++) {
                 buffer[llen++] = buffer[ii];
-    }
+            }
             buffer[llen] = '\0';
             PSM_addstrn(localpsm_handle,buffer,llen);
-}
-	}
-        
+        }
+    }
+    
     fclose(infile);
-        
+    
     if (PSM_write_file(localpsm_handle,mmapfilename)) {
         
         return 0;
         
     }
-        
+    
     return localpsm_handle;
-        
+    
 }
-        
+
 int load_cellDSGZArrays(void) {
-        
+    
     PSM_string* PDBcells_fields;
     PSM_string* CODentries_fields;
     PSM_string* CSDcells_fields;
@@ -295,15 +305,15 @@ int load_cellDSGZArrays(void) {
     double gamma;
     int Z;
     size_t ii;
-        
+    
     PDBcells_fields   = (PSM_string*)malloc(PDBcells_numfields*sizeof(PSM_string));
     CODentries_fields = (PSM_string*)malloc(CODentries_numfields*sizeof(PSM_string));
     CSDcells_fields   = (PSM_string*)malloc(CSDcells_numfields*sizeof(PSM_string));
-        
+    
     if (PDBcells) {
-
+        
         std::cout << "Processing " << PDBcells->str_index_len << " PDB cells " << std::endl;
-
+        
         for (ii = 0; ii < PDBcells->str_index_len; ii++){
             if (ii%20000 == 0) std::cout<< "processing PDB" << ii << std::endl;
             if (PSM_split_psm_string(PDBcells,PDBcells_fields,PDBcells_numfields,
@@ -326,31 +336,40 @@ int load_cellDSGZArrays(void) {
                                        PDBcells_fields[PDBcells_cell_angle_gamma].length).c_str());
                 Z = atoi(std::string(PDBcells->chars+PDBcells_fields[PDBcells_Z].offset,
                                      PDBcells_fields[PDBcells_Z].length).c_str());
-    
+                
                 /* std::cout << "cell read " << a << b << c << alpha << beta << gamma << Z << SG << std::endl; */
-    
+                
                 if (pdbid.length() == 4 && a > 1. && b > 1. && c > 1.
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
-                    && gamma >= 5. && gamma <= 175.) {
-                    cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
-                    zArray.push_back(Z);
-                    idArray.push_back(pdbid);
-                    spaceArray.push_back(SG);
-                    cellDB.push_back(PDB_DBTYPE);
-                            } else {
-                    std::cout << "Rejected "<< pdbid <<" ["<<a<<","<<b<<","<<c<<","<<alpha<<","<<beta<<","<<gamma<<"] "<<SG <<std::endl;
-                            }
-                        }
-                        }
+                    && gamma >= 5. && gamma <= 175.
+                    && (SG.substr(0,1) == "P" || SG.substr(0,1) == "p"
+                        || SG.substr(0,1) == "V" || SG.substr(0,1) == "v"
+                        || SG.substr(0,1) == "I" || SG.substr(0,1) == "i"
+                        || SG.substr(0,1) == "F" || SG.substr(0,1) == "f"
+                        || SG.substr(0,1) == "A" || SG.substr(0,1) == "a"
+                        || SG.substr(0,1) == "B" || SG.substr(0,1) == "b"
+                        || SG.substr(0,1) == "C" || SG.substr(0,1) == "c"
+                        || SG.substr(0,1) == "R" || SG.substr(0,1) == "r"
+                        || SG.substr(0,1) == "H" || SG.substr(0,1) == "h")) {
+                        cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
+                        zArray.push_back(Z);
+                        idArray.push_back(pdbid);
+                        spaceArray.push_back(SG);
+                        cellDB.push_back(PDB_DBTYPE);
+                    } else {
+                        std::cout << "Rejected "<< pdbid <<" ["<<a<<","<<b<<","<<c<<","<<alpha<<","<<beta<<","<<gamma<<"] "<<SG <<std::endl;
                     }
-
+            }
+        }
+    }
+    
     if (CODentries) {
-
+        
         std::cout << "Processing " << CODentries->str_index_len << " COD cells " << std::endl;
-
+        
         for (ii = 0; ii < CODentries->str_index_len; ii++){
-            if (ii%20000 == 0) std::cout<< "processing COD" << ii << std::endl;
+            if (ii%20000 == 0 || (ii+PDBcells->str_index_len > 337528 && ii+PDBcells->str_index_len < 337550)) std::cout<< "processing COD" << ii << std::endl;
             if (PSM_split_psm_string(CODentries,CODentries_fields,CODentries_numfields,
                                      CODentries->str_index[ii],CODentries_sep_char)) {
                 codid = std::string(CODentries->chars+CODentries_fields[CODentries_id].offset,
@@ -371,25 +390,41 @@ int load_cellDSGZArrays(void) {
                                        CODentries_fields[CODentries_cell_angle_gamma].length).c_str());
                 Z = atoi(std::string(CODentries->chars+CODentries_fields[CODentries_cell_formula_units_Z].offset,
                                      CODentries_fields[CODentries_cell_formula_units_Z].length).c_str());
-    
+                
+                if (ii%20000 == 0 || (ii+PDBcells->str_index_len > 337528 && ii+PDBcells->str_index_len < 337550)) {
+                    std::cout << codid <<": ["<< a << "," << b << "," << c << "," << alpha << "," << beta << "," << gamma << "] " << SG << std::endl;
+                }
+                
                 if (codid.length() >= 6 && a > 1. && b > 1. && c > 1.
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
-                    && gamma >= 5. && gamma <= 175.) {
-                    cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
-                    zArray.push_back(Z);
-                    idArray.push_back(codid);
-                    spaceArray.push_back(SG);
-                    cellDB.push_back(COD_DBTYPE);
-    }
+                    && gamma >= 5. && gamma <= 175.
+                    && (SG.substr(0,1) == "P" || SG.substr(0,1) == "p"
+                        || SG.substr(0,1) == "V" || SG.substr(0,1) == "v"
+                        || SG.substr(0,1) == "I" || SG.substr(0,1) == "i"
+                        || SG.substr(0,1) == "F" || SG.substr(0,1) == "f"
+                        || SG.substr(0,1) == "A" || SG.substr(0,1) == "a"
+                        || SG.substr(0,1) == "B" || SG.substr(0,1) == "b"
+                        || SG.substr(0,1) == "C" || SG.substr(0,1) == "c"
+                        || SG.substr(0,1) == "R" || SG.substr(0,1) == "r"
+                        || SG.substr(0,1) == "H" || SG.substr(0,1) == "h")) {
+                        cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
+                        zArray.push_back(Z);
+                        idArray.push_back(codid);
+                        spaceArray.push_back(SG);
+                        cellDB.push_back(COD_DBTYPE);
+                    } else {
+                        std::cout << "Rejected "<< ii << ": " << codid <<" ["<<a<<","<<b<<","<<c<<","<<alpha<<","<<beta<<","<<gamma<<"] "<<SG
+                        <<std::endl;
+                    }
             }
-                }
-                }
-                
-    if (CSDcells) {
+        }
+    }
     
+    if (CSDcells) {
+        
         std::cout << "Processing " << CSDcells->str_index_len << " CSD cells " << std::endl;
-
+        
         for (ii = 0; ii < CSDcells->str_index_len; ii++){
             if (ii%20000 == 0) std::cout<< "processing CSD" << ii << std::endl;
             if (PSM_split_psm_string(CSDcells,CSDcells_fields,CSDcells_numfields,
@@ -411,35 +446,45 @@ int load_cellDSGZArrays(void) {
                 gamma=atof(std::string(CSDcells->chars+CSDcells_fields[CSDcells_cell_angle_gamma].offset,
                                        CSDcells_fields[CSDcells_cell_angle_gamma].length).c_str());
                 Z = 0;
-    
+                
                 if (csdref.length() >= 6 && a > 1. && b > 1. && c > 1.
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
-                    && gamma >= 5. && gamma <= 175.) {
-                    cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
-                    zArray.push_back(Z);
-                    idArray.push_back(csdref);
-                    spaceArray.push_back(SG);
-                    cellDB.push_back(CSD_DBTYPE);
-    }
+                    && gamma >= 5. && gamma <= 175.
+                    && (SG.substr(0,1) == "P" || SG.substr(0,1) == "p"
+                        || SG.substr(0,1) == "V" || SG.substr(0,1) == "v"
+                        || SG.substr(0,1) == "I" || SG.substr(0,1) == "i"
+                        || SG.substr(0,1) == "F" || SG.substr(0,1) == "f"
+                        || SG.substr(0,1) == "A" || SG.substr(0,1) == "a"
+                        || SG.substr(0,1) == "B" || SG.substr(0,1) == "b"
+                        || SG.substr(0,1) == "C" || SG.substr(0,1) == "c"
+                        || SG.substr(0,1) == "R" || SG.substr(0,1) == "r"
+                        || SG.substr(0,1) == "H" || SG.substr(0,1) == "h")) {
+                        
+                        cellDArray.push_back(sixarray<double>(a,b,c,alpha,beta,gamma));
+                        zArray.push_back(Z);
+                        idArray.push_back(csdref);
+                        spaceArray.push_back(SG);
+                        cellDB.push_back(CSD_DBTYPE);
+                    }
+            }
         }
-        }
     }
-
+    
     std::cout << "Processed " << cellDB.size() << " database entries " << std::endl;
     return 0;
-        
-        }
-        
+    
+}
+
 int make_mmapfiles(void) {
-        
+    
     size_t PDBcfieldnumbers[1] = {PDBcells_id+1};
     size_t PDBefieldnumbers[2] = {PDBentries_id+1,PDBentries_head+1};
     size_t CSDfieldnumbers[2] = {CSDcells_refcode+1,
         CSDcells_refcode_family+1};
     size_t CODfieldnumbers[2] = {CODentries_id+1,CODentries_chemical_formula_sum+1};
     size_t numdb;
-        
+    
     PDBentries = make_psmfile(PDBentries_mmap_file, PDBentries_raw_file,
                               2, PDBefieldnumbers,
                               PDBentries_skip_lines, PDBentries_sep_char, 0);
@@ -455,27 +500,27 @@ int make_mmapfiles(void) {
     if (PDBcells != 0) {
         numdb++;
         std::cout << "PDB cells available" << PDBcells->str_index_len <<std::endl;
-                }
+    }
     if (PDBentries != 0 ) {
         numdb++;
         std::cout << "PDB entries available" << PDBentries->str_index_len <<std::endl;
-                }
+    }
     if (CSDcells != 0 ) {
         numdb++;
         std::cout << "CSD data available:" << CSDcells->str_index_len << std::endl;
-            }
+    }
     if (CODentries != 0 ) {
         numdb++;
         std::cout << "COD data available:" << CODentries->str_index_len << std::endl;
-        }
-        
+    }
+    
     return (numdb > 0)?0:1;
+    
+}
 
-        }
-        
 
-        
-        
+
+
 //*****************************************************************************
 bool makeprimredprobe( void )
 {
@@ -580,7 +625,7 @@ bool makeprimredprobe( void )
         << 2.*primredprobe[0]*primredprobe[2]*cos(primredprobe[4]*std::atan(1.0)/45.)<<" "
         << 2.*primredprobe[0]*primredprobe[1]*cos(primredprobe[5]*std::atan(1.0)/45.)<<std::endl;
     }
-	std::cout << std::endl;
+    std::cout << std::endl;
     return ret;
 }
 
@@ -606,7 +651,7 @@ void buildNearTree( void )
     size_t sv;
     double cell[6];
     double row;
-        char dbid;
+    char dbid;
     unitcell ucell;
     std::vector<long> * DelayedIndices; // objects queued for insertion, possibly in random order
     std::vector<unitcell>  * ObjectStore;    // all inserted objects go here
@@ -627,34 +672,34 @@ void buildNearTree( void )
     size_t            NodeVisits;       // number of node visits
 #endif
     CNearTree<unitcell>::NearTreeNode<unitcell> * curntn;
-        int objno = 0;
+    int objno = 0;
     bool gotckp = false;
     
-        serialin.open(sauc_NT_ckp_names[choiceAlgorithm-1].c_str(),std::ios::in);
+    serialin.open(sauc_NT_ckp_names[choiceAlgorithm-1].c_str(),std::ios::in);
     objno = 0;
     while (true) {
         string token;
         int Algorithm = 0;
         if (serialin.is_open()) {
-                std::cout << "Reading database " << sauc_NT_ckp_names[choiceAlgorithm-1] << std::endl;
+            std::cout << "Reading database " << sauc_NT_ckp_names[choiceAlgorithm-1] << std::endl;
             serialin >> token; if (!serialin.good() ||
                                    (token != string("Algorithm:")
                                     && token != string("Metric:"))) {
-                                           std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'Metric' or 'Algorithm:' token" << std::endl;
-                break;
-            }
+                                       std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'Metric' or 'Algorithm:' token" << std::endl;
+                                       break;
+                                   }
             serialin >> Algorithm;
             if (!serialin.good() || algorithm != choiceAlgorithm) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, algorithm value wrong" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, algorithm value wrong" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DelayedIndices:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DelayedIndices:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DelayedIndices:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no DelayedIndices '{' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no DelayedIndices '{' token" << std::endl;
                 break;
             }
             DelayedIndices = new std::vector<long>();
@@ -665,53 +710,53 @@ void buildNearTree( void )
                 DelayedIndices->push_back(atol(token.c_str()));
             }
             if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DelayedIndices" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DelayedIndices" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("ObjectStore:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'ObjectStore:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'ObjectStore:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no ObjectStore '{' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no ObjectStore '{' token" << std::endl;
                 break;
             }
             ObjectStore = new std::vector<unitcell>();
             while (serialin.good()) {
                 double cell[6];
                 double row;
-                    char dbid;
+                char dbid;
                 serialin >> token;
                 if (token == string("}")) break;
                 if (!serialin.good() || token != string("{")) {
-                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, missing ObjectStore '{' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, missing ObjectStore '{' token" << std::endl;
                     break;
                 }
-                    serialin >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5] >> row >> dbid;
+                serialin >> cell[0] >> cell[1] >> cell[2] >> cell[3] >> cell[4] >> cell[5] >> row >> dbid;
                 objno++;
                 if (!serialin.good()) {
-                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, bad object: " << objno  << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, bad object: " << objno  << std::endl;
                     break;
                 }
-                    ObjectStore->push_back(unitcell(cell,row,dbid));
+                ObjectStore->push_back(unitcell(cell,row,dbid));
                 serialin >> token; if (!serialin.good() || token != string("}")) {
-                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, missing ObjectStore '}' token" << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, missing ObjectStore '}' token" << std::endl;
                     break;
                 }
                 
             }
             if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted ObjectStore" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted ObjectStore" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("ObjectCollide:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'ObjectCollide:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'ObjectCollide:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no ObjectCollide '{' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no ObjectCollide '{' token" << std::endl;
                 break;
             }
             ObjectCollide = new std::vector<size_t>();
@@ -728,26 +773,26 @@ void buildNearTree( void )
                 }
             }
             if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted ObjectCollide" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted ObjectCollide" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DeepestDepth:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DeepestDepth:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DeepestDepth:' token" << std::endl;
                 break;
             }
             
             serialin >> DeepestDepth; if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DeepestDepth" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DeepestDepth" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("NearTreeNodes:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'NearTreeNodes:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'NearTreeNodes:' token" << std::endl;
                 break;
             }
             serialin >> token; if (!serialin.good() || token != string("{")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNodes '{' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNodes '{' token" << std::endl;
                 break;
             }
             NearTreeNodes = new std::vector< CNearTree<unitcell>::NearTreeNode<unitcell> * >;
@@ -773,7 +818,7 @@ void buildNearTree( void )
                 if (token == string("}")) break;
                 
                 if (token != string("{")) {
-                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNode '{' token " << token << std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNode '{' token " << token << std::endl;
                     break;
                 }
                 
@@ -854,7 +899,7 @@ void buildNearTree( void )
                 }
 #endif
                 serialin >> token; if (!serialin.good() || token != string("}")) {
-                        std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNode '}' token: " << token <<std::endl;
+                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no NearTreeNode '}' token: " << token <<std::endl;
                     break;
                 }
                 
@@ -876,78 +921,78 @@ void buildNearTree( void )
                 
             }
             if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted NearTreeNodes" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted NearTreeNodes" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("Flags:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'Flags:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'Flags:' token" << std::endl;
                 break;
             }
             
             serialin >> Flags; if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted Flags" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted Flags" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DiamEstimate:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DiamEstimate:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DiamEstimate:' token" << std::endl;
                 break;
             }
             
             serialin >> DiamEstimate; if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DiamEstimate" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DiamEstimate" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("SumSpacings:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'SumSpacings:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'SumSpacings:' token" << std::endl;
                 break;
             }
             
             serialin >> SumSpacings; if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted SumSpacings" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted SumSpacings" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("SumSpacingsSq:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'SumSpacingsSq:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'SumSpacingsSq:' token" << std::endl;
                 break;
             }
             
             serialin >> SumSpacingsSq; if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted SumSpacings" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted SumSpacings" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DimEstimate:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DimEstimate:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DimEstimate:' token" << std::endl;
                 break;
             }
             
             serialin >> DimEstimate; if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DimEstimate" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DimEstimate" << std::endl;
                 break;
             }
             
             serialin >> token; if (!serialin.good() || token != string("DimEstimateEsd:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DimEstimateEsd:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'DimEstimateEsd:' token" << std::endl;
                 break;
             }
             
             serialin >> DimEstimateEsd; if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DimEstimateEsd" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted DimEstimateEsd" << std::endl;
                 break;
             }
             
 #ifdef CNEARTREE_INSTRUMENTED
             serialin >> token; if (!serialin.good() || token != string("NodeVisits:")) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'NodeVisits:' token" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, no 'NodeVisits:' token" << std::endl;
                 break;
             }
             
             serialin >> NodeVisits; if (!serialin.good()) {
-                    std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted NodeVisits" << std::endl;
+                std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted NodeVisits" << std::endl;
                 break;
             }
 #endif
@@ -975,23 +1020,23 @@ void buildNearTree( void )
     
     cellTree[choiceAlgorithm-1] = new CNearTree <unitcell> ();
     
-        std::cout << "processing " << (int)(cellDArray.size()) << " cells" << std::endl;
-        
-        for (int i = 0; i < (int)(cellDArray.size()); i++)
-	{
+    std::cout << "processing " << (int)(cellDArray.size()) << " cells" << std::endl;
+    
+    for (int i = 0; i < (int)(cellDArray.size()); i++)
+    {
         Cell rawcell(cellDArray[i][0], cellDArray[i][1], cellDArray[i][2], cellDArray[i][3], cellDArray[i][4], cellDArray[i][5]);
-            if (i%20000 == 0) std::cout << "processing cell " << i << std::endl;
-            mc = rawcell.LatSymMat66((spaceArray[i]).substr(0,1));
+        if (i%20000 == 0) std::cout << "processing cell " << i << std::endl;
+        mc = rawcell.LatSymMat66((spaceArray[i]).substr(0,1));
         primcell = mc*(rawcell.Cell2V6());
         if (!Reducer::Reduce(primcell,m,redprimcell,0.0)){
-                std::cout << "Reduction failed for "<<idArray[i]<<" "<<
+            std::cout << "Reduction failed for "<<idArray[i]<<" "<<
             cellDArray[i][3]<<" "<<
             cellDArray[i][4]<<" "<<
             cellDArray[i][5]<<" "<<
             cellDArray[i][0]<<" "<<
             cellDArray[i][1]<<" "<<
             cellDArray[i][2]<<" "<<
-                spaceArray[i] << std::endl;
+            spaceArray[i] << std::endl;
             std::cout << "Primitive G6 " << primcell[0]<<" "<<
             primcell[1]<<" "<<
             primcell[2]<<" "<<
@@ -1002,17 +1047,17 @@ void buildNearTree( void )
         searchcell = Cell(redprimcell).CellWithDegrees();
         unitcell cellData(searchcell[0],searchcell[1],searchcell[2],
                           searchcell[3],searchcell[4],searchcell[5],
-                              0,0,0,0,0,0, (double)i, cellDB[i]);
+                          0,0,0,0,0,0, (double)i, cellDB[i]);
         cellTree[choiceAlgorithm-1]->insert(cellData);
         
-	}
-        
-        std::cout << "Neartree loaded, dumping checkpoint " << std::endl;
-        std::cout << "CompleteDelayed Insert" << std::endl;
-        
+    }
+    
+    std::cout << "Neartree loaded, dumping checkpoint " << std::endl;
+    std::cout << "CompleteDelayed Insert" << std::endl;
+    
     cellTree[choiceAlgorithm-1]->CompleteDelayedInsert();
     cellTree_itend[choiceAlgorithm-1] = cellTree[choiceAlgorithm-1]->end();
-        std::cout << "Get_Checkpoint" << std::endl;
+    std::cout << "Get_Checkpoint" << std::endl;
     cellTree[choiceAlgorithm-1]->Get_Checkpoint(&DelayedIndices,
                                                 &ObjectStore,
                                                 &ObjectCollide,
@@ -1029,8 +1074,8 @@ void buildNearTree( void )
                                                 , &NodeVisits
 #endif
                                                 );
-        std::cout << "Dump" << std::endl;
-        serialout.open(sauc_NT_ckp_names[choiceAlgorithm-1].c_str(),std::ios::out|std::ios::trunc);
+    std::cout << "Dump" << std::endl;
+    serialout.open(sauc_NT_ckp_names[choiceAlgorithm-1].c_str(),std::ios::out|std::ios::trunc);
     if (serialout.is_open()) {
         serialout << "Metric: "<< choiceAlgorithm << std::endl;
         serialout << "DelayedIndices: { ";
@@ -1044,22 +1089,22 @@ void buildNearTree( void )
         serialout << "ObjectStore: { ";
         for (si = 0; si < ObjectCollide->size(); si++) {
             ucell = (*ObjectStore)[si];
-                ucell.getCell(cell,&row, &dbid);
-                /* std::cout << "{ " << cell[0] << " "
-                << cell[1] << " "
-                << cell[2] << " "
-                << cell[3] << " "
-                << cell[4] << " "
-                << cell[5] << " "
-                << " " << row << " " << dbid << " }"  << std::endl; */
-                
+            ucell.getCell(cell,&row, &dbid);
+            /* std::cout << "{ " << cell[0] << " "
+             << cell[1] << " "
+             << cell[2] << " "
+             << cell[3] << " "
+             << cell[4] << " "
+             << cell[5] << " "
+             << " " << row << " " << dbid << " }"  << std::endl; */
+            
             serialout << "{ " << cell[0] << " "
             << cell[1] << " "
             << cell[2] << " "
             << cell[3] << " "
             << cell[4] << " "
             << cell[5] << " "
-                << " " << row << " " << dbid << " }"  << std::endl;
+            << " " << row << " " << dbid << " }"  << std::endl;
         }
         serialout << " }" << std::endl;
         
@@ -1125,7 +1170,7 @@ void buildNearTree( void )
         delete BaseNode;
         
     } else {
-            std::cout << "unable to save database checkpoint file "<<sauc_NT_ckp_names[choiceAlgorithm-1] << std::endl;
+        std::cout << "unable to save database checkpoint file "<<sauc_NT_ckp_names[choiceAlgorithm-1] << std::endl;
     }
 }
 
@@ -1158,55 +1203,55 @@ void findNearest( int k, double distance )
     vector <double> mydistances;
     long spheredata;
     double dtest;
-
-    std::cout << "entering findNearest " << k << distance << std::endl;  
+    
+    std::cout << "entering findNearest " << k << distance << std::endl;
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
     NearestInputReport( std::cout, probeArray, primredprobe );
-
+    
     std::cout <<  "crootvol: " << crootvol << std::endl;
     dtest = distance;
     // if (distance > crootvol*.025 || distance <= 0.) dtest = crootvol*.025;
     if (distance <= 0.) dtest = 1.e38;
     if (distance > 0. && dtest > distance) dtest = distance;
-
+    
     std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
     spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
                                                                      myindices,mydistances,unknownCell);
     std::cout <<"returned spheredata " << spheredata << std::endl;
     /*if (spheredata <  k && (dtest < distance || distance <= 0.) )  {
-	dtest = distance;
-	if (dtest <= 0.) dtest = crootvol;
-	std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
-        spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
-			myindices,mydistances,unknownCell);
-	std::cout <<"returned spheredata " << spheredata << std::endl;
-
-        if (spheredata <  (k+1)/2 && (dtest < distance || distance <= 0.) )  {
-		dtest = crootvol*2.;
-		std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
-		spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
-					                        myindices,mydistances,unknownCell);
-		std::cout <<"returned spheredata " << spheredata << std::endl;
-
-	    if (spheredata <  1 )  {
-		    dtest = crootvol*5.;
-		    std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
-		    spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
-	                                                        myindices,mydistances,unknownCell);
-		    std::cout <<"returned spheredata " << spheredata << std::endl;
-	        if (spheredata < 1) {
-                    spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,1.e38, myvector,
-                                                                myindices,mydistances,unknownCell);
-		}
-	    }
-        }
-    }*/
+     dtest = distance;
+     if (dtest <= 0.) dtest = crootvol;
+     std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
+     spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
+     myindices,mydistances,unknownCell);
+     std::cout <<"returned spheredata " << spheredata << std::endl;
+     
+     if (spheredata <  (k+1)/2 && (dtest < distance || distance <= 0.) )  {
+     dtest = crootvol*2.;
+     std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
+     spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
+     myindices,mydistances,unknownCell);
+     std::cout <<"returned spheredata " << spheredata << std::endl;
+     
+     if (spheredata <  1 )  {
+     dtest = crootvol*5.;
+     std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
+     spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
+     myindices,mydistances,unknownCell);
+     std::cout <<"returned spheredata " << spheredata << std::endl;
+     if (spheredata < 1) {
+     spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,1.e38, myvector,
+     myindices,mydistances,unknownCell);
+     }
+     }
+     }
+     }*/
     if (spheredata != 0) {
         std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
         SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
         
         if (!sauc_batch_mode)
-            std::cout << "File name if you want the output saved" << std::endl;
+            std::cout << "File name if you want the output saved" << std::endl << std::flush;
         
         std::string s;
         std::getline( std::cin, s );
@@ -1221,7 +1266,7 @@ void findNearest( int k, double distance )
                 std::ofstream output( filename.c_str() );
                 NearestInputReport( output, probeArray, primredprobe );
                 SphereResults( output, myvector, myindices, mydistances, unknownCell);
-		output.close();
+                output.close();
                 if (sauc_batch_mode)
                     std::cout << "Output saved to: " << filename << std::endl;
             }
@@ -1245,55 +1290,98 @@ void SphereResults( std::ostream& out,
     vector<long> myfamilylist;
     vector<long> myfamilycount;
     vector<long> mythread;
-        int numRow;
+    PSM_string * split_fields = NULL;
+    std::string myfamily;
+    size_t myfamily_index;
+    
+    int numRow;
     myentries.assign(myvector.size(),-1L);   /* The entry with this PDB ID */
     myfamilies.assign(myvector.size(),-1L);  /* The base entry with the same header */
     myfamiliesordinal.assign(myvector.size(),-1L);/* ordinal in the family list */
     myfamilylist.assign(myvector.size(),-1L);/* List in distance order of first
-                                         entry in each family */
+                                              entry in each family */
     myfamilycount.assign(myvector.size(),-1L);/* counts of hits in each family */
     mythread.assign(myvector.size(),-1L);     /* links on hashed headers */
     long ind, family_size;
     long nextthread, prevthread, firstthread, numhit, thread[257];
     int ii;
     family_size=0;
+    
+    split_fields = (PSM_string *)malloc(sizeof(PSM_string)*16);
+    
     for (ii=0; ii < 257; ii++) thread[ii] = -1;
     out << "\nSphere Results " << myvector.size() << " Cells" <<std::endl;
     /* find the header threads of the results,
-       this depends on the assumption that the original
-       list is sorted by distance
+     this depends on the assumption that the original
+     list is sorted by distance
      */
     for (ind=0; ind < (long)myvector.size(); ind++) {
         myentries[ind] = myfamilies[ind] = myfamiliesordinal[ind] = myfamilylist[ind] = myfamilycount[ind] = mythread[ind] = -1;
     }
     for (ind=0; ind < (long)myvector.size(); ind++) {
-            char dbtype;
+        char dbtype;
         const unitcell * const cell = & myvector[ind];
-            std::string dbname;
+        std::string dbname;
         numRow = (int)(*cell).getRow();
-            dbtype = cellDB[numRow];
-            entry =  PSM_getstrindex_by_key(
-                                            (dbtype==PDB_DBTYPE)?PDBentries:
-                                            ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
-                                            idArray[numRow].c_str(),0);
+        dbtype = cellDB[numRow];
+        entry =  PSM_getstrindex_by_key(
+                                        (dbtype==PDB_DBTYPE)?PDBentries:
+                                        ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                        idArray[numRow].c_str(),0);
         if (entry < 0) {
-                std::cout << "entry for "<< idArray[numRow] << " is negative, row " << numRow << std::endl;
+            out << "entry for "<< idArray[numRow] << " is negative, row " << numRow << std::endl;
             myentries[ind] = -1;
             myfamilies[ind] = -1;
+            myfamily = std::string("__UNK__");
+            dbname = std::string("UNK");
         } else {
-                if (dbtype==PDB_DBTYPE) dbname = std::string("PDB");
-                else if (dbtype==CSD_DBTYPE) dbname = std::string("CSD");
-                else dbname = std::string("COD");
-            myentries[ind] = entry;
-                if (dbtype == PDB_DBTYPE)
-                myfamilies[ind] = PSM_getstrindex_by_key((dbtype==PDB_DBTYPE)?PDBentries:
-                                                         ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
-                                                         idArray[numRow].c_str(),0);
+            /* Split the entry row into fields and extract the family */
+            
+            switch (dbtype) {
+                    
+                case PDB_DBTYPE:
+                    if (PSM_split_psm_string(PDBentries,split_fields,PDBentries->maxfieldno,
+                                             PDBentries->str_index[entry],PDBentries_sep_char)) {
+                        dbname = std::string("PDB");
+                        myfamily = std::string(PDBentries->chars+split_fields[PDBentries_head].offset,
+                                               split_fields[PDBentries_head].length);
+                    }
+                    break;
+                case CSD_DBTYPE:
+                    if (PSM_split_psm_string(CSDcells,split_fields,CSDcells->maxfieldno,
+                                             CSDcells->str_index[entry],CSDcells_sep_char)) {
+                        dbname = std::string("CSD");
+                        myfamily = std::string(CSDcells->chars+split_fields[CSDcells_refcode_family].offset,
+                                               split_fields[CSDcells_refcode_family].length);
+                    }
+                    break;
+                case COD_DBTYPE:
+                    if (PSM_split_psm_string(CODentries,split_fields,CODentries->maxfieldno,
+                                             CODentries->str_index[entry],CODentries_sep_char)) {
+                        dbname = std::string("COD");
+                        myfamily = std::string(CODentries->chars+split_fields[CODentries_chemical_formula_sum].offset,
+                                               split_fields[CODentries_chemical_formula_sum].length);
+                    }
+                    break;
+                    
+                default: myfamily = std::string("__UNK__"); break;
+            }
+            
+            
+            myentries[ind] = entry;                                                                   
+            std::cerr << "ind, myfamily: " << ind << " " << myfamily << std::endl;
+            myfamilies[ind] = PSM_getstrindex_by_key((dbtype==PDB_DBTYPE)?PDBentries:
+                                                     ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                                     myfamily.c_str(),1);
             if (myfamilies[ind] < 0 ) {
-                    std::cout << "head for "<< idArray[numRow] <<
-                    " row " << numRow <<
-                    " in " << dbname <<
-                    " is negative" << std::endl;
+                out << "family for "<< idArray[numRow] <<
+                " row " << numRow <<
+                " in " << dbname <<
+                " is unknown" << std::endl;
+                std::cerr << "family for "<< idArray[numRow] <<
+                " row " << numRow <<
+                " in " << dbname <<
+                " is unknown" << std::endl;
             }
         }
         ii = (myfamilies[ind])&0xFF;  /* hash code for families */
@@ -1332,55 +1420,99 @@ void SphereResults( std::ostream& out,
             mythread[ind] = -1;
         }
     }
-
-        out << "Found " << family_size << " families organized by PDB header or CSD Refcode or COD formula" << std::endl << std::endl;
-
+    
+    out << "Found " << family_size << " families organized by PDB header or CSD Refcode or COD formula" << std::endl << std::endl;
+    
     for (ii = 0; ii < family_size; ii++) {
-            char dbtype;
-            std::string dbname;
-            size_t numfields;
-            ssize_t compoundfield;
-            ssize_t sourcefield;
-            ssize_t resfield;
-            ssize_t expfield;
-        long myfamily;
+        char dbtype;
+        std::string dbname;
+        size_t numfields;
+        ssize_t compoundfield;
+        ssize_t sourcefield;
+        ssize_t resfield;
+        ssize_t expfield;
+        std::string myfamily;
         long familyordinal;
         ind = myfamilylist[ii];
         myfamily = myfamilies[ind];
         familyordinal = 0;
         string pdbid;
         while (ind >= 0) {
+            char dbtype;
             const unitcell * const cell = & myvector[ind];
             numRow = (int)(*cell).getRow();
-            if (sauc_javascript) {
-                    if (idArray[numRow].length() > 4) {
-                    pdbid = "<b><a href=\"https://summary.ccdc.cam.ac.uk/structure-summary?refcode=" +
-                        idArray[numRow] + "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
+            dbtype = cellDB[numRow];
+            entry =  PSM_getstrindex_by_key(
+                                            (dbtype==PDB_DBTYPE)?PDBentries:
+                                            ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                            idArray[numRow].c_str(),0);
+            /* Split the entry row into fields and extract the family */
+            
+            switch (dbtype) {
                     
+                case PDB_DBTYPE:
+                    if (PSM_split_psm_string(PDBentries,split_fields,PDBentries->maxfieldno,
+                                             PDBentries->str_index[entry],PDBentries_sep_char)) {
+                        dbname = std::string("PDB");
+                        myfamily = PSM_getstringfield(PDBentries,split_fields[PDBentries_head]);
+                        myfamily_index = PSM_getstrindex_by_key(PDBentries,myfamily.c_str(),1);
+                    }
+                    break;
+                case CSD_DBTYPE:
+                    if (PSM_split_psm_string(CSDcells,split_fields,CSDcells->maxfieldno,
+                                             CSDcells->str_index[entry],CSDcells_sep_char)) {
+                        dbname = std::string("CSD");
+                        myfamily = PSM_getstringfield(CSDcells,split_fields[CSDcells_refcode_family]);
+                        myfamily_index = PSM_getstrindex_by_key(CSDcells,myfamily.c_str(),1);
+                    }
+                    break;
+                case COD_DBTYPE:
+                    if (PSM_split_psm_string(CODentries,split_fields,CODentries->maxfieldno,
+                                             CODentries->str_index[entry],CODentries_sep_char)) {
+                        dbname = std::string("COD");
+                        myfamily = PSM_getstringfield(CODentries,split_fields[CODentries_chemical_formula_sum]);
+                        myfamily_index = PSM_getstrindex_by_key(CODentries,myfamily.c_str(),1);
+                        break;
+                        
+                    }
+                default:  myfamily_index=-1; myfamily = "UNKNOWN FAMILY";break;
+            }
+            
+            if (sauc_javascript) {
+                if (dbtype==CSD_DBTYPE) {
+                    pdbid = "<b><a href=\"https://summary.ccdc.cam.ac.uk/structure-summary?refcode=" +
+                    idArray[numRow] + "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
+                } else if (dbtype==COD_DBTYPE) {
+                    pdbid = "<b><a href=\"http://www.crystallography.net/cod/"+idArray[numRow]+".html\"" +
+                    "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
                 } else {
                     pdbid = "<b><a href=\"http://www.rcsb.org/pdb/explore.do?structureId=" +
-                        idArray[numRow] + "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
+                    idArray[numRow] + "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
                 }
             } else {
-                    pdbid = idArray[numRow];
+                if (dbtype==CSD_DBTYPE) {
+                    pdbid = "CSD:"+idArray[numRow];
+                } else if (dbtype==COD_DBTYPE) {
+                    pdbid = "COD:"+idArray[numRow];
+                } else {
+                    pdbid = "PDB:"+idArray[numRow];
+                }
             }
             familyordinal++;
             if (familyordinal == 1) {
-                    char dbtype;
-                    dbtype = cellDB[numRow];
-                    entry = PSM_getstrindex_by_key(
-                                                   (dbtype==PDB_DBTYPE)?PDBentries:
-                                                   ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
-                                                   idArray[numRow].c_str(),0);
-                if (entry >= 0) {
-                        out << ii+1 << ": "<< idArray[numRow].c_str() ;
-                } else {
-                    out << ii+1 << ": Unidentified Header";
-                }
+                char dbtype;
+                
+                dbtype = cellDB[numRow];
+                entry = PSM_getstrindex_by_key(
+                                               (dbtype==PDB_DBTYPE)?PDBentries:
+                                               ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                               idArray[numRow].c_str(),0);
+                out << ii+1 << ": "<< myfamily;
+
                 if (myfamilycount[ii] > 1) {
                     out << " [" << myfamilycount[ii] << " cells found] ";
                     if (sauc_javascript) {
-                      out << "<a href=\"javascript:open_close('famfloat"<< ii+1 << "');\">(expand/collapse)</a>";
+                        out << "<a href=\"javascript:open_close('famfloat"<< ii+1 << "');\">(expand/collapse)</a>";
                     }
                 }
                 out << std::endl;
@@ -1399,9 +1531,9 @@ void SphereResults( std::ostream& out,
             cellDArray[numRow][4] << ", " <<
             cellDArray[numRow][5] << "], SG: " <<
             spaceArray[numRow][0];
-                if (zArray[numRow] > 0) {
-            out << ", Z: " <<
-                    zArray[numRow] << " ";
+            if (zArray[numRow] > 0) {
+                out << ", Z: " <<
+                zArray[numRow] << " ";
             } else {
                 out << ", ";
             }
@@ -1412,80 +1544,78 @@ void SphereResults( std::ostream& out,
             (*cell).getData(3) << ", " <<
             (*cell).getData(4) << ", " <<
             (*cell).getData(5) << "]" << std::endl;
-                dbtype = cellDB[numRow];
-                entry =  PSM_getstrindex_by_key(
-                                                (dbtype==PDB_DBTYPE)?PDBentries:
-                                                ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
-                                                idArray[numRow].c_str(),0);
+            dbtype = cellDB[numRow];
+            entry =  PSM_getstrindex_by_key(
+                                            (dbtype==PDB_DBTYPE)?PDBentries:
+                                            ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                            idArray[numRow].c_str(),0);
             if (entry >= 0) {
-                    PSM_localpsm_handle psm_handle;
-                    if (dbtype==PDB_DBTYPE) {
-                        dbname = std::string("PDB");
-                        psm_handle = PDBentries;
-                        numfields = PDBentries_numfields;
-                        compoundfield = PDBentries_cmpd;
-                        sourcefield = PDBentries_src;
-                        resfield = PDBentries_res;
-                        expfield = PDBentries_exp;
-                        
-                    }
-                    else if (dbtype==CSD_DBTYPE) {
-                        dbname = std::string("CSD");
-                        psm_handle = CSDcells;
-                        numfields = CSDcells_numfields;
-                        compoundfield = CSDcells_refcode_family;
-                        sourcefield = -1;
-                        resfield = -1;
-                        expfield = -1;
-
-                    }
-                    else {
-                        dbname = std::string("COD");
-                        psm_handle = CODentries;
-                        numfields = CODentries_numfields;
-                        compoundfield = CODentries_chemical_formula_sum;;
-                        sourcefield = CODentries_chemical_name_common;
-                        resfield = -1;
-                        expfield = -1;
-                    }
-
-                    PSM_string entryArray[16];
-                    PSM_split_psm_string(psm_handle,entryArray,numfields,
-                                         psm_handle->str_index[entry],psm_handle->split_char);
-                    if (compoundfield >= 0 && entryArray[compoundfield].length > 0) {
-                        char * compound=PSM_getstrfield(psm_handle,entryArray[(size_t)compoundfield]);
-                        out << "      " <<  compound << std::endl;
-                        free(compound);
-                    }
-                    if (sourcefield >= 0 && entryArray[PDBentries_src].length > 0) {
-                        char * source=PSM_getstrfield(psm_handle,entryArray[(size_t)sourcefield]);
-                        out << "      " <<  source;
-                        free(source);
-                    }
-                    if (resfield >= 0 && entryArray[resfield].length > 0) {
-                        char * res=PSM_getstrfield(psm_handle,entryArray[(size_t)resfield ]);
-                        out << " " << res;
-                        free(res);
-                    }
-                    if (expfield >= 0 && entryArray[expfield].length> 0) {
-                        char * exp=PSM_getstrfield(psm_handle,entryArray[(size_t)expfield]);
-                        out << " " << exp;
-                        free(exp);
-                    }
-                out << std::endl;
+                PSM_localpsm_handle psm_handle;
+                if (dbtype==PDB_DBTYPE) {
+                    dbname = std::string("PDB");
+                    psm_handle = PDBentries;
+                    numfields = PDBentries_numfields;
+                    compoundfield = PDBentries_cmpd;
+                    sourcefield = PDBentries_src;
+                    resfield = PDBentries_res;
+                    expfield = PDBentries_exp;
+                    
+                }
+                else if (dbtype==CSD_DBTYPE) {
+                    dbname = std::string("CSD");
+                    psm_handle = CSDcells;
+                    numfields = CSDcells_numfields;
+                    compoundfield = CSDcells_refcode_family;
+                    sourcefield = -1;
+                    resfield = -1;
+                    expfield = -1;
+                    
+                }
+                else {
+                    dbname = std::string("COD");
+                    psm_handle = CODentries;
+                    numfields = CODentries_numfields;
+                    compoundfield = CODentries_chemical_formula_sum;;
+                    sourcefield = CODentries_chemical_name_common;
+                    resfield = -1;
+                    expfield = -1;
+                }
+                
+                PSM_split_psm_string(psm_handle,split_fields,psm_handle->maxfieldno,
+                                     psm_handle->str_index[entry],psm_handle->split_char);
+                if (compoundfield >= 0 && split_fields[compoundfield].length > 0 &&
+                    compoundfield < psm_handle->maxfieldno) {
+                    out << "      " <<
+                    PSM_getstringfield(psm_handle,split_fields[(size_t)compoundfield]) << std::endl;
+                }
+                if (sourcefield >= 0 && split_fields[sourcefield].length > 0 &&
+                    sourcefield < psm_handle->maxfieldno) {
+                    out << "      " <<
+                    PSM_getstringfield(psm_handle,split_fields[(size_t)sourcefield]);
+                }
+                if (resfield >= 0 && split_fields[resfield].length > 0 &&
+                    resfield < psm_handle->maxfieldno) {
+                    out << " " << PSM_getstringfield(psm_handle,split_fields[(size_t)resfield]);
+                }
+                if (expfield >= 0 && split_fields[expfield].length> 0 &&
+                    expfield < psm_handle->maxfieldno) {
+                    out << " " << PSM_getstringfield(psm_handle,split_fields[(size_t)expfield]);;
+                }
+                out << std::endl << std::flush;
             }
             ind = mythread[ind];
             while (ind >= 0) {
-                if (myfamilies[ind] == myfamily) break;
+                if (myfamilies[ind] == myfamily_index) break;
                 ind = mythread[ind];
             }
         }
         if (myfamilycount[ii] > 1 && sauc_javascript) {
             out << "</div>";
         }
-        out << std::endl;
+        out << std::endl << std::flush;
     }
-        
+    if (split_fields) free(split_fields);
+    
 }
 
 //*****************************************************************************
@@ -1513,12 +1643,12 @@ void findSphere( int limit )
 {
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
     
-	std::cout << std::endl;
+    std::cout << std::endl;
     SphereInputReport( std::cout );
-	vector <unitcell> myvector;
+    vector <unitcell> myvector;
     vector <size_t> myindices;
     vector <double> mydistances;
-	const long sphereData = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(limit,sphereRange, myvector,
+    const long sphereData = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(limit,sphereRange, myvector,
                                                                                 myindices,mydistances,unknownCell);
     
     SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
@@ -1541,7 +1671,7 @@ void findSphere( int limit )
             SphereResults( output, myvector, myindices, mydistances, unknownCell);
             output.close();
             if (sauc_batch_mode)
-                std::cout << "Output saved to: " << filename << std::endl;
+                std::cout << "Output saved to: " << filename << std::endl << std::flush;
         }
     }
 }
@@ -1549,108 +1679,108 @@ void findSphere( int limit )
 //*****************************************************************************
 void findRange( void )
 {
-	std::cout << std::endl;
-	std::cout << "Unknown Cell\n" <<
+    std::cout << std::endl;
+    std::cout << "Unknown Cell\n" <<
     "A: "     << probeArray[0] << " " <<
     "B: "     << probeArray[1] << " " <<
     "C: "     << probeArray[2] << " " <<
     "Alpha: " << probeArray[3] << " " <<
     "Beta: "  << probeArray[4] << " " <<
     "Gamma: " << probeArray[5] << std::endl;
-	std::cout << "\nRange Results\n";
-        for (int i = 0; i < (int)(cellDArray.size()); i++)
-	{
-		if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
-			(probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
-			(probeArray[2] + numRangeC    ) >= cellDArray[i][2] && (probeArray[2] - numRangeC    ) <= cellDArray[i][2] &&
-			(probeArray[3] + numRangeAlpha) >= cellDArray[i][3] && (probeArray[3] - numRangeAlpha) <= cellDArray[i][3] &&
-			(probeArray[4] + numRangeBeta ) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta ) <= cellDArray[i][4] &&
-			(probeArray[5] + numRangeGamma) >= cellDArray[i][5] && (probeArray[5] - numRangeGamma) <= cellDArray[i][5])
-		{
-                std::cout << "PDBID: " << idArray[i] << " " <<
+    std::cout << "\nRange Results\n";
+    for (int i = 0; i < (int)(cellDArray.size()); i++)
+    {
+        if ((probeArray[0] + numRangeA    ) >= cellDArray[i][0] && (probeArray[0] - numRangeA    ) <= cellDArray[i][0] &&
+            (probeArray[1] + numRangeB    ) >= cellDArray[i][1] && (probeArray[1] - numRangeB    ) <= cellDArray[i][1] &&
+            (probeArray[2] + numRangeC    ) >= cellDArray[i][2] && (probeArray[2] - numRangeC    ) <= cellDArray[i][2] &&
+            (probeArray[3] + numRangeAlpha) >= cellDArray[i][3] && (probeArray[3] - numRangeAlpha) <= cellDArray[i][3] &&
+            (probeArray[4] + numRangeBeta ) >= cellDArray[i][4] && (probeArray[4] - numRangeBeta ) <= cellDArray[i][4] &&
+            (probeArray[5] + numRangeGamma) >= cellDArray[i][5] && (probeArray[5] - numRangeGamma) <= cellDArray[i][5])
+        {
+            std::cout << "PDBID: " << idArray[i] << " " <<
             "A: "     << cellDArray[i][0] << " " <<
             "B: "     << cellDArray[i][1] << " " <<
             "C: "     << cellDArray[i][2] << " " <<
             "Alpha: " << cellDArray[i][3] << " " <<
             "Beta: "  << cellDArray[i][4] << " " <<
             "Gamma: " << cellDArray[i][5] << " " <<
-                "Space Group: " << spaceArray[i];
+            "Space Group: " << spaceArray[i];
             
-                if (zArray[i] > 0) {
+            if (zArray[i] > 0) {
                 std::cout << ", Z: " <<
-                    zArray[i] << std::endl;
+                zArray[i] << std::endl;
             } else {
                 std::cout << std::endl;
             }
-		}
-	}
+        }
+    }
 }
 
-    /* EntryArray holds:
-     
-     entryArray[i][0] = id;   ID code
-     entryArray[i][1] = head; header
-     entryArray[i][2] = acc;  accession date
-     entryArray[i][3] = cmpd; compound
-     entryArray[i][4] = src;  source
-     entryArray[i][5] = aut;  author list
-     entryArray[i][6] = res;  resolution
-     entryArray[i][7] = exp;  experiment type (if not X-ray).
-     
-     */
-        
-        
-        
+/* EntryArray holds:
+ 
+ entryArray[i][0] = id;   ID code
+ entryArray[i][1] = head; header
+ entryArray[i][2] = acc;  accession date
+ entryArray[i][3] = cmpd; compound
+ entryArray[i][4] = src;  source
+ entryArray[i][5] = aut;  author list
+ entryArray[i][6] = res;  resolution
+ entryArray[i][7] = exp;  experiment type (if not X-ray).
+ 
+ */
+
+
+
 //*****************************************************************************
 int main ()
 {
     
-        std::cout << "sauc Copyright (C) Keith McGill 2013, 2014" << std::endl;
-        std::cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
-        std::cout << "This is free software, and you are welcome to" << std::endl;
-        std::cout << "redistribute it under the GPL or LGPL" << std::endl;
-        std::cout << "See the program documentation for details" << std::endl;
-        std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
-        std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
-
+    std::cout << "sauc Copyright (C) Keith McGill 2013, 2014" << std::endl;
+    std::cout << "This program comes with ABSOLUTELY NO WARRANTY" << std::endl;
+    std::cout << "This is free software, and you are welcome to" << std::endl;
+    std::cout << "redistribute it under the GPL or LGPL" << std::endl;
+    std::cout << "See the program documentation for details" << std::endl;
+    std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
+    std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
+    
     // Check for sauc html run
     
     if (std::getenv("SAUC_BATCH_MODE")) {
         sauc_batch_mode = 1;
     }
-
+    
     if (std::getenv("SAUC_JAVASCRIPT")) {
         sauc_javascript = 1;
     }
-
-        make_mmapfiles();
-        load_cellDSGZArrays();
-	unitcell cell;
+    
+    make_mmapfiles();
+    load_cellDSGZArrays();
+    unitcell cell;
     
     
-	while (endProgram != 1)
-	{
+    while (endProgram != 1)
+    {
         if (goBack != 1)
         {
             int ii;
             double edgemax;
             for (ii=0; ii < 6; ii++) probeArray[ii] = 0;
-        	std::cout << "Search of Alternate Unit Cells\n";
+            std::cout << "Search of Alternate Unit Cells\n";
             if (!sauc_batch_mode) std::cout << "\nPlease Input Your Data\n";
             if (!sauc_batch_mode) std::cout << "Lattice Centering (P, A, B, C, F, I, R, H, V): ";
             std::cin >> probelattice; std::cin.clear();
             if (!sauc_batch_mode) std::cout << "A: ";
-        	std::cin >> probeArray[0]; std::cin.clear();
+            std::cin >> probeArray[0]; std::cin.clear();
             if (!sauc_batch_mode) std::cout << "B: ";
-        	std::cin >> probeArray[1]; std::cin.clear();
+            std::cin >> probeArray[1]; std::cin.clear();
             if (!sauc_batch_mode) std::cout << "C: ";
-        	std::cin >> probeArray[2]; std::cin.clear();
+            std::cin >> probeArray[2]; std::cin.clear();
             if (!sauc_batch_mode) std::cout << "Alpha: ";
-        	std::cin >> probeArray[3]; std::cin.clear();
+            std::cin >> probeArray[3]; std::cin.clear();
             if (!sauc_batch_mode) std::cout << "Beta: ";
-        	std::cin >> probeArray[4]; std::cin.clear();
+            std::cin >> probeArray[4]; std::cin.clear();
             if (!sauc_batch_mode) std::cout << "Gamma: ";
-        	std::cin >> probeArray[5]; std::cin.clear();
+            std::cin >> probeArray[5]; std::cin.clear();
             std::cout << std::endl;
             if (sauc_batch_mode) {
                 std::cout << "Centering and Probe cell :"<<  probelattice << " "
@@ -1794,7 +1924,7 @@ int main ()
                 string sradline;
                 int limit, klimit;
                 int ll;
-		klimit = 10;
+                klimit = 10;
                 if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Radius and Optional Limit K: ";
                 std::getline(std::cin,sradline);
                 std::stringstream ssradline(sradline);
@@ -1808,9 +1938,9 @@ int main ()
                     sphereRange=convertToDouble(token);
                 }
                 if (ssradline >> limit) {
-                  if (limit >= 1) klimit = limit;
+                    if (limit >= 1) klimit = limit;
                 } else {
-                  klimit = 100000;
+                    klimit = 100000;
                 }
                 if (sauc_batch_mode) {
                     std::cout << "Sphere Radius: "<< sphereRange << " Limit: " << klimit << std::endl;
@@ -1916,5 +2046,5 @@ int main ()
         quitContinue = 0;
     }
     
-	return 0;
+    return 0;
 }

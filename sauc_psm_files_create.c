@@ -139,9 +139,8 @@ int make_psmfile(const char * mmapfilename, const char* textfilename,
 int main(int argc, char** argv) {
     
     size_t PDBcfieldnumbers[2] = {PDBcells_id+1,PDBcells_numfields};
-    size_t PDBefieldnumbers[2] = {PDBentries_id+1,PDBentries_head+1,PDBentries_numfields};
-    size_t CSDfieldnumbers[2] = {CSDcells_refcode+1,
-        CSDcells_refcode_family+1};
+    size_t PDBefieldnumbers[3] = {PDBentries_id+1,PDBentries_head+1, PDBentries_numfields};
+    size_t CSDfieldnumbers[2] = {CSDcells_refcode+1,CSDcells_refcode_family+1};
     size_t CODfieldnumbers[3] = {CODentries_id+1,CODentries_chemical_formula_sum+1,CODentries_numfields};
     
     
@@ -159,7 +158,7 @@ int main(int argc, char** argv) {
         }  else if (!strcmp(argv[ii],"PDB")){
             
             if (make_psmfile(PDBentries_mmap_file, PDBentries_raw_file,
-                             2, PDBefieldnumbers,
+                             3, PDBefieldnumbers,
                              PDBentries_skip_lines, PDBentries_sep_char, 0)) {
                 fprintf(stderr,"sauc_psm_files_create failed to establish PDBentries mmap");
                 return 1;

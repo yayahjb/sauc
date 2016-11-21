@@ -330,8 +330,8 @@ arma::mat66 Cell::LatSymMat66( const std::string& latsym ) const
                     break;
                 }
             }
-            fprintf(stderr,"Treated non-rhombodedral R as H: %g %g %g %g %g %g\n",
-                   cwd[0],cwd[1],cwd[2],cwd[3],cwd[4],cwd[5]);
+            /* fprintf(stderr,"Treated non-rhombodedral R as H: %g %g %g %g %g %g\n",
+                   cwd[0],cwd[1],cwd[2],cwd[3],cwd[4],cwd[5]); */
         }
 
         case 'H':

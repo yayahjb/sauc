@@ -71,7 +71,7 @@ extern "C" {
 #include "pststrmgr.h"
     
     
-        
+    
     
     /* create a local persistent string manager handle with hashtables */
     
@@ -212,7 +212,7 @@ extern "C" {
         
         size_t oldcap = handle->str_index_cap;
         
-        size_t ii;
+        size_t ii, jj;
         
         if (!handle) return 0;
         
@@ -252,6 +252,10 @@ extern "C" {
                             memmove(temphashlink+ii*cap,
                                     handle->hashlink+ii*oldcap,
                                     sizeof(ssize_t)*(handle->str_index_len));
+                            for (jj=0; jj< handle->str_index_len; jj++) {
+                                if (*(temphashlink+ii*cap+jj)>=handle->str_index_len)
+                                    *(temphashlink+ii*cap+jj) = (ssize_t)(-1L);
+                            }
                         }
                     }
                 }
@@ -385,7 +389,7 @@ extern "C" {
                                                  const size_t length) {
         
         size_t ii,jj;
-        ssize_t hashlink;
+        ssize_t hashlink, nextlink;
         
         if (!handle || length > handle->str_index_len) return 0;
         
@@ -408,8 +412,8 @@ extern "C" {
         /* We need to trim the hashhead entries to only point to
          valid index entries, and we assume the 2s-complement
          equivalence of 0xFFF... to -1.  We also assume the
-         chain of links _always_ run backwards from highest to
-         lowest. */
+         chain of links _always_ runs forwards from lowest to
+         highest. */
         
         if (length == 0) {
             memset(handle->hashhead,
@@ -419,10 +423,15 @@ extern "C" {
             for (ii = 0; ii < handle->numhashtables; ii++) {
                 for (jj = 0; jj < PSM_HASHTABLE_SIZE; jj++) {
                     hashlink = PSM_hashhead_entry(handle,ii,jj);
-                    while (hashlink >= (ssize_t)length) {
-                        PSM_hashhead_entry(handle,ii,jj)
-                        = PSM_hashlink_entry(handle,ii,hashlink);
-                        hashlink = PSM_hashhead_entry(handle,ii,jj);
+                    if (hashlink >= (ssize_t)length) {
+                        PSM_hashhead_entry(handle,ii,jj) = (ssize_t)(-1L);
+                    }
+                    while (hashlink >= 0 && hashlink < length) {
+                        nextlink = PSM_hashlink_entry(handle,ii,hashlink);
+                        if (nextlink >= (ssize_t)length) {
+                            PSM_hashlink_entry(handle,ii,hashlink) = (ssize_t)(-1L);
+                        }
+                        hashlink = nextlink;
                     }
                 }
             }
@@ -432,7 +441,7 @@ extern "C" {
         
     }
     
-    /* Splits a PSM_string into an array of nfields PSM_strings on the basis
+    /* Splits a PSM_string into a C array of nfields PSM_strings on the basis
      of a separator character c.  Returns split_string on success, NULL on
      failure
      */
@@ -490,7 +499,7 @@ extern "C" {
             while (ipos < str.length+str.offset
                    && (handle->chars[ipos] != c||qcount > 0)) {
                 clast = handle->chars[ipos];
-                if(qcount > 0 && clast == cfirst && (cfirst == '\'' || cfirst == '"')) {
+                if(qcount > 0 && clast == cfirst && (cfirst == '\'' || cfirst == '"' || cfirst == ';')) {
                     qcount--;
                     if (qcount == 0) {
                         ipos++;
@@ -500,7 +509,7 @@ extern "C" {
                                    || handle->chars[ipos] == '\t'
                                    || handle->chars[ipos] == '\n')) {
                                    if (ipos >= str.length+str.offset
-                                       || handle->chars[ipos] == c) break;
+                                     || handle->chars[ipos] == c) break;
                                    ipos++;
                                }
                         if (ipos >= str.length+str.offset
@@ -515,7 +524,7 @@ extern "C" {
             /* Strip one layer of quotes */
             if (split_string[ifield].length > 1 &&
                 cfirst == clast &&
-                (cfirst == '\'' || cfirst=='"')) {
+                (cfirst == '\'' || cfirst=='"' || cfirst == ';')) {
                 split_string[ifield].offset++;
                 split_string[ifield].length -= 2;
             }
@@ -543,6 +552,7 @@ extern "C" {
         
         return split_string;
     }
+
     
     /* Add a string to a persistent string
      Returns either a handle to the newly created PSM_string
@@ -610,12 +620,13 @@ extern "C" {
                                     *((handle->str_index)+(handle->str_index_len)-1),
                                     handle->split_char)) {
                 size_t table;
-                ssize_t hashlink, hashvalue;
+                ssize_t hashlink, hashvalue, nextlink;
                 
                 /* For each hash table add the latest link as the last in the chain
                  so that the pruning code when reducing sizes works */
                 
                 for (table=0; table < handle->numhashtables; table++) {
+                    PSM_hashlink_entry(handle,table,(handle->str_index_len)-1) = (ssize_t)(-1L);
                     if (handle->fieldnumbers[table] == 0) {
                         hashvalue = PSM_str_hashvalue(handle->chars+handle->str_index[handle->str_index_len-1].offset,
                                                       handle->str_index[handle->str_index_len-1].length);
@@ -624,11 +635,26 @@ extern "C" {
                                                       +(handle->split_str)[(handle->fieldnumbers[table]-1)].offset,
                                                       (handle->split_str)[(handle->fieldnumbers[table]-1)].length);
                     }
-                    PSM_hashvalue_entry(handle,table,(handle->str_index_len)-1)=hashvalue;
                     hashlink = PSM_hashhead_entry(handle,table,hashvalue);
-                    PSM_hashhead_entry(handle,table,hashvalue) = (handle->str_index_len)-1;
-                    PSM_hashlink_entry(handle,table,(handle->str_index_len)-1) = hashlink;
-                    if ((long)(handle->str_index_len) <= 10L ) {
+                    /* if the head is not in use, we just insert the new link */
+                    if (hashlink == -1) {
+                        PSM_hashhead_entry(handle,table,hashvalue) = (handle->str_index_len)-1;
+                        PSM_hashlink_entry(handle,table,(handle->str_index_len)-1) = hashlink;
+                        continue;
+                    } else {
+                        /* In this case need to trace the chain forward, putting the new entry
+                           as a hashlink for the end of the chain */
+                        nextlink = PSM_hashlink_entry(handle,table,hashlink);
+                        while (nextlink != -1) {
+                            hashlink = nextlink;
+                            nextlink = PSM_hashlink_entry(handle,table,hashlink);
+                        }
+                        PSM_hashlink_entry(handle,table,hashlink) = (handle->str_index_len)-1;
+                        PSM_hashlink_entry(handle,table,(handle->str_index_len)-1) = nextlink;
+                    }
+                    
+                     
+                    /*if ((long)(handle->str_index_len) <= 10L ) {
                         fprintf(stderr,"table %ld item %ld hashvalue %ld key '",
                                 (long)table, (long)(handle->str_index_len-1),
                                 (long)hashvalue);
@@ -638,7 +664,7 @@ extern "C" {
                         }
                         fprintf(stderr,"'\n");
                         
-                    }
+                    } */
                     
                 }
                 
@@ -675,7 +701,7 @@ extern "C" {
         return string;
         
     }
-
+    
     
     /* get a string from a persistent string field
      Returns a newly allocated string that must be freed by the user
@@ -734,7 +760,7 @@ extern "C" {
     
     ssize_t PSM_getstrindex_by_key(PSM_localpsm_handle handle, const char * key, size_t table) {
         
-        ssize_t hashvalue, hashlink;
+        ssize_t hashvalue, hashlink, ohashlink;
         
         size_t cmplen, maxlen;
         
@@ -748,6 +774,8 @@ extern "C" {
         hashvalue = PSM_str_hashvalue(key,maxlen);
         
         hashlink = PSM_hashhead_entry(handle,table,hashvalue);
+        
+        ohashlink = -1;
         
         
         while (hashlink < (ssize_t)handle->str_index_len
@@ -780,7 +808,11 @@ extern "C" {
                                
                            }
                        
+                       ohashlink = hashlink;
+                       
                        hashlink =PSM_hashlink_entry(handle,table,hashlink);
+                       
+                       /* if (hashlink <= ohashlink) break; */
                        
                    }
         
@@ -797,6 +829,12 @@ extern "C" {
         unsigned char pad[512-sizeof(PSM_header)];
         
         unsigned char charspad[8192];
+        
+        /* trim the capacity to the length */
+        
+        PSM_localpsm_set_character_buffer_capacity(handle,handle->chars_len);
+        
+        PSM_localpsm_set_string_index_capacity(handle,handle->str_index_len);
         
         memset((void *)(&header),0,sizeof(PSM_header));
         
@@ -956,8 +994,8 @@ extern "C" {
                                                    + (handle->numhashtables)*(handle->str_index_len)*sizeof(ssize_t)
                                                    + (handle->numhashtables)*(handle->str_index_len)*sizeof(ssize_t)
                                                    + handle->chars_cap+8192,
-                                         PROT_READ,
-                                         MAP_SHARED | MAP_FILE, fd, 0);
+                                                   PROT_READ,
+                                                   MAP_SHARED | MAP_FILE, fd, 0);
             
             if (handle->str_index == MAP_FAILED) {
                 
