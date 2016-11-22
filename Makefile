@@ -78,9 +78,8 @@ FC	=	gfortran
 MATHSCRIBEVERSION ?= 0.2.0
 MATHSCRIBEPATH ?= mathscribe-$(MATHSCRIBEVERSION)
 MATHSCRIBETARBALL ?= $(MATHSCRIBEPATH).tar.gz
-MATHSCRIBETARBALLURL ?= http://downloads.sf.net/iterate/$(MATHSCRIBETARBALL)
+MATHSCRIBETARBALLURL ?= http://downloads.sf.net/project/iterate/external_packages/$(MATHSCRIBETARBALL)
 MATHSCRIBEURL = http://$(HTTPDSERVER)$(HTDOCSEXT)/$(MATHSCRIBEPATH)
-
 #
 # SAUC URLS
 #
@@ -165,7 +164,7 @@ edit:
 		@/bin/echo "**************************************"
 
 #
-edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh
+edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create
 		touch edit
 #
 clean:
@@ -249,7 +248,7 @@ sauc_psm_files_create: \
 
 
 $(MATHSCRIBETARBALL):
-	wget http://downloads.sf.net/iterate/$(MATHSCRIBETARBALL)
+	wget --no-check-certificate $(MATHSCRIBETARBALLURL)
 
 $(MATHSCRIBEPATH): $(MATHSCRIBETARBALL)
 	gunzip < $(MATHSCRIBETARBALL) | tar xvf -

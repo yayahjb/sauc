@@ -305,6 +305,7 @@ int load_cellDSGZArrays(void) {
     double gamma;
     int Z;
     size_t ii;
+    size_t rejected;
     
     PDBcells_fields   = (PSM_string*)malloc(PDBcells_numfields*sizeof(PSM_string));
     CODentries_fields = (PSM_string*)malloc(CODentries_numfields*sizeof(PSM_string));
@@ -313,9 +314,10 @@ int load_cellDSGZArrays(void) {
     if (PDBcells) {
         
         std::cout << "Processing " << PDBcells->str_index_len << " PDB cells " << std::endl;
+	rejected = 0;
         
         for (ii = 0; ii < PDBcells->str_index_len; ii++){
-            if (ii%20000 == 0) std::cout<< "processing PDB" << ii << std::endl;
+            if (ii%20000 == 0) std::cout<< "." ; /*processing PDB" << ii << std::endl; */
             if (PSM_split_psm_string(PDBcells,PDBcells_fields,PDBcells_numfields,
                                      PDBcells->str_index[ii],PDBcells_sep_char)) {
                 pdbid = std::string(PDBcells->chars+PDBcells_fields[PDBcells_id].offset,
@@ -337,8 +339,6 @@ int load_cellDSGZArrays(void) {
                 Z = atoi(std::string(PDBcells->chars+PDBcells_fields[PDBcells_Z].offset,
                                      PDBcells_fields[PDBcells_Z].length).c_str());
                 
-                /* std::cout << "cell read " << a << b << c << alpha << beta << gamma << Z << SG << std::endl; */
-                
                 if (pdbid.length() == 4 && a > 1. && b > 1. && c > 1.
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
@@ -358,18 +358,24 @@ int load_cellDSGZArrays(void) {
                         spaceArray.push_back(SG);
                         cellDB.push_back(PDB_DBTYPE);
                     } else {
-                        std::cout << "Rejected "<< pdbid <<" ["<<a<<","<<b<<","<<c<<","<<alpha<<","<<beta<<","<<gamma<<"] "<<SG <<std::endl;
+			rejected++;
+	                /*std::cout << "Rejected "<< pdbid <<" ["<<a<<","<<b<<","<<c<<","<<alpha<<","<<beta<<","<<gamma<<"] "<<SG <<std::endl;*/
                     }
             }
         }
+	if (rejected > 0) {
+		std::cout << "Rejected "<<rejected<< " PDB cells" << std::endl;
+	}
     }
     
     if (CODentries) {
         
         std::cout << "Processing " << CODentries->str_index_len << " COD cells " << std::endl;
+
+	rejected = 0;
         
-        for (ii = 0; ii < CODentries->str_index_len; ii++){
-            if (ii%20000 == 0 || (ii+PDBcells->str_index_len > 337528 && ii+PDBcells->str_index_len < 337550)) std::cout<< "processing COD" << ii << std::endl;
+        for (ii = 0; ii < CODentries->str_index_len; ii++) {
+            if (ii%20000 == 0) std::cout<< "."; 
             if (PSM_split_psm_string(CODentries,CODentries_fields,CODentries_numfields,
                                      CODentries->str_index[ii],CODentries_sep_char)) {
                 codid = std::string(CODentries->chars+CODentries_fields[CODentries_id].offset,
@@ -389,13 +395,10 @@ int load_cellDSGZArrays(void) {
                 gamma=atof(std::string(CODentries->chars+CODentries_fields[CODentries_cell_angle_gamma].offset,
                                        CODentries_fields[CODentries_cell_angle_gamma].length).c_str());
                 Z = atoi(std::string(CODentries->chars+CODentries_fields[CODentries_cell_formula_units_Z].offset,
-                                     CODentries_fields[CODentries_cell_formula_units_Z].length).c_str());
+                                     CODentries_fields[CODentries_cell_formula_units_Z].length).c_str());                
+            } 
                 
-                if (ii%20000 == 0 || (ii+PDBcells->str_index_len > 337528 && ii+PDBcells->str_index_len < 337550)) {
-                    std::cout << codid <<": ["<< a << "," << b << "," << c << "," << alpha << "," << beta << "," << gamma << "] " << SG << std::endl;
-                }
-                
-                if (codid.length() >= 6 && a > 1. && b > 1. && c > 1.
+            if (codid.length() >= 6 && a > 1. && b > 1. && c > 1.
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
                     && gamma >= 5. && gamma <= 175.
@@ -413,12 +416,13 @@ int load_cellDSGZArrays(void) {
                         idArray.push_back(codid);
                         spaceArray.push_back(SG);
                         cellDB.push_back(COD_DBTYPE);
-                    } else {
-                        std::cout << "Rejected "<< ii << ": " << codid <<" ["<<a<<","<<b<<","<<c<<","<<alpha<<","<<beta<<","<<gamma<<"] "<<SG
-                        <<std::endl;
-                    }
+            } else {
+	      rejected++;
             }
         }
+	if (rejected > 0) {
+		std::cout << "Rejected "<<rejected<< " COD cells" << std::endl;
+	}
     }
     
     if (CSDcells) {
@@ -426,7 +430,7 @@ int load_cellDSGZArrays(void) {
         std::cout << "Processing " << CSDcells->str_index_len << " CSD cells " << std::endl;
         
         for (ii = 0; ii < CSDcells->str_index_len; ii++){
-            if (ii%20000 == 0) std::cout<< "processing CSD" << ii << std::endl;
+            if (ii%20000 == 0) std::cout<< ".";  /* "processing CSD" << ii << std::endl; */
             if (PSM_split_psm_string(CSDcells,CSDcells_fields,CSDcells_numfields,
                                      CSDcells->str_index[ii],CSDcells_sep_char)) {
                 csdref = std::string(CSDcells->chars+CSDcells_fields[CSDcells_refcode].offset,
@@ -466,9 +470,14 @@ int load_cellDSGZArrays(void) {
                         idArray.push_back(csdref);
                         spaceArray.push_back(SG);
                         cellDB.push_back(CSD_DBTYPE);
-                    }
+                } else {
+			rejected++;
+		}
             }
         }
+	if (rejected > 0) {
+		std::cout << "Rejected "<<rejected<< " CSD cells" << std::endl;
+	}
     }
     
     std::cout << "Processed " << cellDB.size() << " database entries " << std::endl;
@@ -1025,7 +1034,7 @@ void buildNearTree( void )
     for (int i = 0; i < (int)(cellDArray.size()); i++)
     {
         Cell rawcell(cellDArray[i][0], cellDArray[i][1], cellDArray[i][2], cellDArray[i][3], cellDArray[i][4], cellDArray[i][5]);
-        if (i%20000 == 0) std::cout << "processing cell " << i << std::endl;
+        if (i%20000 == 0) std::cout << "." ; 
         mc = rawcell.LatSymMat66((spaceArray[i]).substr(0,1));
         primcell = mc*(rawcell.Cell2V6());
         if (!Reducer::Reduce(primcell,m,redprimcell,0.0)){
@@ -1369,7 +1378,7 @@ void SphereResults( std::ostream& out,
             
             
             myentries[ind] = entry;                                                                   
-            std::cerr << "ind, myfamily: " << ind << " " << myfamily << std::endl;
+            /* std::cerr << "ind, myfamily: " << ind << " " << myfamily << std::endl; */
             myfamilies[ind] = PSM_getstrindex_by_key((dbtype==PDB_DBTYPE)?PDBentries:
                                                      ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
                                                      myfamily.c_str(),1);
@@ -1530,7 +1539,7 @@ void SphereResults( std::ostream& out,
             cellDArray[numRow][3] << ", " <<
             cellDArray[numRow][4] << ", " <<
             cellDArray[numRow][5] << "], SG: " <<
-            spaceArray[numRow][0];
+            spaceArray[numRow];
             if (zArray[numRow] > 0) {
                 out << ", Z: " <<
                 zArray[numRow] << " ";
