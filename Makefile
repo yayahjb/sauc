@@ -59,8 +59,8 @@ PDBCELLINDEXURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
 PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #
 #  Default compile flag definition to select debug mode under unix
-CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
-CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g
+CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8
+CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8
 CXX	?=	g++
 CC	?=	gcc
 
@@ -233,7 +233,7 @@ $(SAUCEXE): \
 	sauc.cpp \
 	Reducer.cpp \
 	V7.cpp \
-	pststrmgr.o 
+	pststrmgr.o -lpthread
 
 sauc_psm_files_create: \
 	sauc_psm_files_create.c \
@@ -244,7 +244,7 @@ sauc_psm_files_create: \
 	$(CC) $(CFLAGS) -c pststrmgr.c
 	$(CC) $(CFLAGS) -o sauc_psm_files_create \
 	sauc_psm_files_create.c fgetln.c \
-	pststrmgr.o
+	pststrmgr.o -lpthread
 
 
 $(MATHSCRIBETARBALL):

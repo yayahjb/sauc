@@ -2035,10 +2035,12 @@ double NCDist_pass(double gvec1[6],double gvec2[6],double dist) {
 
 double NCDist(double gvec1[6],double gvec2[6]) {
     double dist,dist1, dist2, distmin;
+    double ndist1[24];
+    double ndist2[24];
     int opass,ir,irt;
     int rpasses;
-    double rgvec1[6];
-    double rgvec2[6];
+    double rgvec1[24][6];
+    double rgvec2[24][6];
     double lgv1, lgv2;
     int signgvec1p,signgvec2p;
     int signgvec1m,signgvec2m;
@@ -2064,15 +2066,25 @@ double NCDist(double gvec1[6],double gvec2[6]) {
         rpasses = NREFL_OUTER_FULL;
     }
     report_integer("rpasses = ",rpasses,"\n");
+#pragma omp parallel for schedule(dynamic)
     for (irt = 0; irt < rpasses; irt++) {
         ir = rord[irt];
         if (ir == 0) continue;
-        imv6(gvec1,RS[ir],rgvec1);
-        dist = NCDist_pass(rgvec1,gvec2,dist);
-        imv6(gvec2,RS[ir],rgvec2);
-        dist = NCDist_pass(gvec1,rgvec2,dist);
+        imv6(gvec1,RS[ir],rgvec1[ir]);
+        ndist1[ir] = NCDist_pass(rgvec1[ir],gvec2,dist);
+#pragma omp flush(dist,ndist1)
+#pragma omp critical(distminimize) 
+	{
+        if (ndist1[ir] < dist) dist = ndist1[ir];
+        }
+        imv6(gvec2,RS[ir],rgvec2[ir]);
+        ndist2[ir] = NCDist_pass(gvec1,rgvec2[ir],dist);
+#pragma omp flush(dist,ndist2)
+#pragma omp critical(distminimize) 
+	{
+	if (ndist2[ir] < dist) dist = ndist2[ir];
+        }
     }
-    
     pass = opass+100;
     return dist;
 }
