@@ -7503,8 +7503,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDL*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                                      (double)dRadiusOuter); */
                         }
@@ -7541,8 +7543,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDR*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                                      (double)dRadiusOuter); */
                         }
@@ -7717,17 +7721,21 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) {
+                               tClosest.clear();
+                               dRadiusOuter = dDL*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                                      (double)dRadiusOuter); */
                         }
                         tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+			/* fprintf(stderr,"K_Near item %d dist %g, rin %g, rout%g\n",(int)tClosest.size( ),dDL,dRadiusInner,dRadiusOuter); */
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
                             if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+          			/* fprintf(stderr,"K_Near collide %d dist %g, rin %g, rout%g\n",(int)tClosest.size( ),dDL,dRadiusInner,dRadiusOuter); */
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7755,17 +7763,21 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                               tClosest.clear();
+                               dRadiusOuter = dDR*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                                      (double)dRadiusOuter); */
                         }
                         tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+			/* fprintf(stderr,"K_Near item %d dist %g, rin %g, rout%g\n",(int)tClosest.size( ),dDR,dRadiusInner,dRadiusOuter); */
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
                             if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+          			/* fprintf(stderr,"K_Near collide %d dist %g, rin %g, rout%g\n",(int)tClosest.size( ),dDR,dRadiusInner,dRadiusOuter); */
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -7984,8 +7996,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) {
+                               tClosest.clear();
+                               dRadiusOuter = dDL*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                                      (double)dRadiusOuter); */
                         }
@@ -8033,8 +8047,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDR*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                                      (double)dRadiusOuter); */
                         }
@@ -8220,8 +8236,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDL*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                                      (double)dRadiusOuter); */
                         }
@@ -8269,8 +8287,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDR*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                                      (double)dRadiusOuter); */
                         }
@@ -8503,8 +8523,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDL*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                              (double)dRadiusOuter); */
                         }
@@ -8555,8 +8577,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDR*(1.00000000005);
+                            }
                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                              (double)dRadiusOuter); */
                         }
@@ -8745,17 +8769,23 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
+                            if (dDL*(1.00000000005) < dRadiusOuter) { 
+                              tClosest.clear();
+                              dRadiusOuter = dDL*(1.0000000005);
+                             }
+                             /* fprintf (stderr,"reduced dRadiusOuter %g\n",
                              (double)dRadiusOuter); */
                         }
                         tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+			/* fprintf (stderr,"K_Near count %d, dist %g, dist-rin %g, rin %g, rout %g\n",(int) tClosest.size( ), dDL, dDL-dRadiusInner, dRadiusInner, 
+dRadiusOuter); */
                         collide = pt->m_ptLeft;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[m_ObjectCollide[collide]], m_ObjectCollide[collide] ) );
                             if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+			    /* fprintf (stderr,"K_Near collide count %d, dist %g, rin %g, dist-rin %g, rout %g\n",(int) tClosest.size( ), dDL, dDL-dRadiusInner, 
+dRadiusInner, dRadiusOuter); */
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -8796,17 +8826,23 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
-                            /* fprintf (stderr,"reduced dRadiusOuter %g\n",
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                               tClosest.clear();
+                               dRadiusOuter = dDR*(1.00000000005);
+                            }
+                            /*  fprintf (stderr,"reduced dRadiusOuter %g\n",
                              (double)dRadiusOuter); */
                         }
                         tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+			/* fprintf (stderr,"K_Near count %d, dist %g, dist-rin %g, rin %g, rout %g\n",(int) tClosest.size( ), dDR, dDR-dRadiusInner, dRadiusInner, 
+dRadiusOuter);*/     
                         collide = pt->m_ptRight;
                         while (m_ObjectCollide[collide] != ULONG_MAX ) {
                             tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[m_ObjectCollide[collide]],  m_ObjectCollide[collide]));
                             if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
+			    /* fprintf (stderr,"K_Near collide count %d, dist %g, dist-rin %g, rin %g, rout %g\n",(int) tClosest.size( ), dDR, dDR-dRadiusInner, 
+dRadiusInner, dRadiusOuter); */ 
                             collide = m_ObjectCollide[collide];
 #ifdef CNEARTREE_INSTRUMENTED
                             colcount++;
@@ -9808,8 +9844,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                               tClosest.clear();
+                               dRadiusOuter = dDR*(1.00000000005);
+                            }
                         }
                         tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
@@ -9868,8 +9906,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) { 
+                              tClosest.clear();
+                              dRadiusOuter = dDL*(1.00000000005);
+                            }
                         }
                         tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
                          if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
@@ -9977,8 +10017,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDR*(1.00000000005);
+                            }
                         }
                         tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
@@ -10036,8 +10078,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDL*(1.00000000005);
+                            }
                         }
                         tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
@@ -10186,8 +10230,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDR*(1.00000000005);
+                            }
                         }
                         tClosest.insert( tClosest.end(), std::make_pair( dDR, m_ObjectStore[pt->m_ptRight] ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
@@ -10242,8 +10288,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDL*(1.00000000005);
+                            }
                         }
                         tClosest.insert( tClosest.end(), std::make_pair( dDL, m_ObjectStore[pt->m_ptLeft] ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
@@ -10347,8 +10395,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDR <= dRadiusOuter) {
-                            if (dDR < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDR;
+                            if (dDR*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDR*(1.00000000005);
+                            }
                         }
                         tClosest.insert( tClosest.end(), make_triple( dDR, m_ObjectStore[pt->m_ptRight], pt->m_ptRight ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );
@@ -10402,8 +10452,10 @@ public:
                         colcount = 1;
 #endif
                         if ((k == 1 || shell) && dDL <= dRadiusOuter) {
-                            if (dDL < dRadiusOuter) tClosest.clear();
-                            dRadiusOuter = dDL;
+                            if (dDL*(1.00000000005) < dRadiusOuter) {
+                              tClosest.clear();
+                              dRadiusOuter = dDL*(1.00000000005);
+                            }
                         }
                         tClosest.insert( tClosest.end(), make_triple( dDL, m_ObjectStore[pt->m_ptLeft], pt->m_ptLeft ) );
                         if( tClosest.size( ) > k ) K_Resize( k, t, tClosest, dRadiusOuter );

@@ -1223,7 +1223,7 @@ void findNearest( int k, double distance )
     if (distance <= 0.) dtest = 1.e38;
     if (distance > 0. && dtest > distance) dtest = distance;
     
-    std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;
+    /*std::cout <<"calling FindK_NearestNeighbors " << "k: "<<k << " dtest: " << dtest << std::endl;*/
     spheredata = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(k,dtest, myvector,
                                                                      myindices,mydistances,unknownCell);
     std::cout <<"returned spheredata " << spheredata << std::endl;
