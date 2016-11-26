@@ -1,0 +1,24 @@
+#-------------- QUASAR request file 'qtest.req' -----------------------
+#               modified for cif2cif -q option tests
+
+data_which_contains:            #<< extract a block by context
+_cod_database_code               #nnnnnnn database id
+_cell_length_a                   #9.7070(10)
+_cell_length_b                   #11.2570(10)
+_cell_length_c                   #15.763(2)
+_cell_angle_alpha                #79.386(8)
+_cell_angle_beta                 #80.220(8)
+_cell_angle_gamma                #86.776(8)
+_symmetry_space_group_name_H-M   #'P -1'
+_cell_formula_units_Z            #1
+_publ_section_title              #title use for header
+_publ_author_name                #pick up authors
+_chemical_formula_sum            #'C66 H102 B2 Fe3 Li2 O16' use for compount
+_chemical_formula_weight         #1354.53
+_chemical_name_common            #'compound Li2(3)'
+_chemical_name_systematic        #compound Li2[3]
+
+
+
+
+

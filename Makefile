@@ -63,6 +63,14 @@ CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=
 CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 -mfpmath=sse -msse2
 CXX	?=	g++
 CC	?=	gcc
+#
+#  ZINCURL is the github URL for ZINC
+#
+ZINCURL	?= https://github.com/yayahjb/Zinc.git
+#
+#  CIFTBXURL is the github URL for ciftbx
+#
+CIFTBXURL  ?= https://github.com/yayahjb/ciftbx.git
 
 #
 #  Fortran compile (needed for database updates)
@@ -174,6 +182,10 @@ clean:
 		-@rm -f *.o
 		-@rm -f $(SAUCCGI)
 		-@rm -f *.bak
+		-@rm -rf Zinc
+		-@rm -rf ciftbx
+		-@rm -f cif2cif
+		-@rm -f idx2tsv
 #
 $(SAUCHTML):	sauc.html.m4 Makefile $(MATHSCRIBEPATH) gpl.txt lgpl.txt
 		m4 $(HTFLAGS) < sauc.html.m4 > $(SAUCHTML)
@@ -246,6 +258,18 @@ sauc_psm_files_create: \
 	sauc_psm_files_create.c fgetln.c \
 	pststrmgr.o -lpthread
 
+Zinc:
+	git clone $(ZINCURL)
+
+Zinc/src/cifZinc:	Zinc
+	cd Zinc/src; make cifZinc
+
+ciftbx:
+	git clone $(CIFTBXURL)
+
+cif2cif:  ciftbx
+	cd ciftbx/cif2cif.src;  make clean; make cif2cif
+	mv ciftbx/cif2cif.src/cif2cif .
 
 $(MATHSCRIBETARBALL):
 	wget --no-check-certificate $(MATHSCRIBETARBALLURL)
