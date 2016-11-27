@@ -1315,6 +1315,7 @@ void SphereResults( std::ostream& out,
     long nextthread, prevthread, firstthread, numhit, thread[257];
     int ii;
     family_size=0;
+    int PDBcount=0, CODcount=0, CSDcount=0;
     
     split_fields = (PSM_string *)malloc(sizeof(PSM_string)*16);
     
@@ -1349,6 +1350,7 @@ void SphereResults( std::ostream& out,
             switch (dbtype) {
                     
                 case PDB_DBTYPE:
+		    PDBcount++;
                     if (PSM_split_psm_string(PDBentries,split_fields,PDBentries->maxfieldno,
                                              PDBentries->str_index[entry],PDBentries_sep_char)) {
                         dbname = std::string("PDB");
@@ -1357,6 +1359,7 @@ void SphereResults( std::ostream& out,
                     }
                     break;
                 case CSD_DBTYPE:
+		    CSDcount++;
                     if (PSM_split_psm_string(CSDcells,split_fields,CSDcells->maxfieldno,
                                              CSDcells->str_index[entry],CSDcells_sep_char)) {
                         dbname = std::string("CSD");
@@ -1365,6 +1368,7 @@ void SphereResults( std::ostream& out,
                     }
                     break;
                 case COD_DBTYPE:
+		    CODcount++;
                     if (PSM_split_psm_string(CODentries,split_fields,CODentries->maxfieldno,
                                              CODentries->str_index[entry],CODentries_sep_char)) {
                         dbname = std::string("COD");
@@ -1430,7 +1434,13 @@ void SphereResults( std::ostream& out,
         }
     }
     
-    out << "Found " << family_size << " families organized by PDB header or CSD Refcode or COD formula" << std::endl << std::endl;
+    out << "Found " << family_size << " families organized by ";
+	if (PDBcount > 0) out << "PDB header";
+	if (PDBcount > 0 && (CSDcount > 0 || CODcount > 0 )) out << ", ";
+	if (CSDcount > 0 ) out << "CSD Refcode";
+	if (CSDcount > 0 && CODcount > 0 ) out << ", ";
+	if (CODcount > 0) out << "COD formula";
+	out << std::endl << std::endl;
     
     for (ii = 0; ii < family_size; ii++) {
         char dbtype;
