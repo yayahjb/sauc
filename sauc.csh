@@ -11,7 +11,7 @@
 #
 #
 # Set the following to the best available search URL
-set searchurl="http://arcib.dowling.edu/~yaya/sauc"
+set searchurl="http://blondie.ddns.net:8083/sauc-1.0.0/"
 #
 # To operate correctly, the programs tr and sed must be in the
 # default path and the /bin/echo version of echo must follow
@@ -49,6 +49,8 @@ echo '<center>'
 echo "Search of Alternate Unit Cells"
 echo "<br />Copyright Keith J. McGill 2013"
 echo "<br />Rev 0.8, 24 Apr 2014 Mojgan Asadi, Herbert J. Bernstein"
+echo "<br />Rev 0.9.0, 14 Aug 2015 Herbert J. Bernstein"
+echo "<br />Rev 1.0.0, 22 Nov 2016 Herbert J. Bernstein"
 echo '</center>'
 echo "<p>"
 echo "<center>"
@@ -74,6 +76,13 @@ else if ($Algorithm == 3) then
 else
 	echo "V7"
 endif
+if ($Similarity == 1) then
+  if ($NumHits != 1) then
+    set Similarity="2"
+    set RangeSphere="0"
+    set UsePercent="no"
+  endif
+endif
 echo ${Similarity} >> /tmp/instr$$
 echo "| Similarity: "
 if ($Similarity == 1) then
@@ -84,8 +93,13 @@ else
         echo "Range"
 endif
 if ($Similarity == 2) then
-	echo ${RangeSphere} >> /tmp/instr$$
-	echo "| Radius of S: " $RangeSphere " |"
+if ($UsePercent == "yes") then
+        echo ${RangeSphere}% ${NumHits} >> /tmp/instr$$
+        echo "| Radius of S: " ${RangeSphere}%", Max Hits: " ${NumHits} " |"
+else
+	echo ${RangeSphere}  ${NumHits} >> /tmp/instr$$
+	echo "| Radius of S: " ${RangeSphere}", Max Hits: " ${NumHits} " |"
+endif
 else if ($Similarity == 3) then
 	echo ${RangeA} >> /tmp/instr$$
 	echo "| Range of A: " $RangeA
@@ -112,8 +126,8 @@ setenv SAUC_JAVASCRIPT YES
 setenv ITERATE_QUERY NO
 setenv OUTPUT_STYLE $OutputStyle
 echo '<PRE><font face="Monaco, Anadale Mono" size="2">'
-cd /home/yaya/public_html/sauc
-/home/yaya/bin/sauc < /tmp/instr$$
+cd /var/www/sauc-1.0.0
+/var/www/cgi-bin/sauc-1.0.0.exe < /tmp/instr$$
 rm /tmp/instr$$
 #cat /tmp/instr$$ 
 echo "</font></pre>"

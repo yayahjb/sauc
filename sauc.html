@@ -4,10 +4,10 @@
 	<meta charset="utf-8">
 	
 	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=UnifrakturMaguntia">
-        <link rel="stylesheet" href="http://arcib.dowling.edu/~yaya/sauc/mathscribe-0.2.0/jqmath-0.2.0.css">
+        <link rel="stylesheet" href="http://http://blondie.ddns.net:8083/sauc-1.0.0/mathscribe-0.2.0/jqmath-0.2.0.css">
 	
-	<script src="http://arcib.dowling.edu/~yaya/sauc/mathscribe-0.2.0/jquery-1.4.3.min.js"></script>
-	<script src="http://arcib.dowling.edu/~yaya/sauc/mathscribe-0.2.0/jqmath-etc-0.2.0.min.js"></script>
+	<script src="http://http://blondie.ddns.net:8083/sauc-1.0.0/mathscribe-0.2.0/jquery-1.4.3.min.js"></script>
+	<script src="http://http://blondie.ddns.net:8083/sauc-1.0.0/mathscribe-0.2.0/jqmath-etc-0.2.0.min.js"></script>
 	<!-- <script>M.MathPlayer = false;</script> -->
 
 <!--
@@ -65,6 +65,26 @@ function pfloat(pfield){
         if(allowed==false){ pfield.value = pfield.value.replace(pfield.value.charAt(i),""); i--; }
     }
     return true;
+}
+
+function pint(ifield){
+    // validate for positive int   
+    var charsAllowed="0123456789";
+    var allowed;
+    var nonzero;
+    nonzero = false;
+    for(var i=0;i<ifield.value.length;i++){       
+        allowed=false;
+        for(var j=0;j<charsAllowed.length;j++){
+            if( ifield.value.charAt(i)==charsAllowed.charAt(j) ){ 
+               allowed=true;
+               if (j > 0) nonzero = true;
+               break;
+            }
+        }
+        if(allowed==false){ ifield.value = ifield.value.replace(ifield.value.charAt(i),""); i--; }
+    }
+    return nonzero;
 }
 
 function gfloat(field){
@@ -128,12 +148,15 @@ Search of Alternate Unit Cells - SAUC
 <H1>SAUC</H1>
 Search of Alternate Unit Cells
 <br />Copyright Keith J. McGill 2013, 2014
-<br /><br />Keith J McGill, Mojgan Asadi, Maria T. Karakasheva, Lawrence C. Andrews, Herbert J. Bernstein
-<br /><br />Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein
-<br /><br />Dowling College and Micro Encoder Inc.
+<br />Keith J McGill, Mojgan Asadi, Maria T. Karakasheva, Lawrence C. Andrews, Herbert J. Bernstein
+<br />Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein
+<br />Rev 0.9, 21 Jul 2015, Herbert J. Bernstein
+<br />Rev 1.0, 22 Nov 2016, Herbert J. Bernstein
+<br />formerly Dowling College and Micro Encoder Inc.
 <br />Work Supported In Part By NIGMS
-<br /><br />Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
-<FORM method=GET ACTION="http://arcib.dowling.edu/cgi-bin/cgiwrap/yaya/sauc.csh">
+<br />Original Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
+<br />Support Contact Email: <a href=mailto:yayahjb@gmail.com>yayahjb@gmail.com</a>
+<FORM method=GET ACTION="http://blondie.ddns.net:8083/cgi-bin/sauc-1.0.0.csh">
 </center>
 <font size="-1">
 A crystallographic cell is a representation of a lattice, but each lattice can be represented
@@ -218,10 +241,14 @@ VALUE="90.0" SIZE="9"></td>
 </tr>
 <th align="left">
 Similarity:</th>
-<tr><td>
-<input type="radio" name="Similarity" value="1" />Nearest<br />
-<input type="radio" name="Similarity" value="2" /checked>Sphere<br />
-Radius of S<td><br /><br /><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere"VALUE="2.5" SIZE="9"></td>
+<tr><td colspan=2>
+<input type="radio" name="Similarity" value="1" />Nearest&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" onchange="pint(this)" NAME="NumHits"VALUE="10" SIZE="9">
+&nbsp;&nbsp;&nbsp;&nbsp;Hits<br />
+<input type="radio" name="Similarity" value="2" checked />Sphere<br />
+Radius of S</td>
+<td colspan=2><br /><br /><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere"VALUE="2.5" SIZE="9">
+&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="yes" checked />%
+&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="no" />Angstroms</td>
 </td></tr>
 <tr><td>
 <input type="radio" name="Similarity" value="3" />Range<br />
@@ -348,17 +375,25 @@ FILE OR FILES AND NOT WITH AUTHORS OF THE PROGRAMS OR DOCUMENTS.
 
 <P>
 This program and related scripts are available as 
-a <a href="http://downloads.sf.net/iterate/sauc-0.8.1.tar.gz">tarball</a>
+a <a href="http://downloads.sf.net/iterate/sauc-1.0.0.tar.gz">tarball</a>
 or a 
-<a href="http://downloads.sf.net/iterate/sauc-0.8.1.zip">zip file</a>.
+<a href="http://downloads.sf.net/iterate/sauc-1.0.0.zip">zip file</a>.
 <br />The information below is available for download from 
 <a href="http://arxiv.org/abs/1307.1811">arxiv.org/abs/1307.1811</a>.
 <p>
 
-<a name="Rev_0.8"></a>
-<h2>Revison 0.8</h2>
+<a name="Rev_1.0"></a>
+<h2>Revison 1.0</h2>
+Revision 1.0 of 22 November 2016 adds support for searching cells from the Crystallographic
+Open Database (COD), and has considerable speed improvements.  Use of COD in place of CSD avoids
+license issues, but provides fewer small molecule cells. 
 <p>
-Revision 0.8 of 24 April 2014 has revised output, following the suggestions of Graeme Winter and 
+Revision 0.9 of 11 August 2015 added support for searching cell from the Cambridge Structural Database
+from Cambridge Crystallographic Data Centre as a development effort in support of image identification
+for synchrotrons.  That version was experimental.  Support for specifying the sphere radius as
+a percentage and for specifying a limit on the number of hits are provided.
+<p>
+Revision 0.8 of 24 April 2014 had revised output, following the suggestions of Graeme Winter and
 the good example of Nearest-Cell (Ramraj et al., 2011) in giving some of the provenance of the
 cell and organizing long output lists into collapsed lists of families.  Unlike Nearest-Cell
 we have chosen to organize the families on the PDB HEADER field, rather than the sequence.
