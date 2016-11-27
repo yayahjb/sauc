@@ -15,10 +15,10 @@ do
       data_cif=data_cifs/$1/data_${xdata}
       data_zinc=${data_cif}.zinc
       echo "processing $xcif to $data_cif"
-      bin/cif2cif -q codfields.req -i $xcif -o $data_cif
+      ./cif2cif -q codfields.req -m 2048 -i $xcif -o $data_cif
       echo "processing $data_cif to $data_zinc"
       Zinc/src/cifZinc -c $data_cif > $data_zinc
-      bin/getcodfields < $data_zinc >> cod_$1.tsv
+      ./getcodfields < $data_zinc >> cod_$1.tsv
     done
   fi
 done

@@ -97,6 +97,9 @@ SAUCHTML = sauc-$(SAUCVERSION).html
 SAUCCGI = sauc-$(SAUCVERSION).csh
 SAUCEXE = sauc-$(SAUCVERSION).exe
 
+COD ?= .
+
+
 
 
 CGIPATH		?=	http://$(HTTPDSERVER)$(CGIBINEXT)
@@ -271,6 +274,19 @@ cif2cif:  ciftbx
 	cd ciftbx/cif2cif.src;  make clean; make cif2cif
 	mv ciftbx/cif2cif.src/cif2cif .
 
+getcodfields:	getcodfields.c pststrmgr.c pststrmgr.h fgetln.c
+	$(CC) $(CFLAGS) -o getcodfields getcodfields.c fgetln.c pststrmgr.c
+
+$(COD)/cif:	load_COD
+	touch load_COD
+	mkdir -p $(COD)/cif; rsync -avz --delete rsync://www.crystallography.net/cif/ $(COD)/cif/
+	touch $(COD)/cif
+
+cod.tsv:	$(COD)/cif getcodfields exdata.sh coddata.sh Zinc/src/cifZinc cif2cif
+	-cp cod.tsv $(SAVEDB)
+	./coddata.sh
+	cat cod_*.tsv > cod.tsv
+
 $(MATHSCRIBETARBALL):
 	wget --no-check-certificate $(MATHSCRIBETARBALLURL)
 
@@ -288,12 +304,15 @@ $(NEWDB)/crystal.idx: $(NEWDB)
 $(NEWDB)/entries.idx: $(NEWDB)
 	(cd $(NEWDB); wget -N $(PDBENTRIESURL) )
 
-updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) $(NEWDB) sauc
+updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) $(NEWDB) $(SAUCEXE) cod.tsv sauc_psm_files_create
 	-cp PDBcelldatabase.tsv $(SAVEDB)/
 	-cp *.dmp $(SAVEDB)/
 	-(cd $(NEWDB);rm -f *.dmp result*)
-	(cd $(NEWDB);../idx2tsc < crystal.idx > PDBcelldatabase.tsv)
-	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../sauc < ../rebuild.inp)
+	cp cod.tsv $(NEWDB)/
+	(cd $(NEWDB);../idx2tsv < crystal.idx > PDBcelldatabase.tsv)
+	(cd $(NEWDB);../sauc_psm_files_create PDB)
+	(cd $(NEWDB);../sauc_psm_files_create COD)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../$(SAUCEXE) < ../rebuild.inp)
 	(cd $(NEWDB);grep "1O51" resultL1)
 	(cd $(NEWDB);grep "1O51" resultL2)
 	(cd $(NEWDB);grep "1O51" resultNCDist)
