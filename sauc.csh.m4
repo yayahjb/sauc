@@ -50,6 +50,7 @@ echo "Search of Alternate Unit Cells"
 echo "<br />Copyright Keith J. McGill 2013"
 echo "<br />Rev 0.8, 24 Apr 2014 Mojgan Asadi, Herbert J. Bernstein"
 echo "<br />Rev 0.9.0, 14 Aug 2015 Herbert J. Bernstein"
+echo "<br />Rev 1.0.0, 22 Nov 2016 Herbert J. Bernstein"
 echo ''`</center>''`
 echo "<p>"
 echo "<center>"

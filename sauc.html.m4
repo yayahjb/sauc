@@ -148,12 +148,14 @@ Search of Alternate Unit Cells - SAUC
 <H1>SAUC</H1>
 Search of Alternate Unit Cells
 <br />Copyright Keith J. McGill 2013, 2014
-<br /><br />Keith J McGill, Mojgan Asadi, Maria T. Karakasheva, Lawrence C. Andrews, Herbert J. Bernstein
-<br /><br />Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein
-<br /><br />Rev 0.9, 21 July 2015, Herbert J. Bernstein
-<br /><br />Dowling College and Micro Encoder Inc.
+<br />Keith J McGill, Mojgan Asadi, Maria T. Karakasheva, Lawrence C. Andrews, Herbert J. Bernstein
+<br />Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein
+<br />Rev 0.9, 21 Jul 2015, Herbert J. Bernstein
+<br />Rev 1.0, 22 Nov 2016, Herbert J. Bernstein
+<br />formerly Dowling College and Micro Encoder Inc.
 <br />Work Supported In Part By NIGMS
-<br /><br />Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
+<br />Original Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
+<br />Support Contact Email: <a href=mailto:yayahjb@gmail.com>yayahjb@gmail.com</a>
 <FORM method='CGIMETHOD()` ACTION="'CGIBIN()`/'SAUCCGI()`">
 </center>
 <font size="-1">
@@ -380,12 +382,15 @@ or a
 <a href="http://arxiv.org/abs/1307.1811">arxiv.org/abs/1307.1811</a>.
 <p>
 
-<a name="Rev_0.9"></a>
-<h2>Revison 0.9</h2>
+<a name="Rev_1.0"></a>
+<h2>Revison 1.0</h2>
+Revision 1.0 of 22 November 2016 adds support for searching cells from the Crystallographic
+Open Database (COD), and has considerable speed improvements.  Use of COD in place of CSD avoids
+license issues, but provides fewer small molecule cells. 
 <p>
-Revision 0.9 of 11 August 2015 adds support for searching cell from the Cambridge Structural Database
+Revision 0.9 of 11 August 2015 added support for searching cell from the Cambridge Structural Database
 from Cambridge Crystallographic Data Centre as a development effort in support of image identification
-for synchrotrons.  The current version is experimental.  Support for specifying the sphere radius as
+for synchrotrons.  That version was experimental.  Support for specifying the sphere radius as
 a percentage and for specifying a limit on the number of hits are provided.
 <p>
 Revision 0.8 of 24 April 2014 had revised output, following the suggestions of Graeme Winter and
