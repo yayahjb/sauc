@@ -8,6 +8,7 @@
 #  Rev 13 July 2013
 #  Rev 21 April 2014
 #  Rev 142 August 2015
+#  Rev 17 Dec 2017
 #
 #  Modify the following definitions for your system
 #
@@ -23,7 +24,7 @@ HTTPDSERVER	?=	HOST.DOMAIN/~$(USER)
 #
 #  SAUCVERSION is used to allow multiple co-existing versions
 #
-SAUCVERSION = 1.0.0
+SAUCVERSION = 1.0.2
 #
 #  SEARCHURL IS THE URL FOR NEW SEARCH
 #
@@ -139,8 +140,19 @@ UPDFLAGS    =   -DSAUCDIR=$(PWD) \
 	    -DSAUCEXE=$(SAUCEXE)
 
 
-SAVEDB		=	./save
+SAVEDB		=	./saves
 NEWDB		=	./newdb
+
+
+BIGFILES	=  CODentries.dmp  crystal.idx  PDBcelldatabase.csv  PDBcells.dmp    \
+		sauc_NT_L1_ckp.dmp  sauc_NT_NCDist_ckp.dmp cod.tsv         entries.idx  \
+		PDBcelldatabase.tsv  PDBentries.dmp  sauc_NT_L2_ckp.dmp  sauc_NT_V7_ckp.dmp
+
+$(BIGFILES):	CODentries.dmp.bz2  crystal.idx.bz2  PDBcelldatabase.csv.bz2  PDBcells.dmp.bz2 \
+		sauc_NT_L1_ckp.dmp.bz2  sauc_NT_NCDist_ckp.dmp.bz2 cod.tsv.bz2         entries.idx.bz2 \
+		PDBcelldatabase.tsv.bz2  PDBentries.dmp.bz2  sauc_NT_L2_ckp.dmp.bz2  sauc_NT_V7_ckp.dmp.bz2
+		bunzip2 < $@.bz2 > $@
+
 
 all:		edit
 		@/bin/echo "  make edit_done   to build the kit after edits"
@@ -175,7 +187,7 @@ edit:
 		@/bin/echo "**************************************"
 
 #
-edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create
+edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create $(BIGFILES)
 		touch edit
 #
 clean:
@@ -189,6 +201,7 @@ clean:
 		-@rm -rf ciftbx
 		-@rm -f cif2cif
 		-@rm -f idx2tsv
+		-@rm -f $(BIGFILES)
 #
 $(SAUCHTML):	sauc.html.m4 Makefile $(MATHSCRIBEPATH) gpl.txt lgpl.txt
 		m4 $(HTFLAGS) < sauc.html.m4 > $(SAUCHTML)
@@ -202,7 +215,7 @@ updatedb.csh:	updatedb.csh.m4 Makefile edit
 #
 install:	edit $(SAUCEXE) $(SAUCCGI) $(SAUCHTML) \
 		$(MATHSCRIBEPATH) gpl.txt lgpl.txt \
-		entries.idx
+		$(BIGFILES)
 		-mkdir -p $(BINDEST)
 		-mkdir -p $(CGIBIN)
 		-mkdir -p $(HTDOCS)
@@ -277,15 +290,14 @@ cif2cif:  ciftbx
 getcodfields:	getcodfields.c pststrmgr.c pststrmgr.h fgetln.c
 	$(CC) $(CFLAGS) -o getcodfields getcodfields.c fgetln.c pststrmgr.c
 
-$(COD)/cif:	load_COD
-	touch load_COD
+$(COD)/cif:	
 	mkdir -p $(COD)/cif; rsync -avz --delete rsync://www.crystallography.net/cif/ $(COD)/cif/
 	touch $(COD)/cif
 
-cod.tsv:	$(COD)/cif getcodfields exdata.sh coddata.sh Zinc/src/cifZinc cif2cif
-	-cp cod.tsv $(SAVEDB)
+cod.tsv.bz2:	$(COD)/cif getcodfields exdata.sh coddata.sh Zinc/src/cifZinc cif2cif $(SAVEDB)
+	-cp cod.tsv.bz2 $(SAVEDB)
 	./coddata.sh
-	cat cod_*.tsv > cod.tsv
+	cat cod_*.tsv | bzip2 >  cod.tsv.bz2
 
 $(MATHSCRIBETARBALL):
 	wget --no-check-certificate $(MATHSCRIBETARBALLURL)
@@ -304,7 +316,8 @@ $(NEWDB)/crystal.idx: $(NEWDB)
 $(NEWDB)/entries.idx: $(NEWDB)
 	(cd $(NEWDB); wget -N $(PDBENTRIESURL) )
 
-updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) $(NEWDB) $(SAUCEXE) cod.tsv sauc_psm_files_create
+updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
+	    $(NEWDB) $(SAUCEXE) cod.tsv sauc_psm_files_create
 	-cp PDBcelldatabase.tsv $(SAVEDB)/
 	-cp *.dmp $(SAVEDB)/
 	-(cd $(NEWDB);rm -f *.dmp result*)
@@ -331,7 +344,7 @@ $(NEWDB)/last_update:
 	touch $(NEWDB)/last_update
 
 $(SAVEDB):
-	mkdir $(SAVEDB)
+	mkdir -p $(SAVEDB)
 
 $(NEWDB):
-	mkdir $(NEWDB)
+	mkdir -p $(NEWDB)
