@@ -33,6 +33,26 @@ information.  They are all included, and compressed, in jqmath-etc-0.2.0.min.js.
 -->
 <script 
 language="javascript" type="text/javascript">
+function ifnotcheckedhide(testfield,hidefield) {
+    //if testfield is not checked, hide hidefield;
+    if (testfield.checked) {
+        hidefield.style.visibility="visible";
+    } else {
+        hidefield.style.visibility="hidden";
+    }
+    return hidefield.style.visibility;
+}
+
+function ifcheckedhide(testfield,hidefield) {
+    //if testfield is checked, hide hidefield;
+    if (testfield.checked) {
+        hidefield.style.visibility="hidden";
+    } else {
+        hidefield.style.visibility="visible";
+    }
+    return hidefield.style.visibility;
+}
+
 function pfloat(pfield){
     // validate for non-negative float   
     var charsAllowed="0123456789.+";
@@ -129,7 +149,7 @@ Search of Alternate Unit Cells - SAUC
 </TITLE> 
 </HEAD> 
 <BODY>
-<font face="Arial,Helvetica,Times" size="3">
+<font face="Arial,Helvetica,Times" size="2">
 <center>
 | <a href="#Search">Search</a>
 | <a href="#Source">Source</a>
@@ -241,29 +261,51 @@ VALUE="90.0" SIZE="9"></td>
 </tr>
 <th align="left">
 Similarity:</th>
-<tr><td colspan=2>
-<input type="radio" name="Similarity" value="1" />Nearest&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE="text" onchange="pint(this)" NAME="NumHits"VALUE="10" SIZE="9">
-&nbsp;&nbsp;&nbsp;&nbsp;Hits<br />
-<input type="radio" name="Similarity" value="2" checked />Sphere<br />
-Radius of S</td>
-<td colspan=2><br /><br /><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere"VALUE="2.5" SIZE="9">
+<td id="NumHitsLabel" colspan=2 align="right" style="visibility:visible">
+Limit Nearest or Sphere to <INPUT TYPE="text" onchange="pint(this)" NAME="NumHits" VALUE="50" SIZE="9">
+Hits</td>
+<tr><td>
+<input id="SimNear" type="radio" name="Similarity" value="1" 
+onchange="ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangea''`));
+ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangeb''`));
+ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangec''`));
+ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`RangeSphereLabel''`));
+ifcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`NumHitsLabel''`))"/>
+Nearest</td></tr>
+<tr><td>&nbsp;</td></tr>
+<tr><td>
+<input id="SimSphere" type="radio" name="Similarity" value="2" checked 
+onchange="ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangea''`));
+ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangeb''`));
+ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangec''`));
+ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`RangeSphereLabel''`));
+ifcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`NumHitsLabel''`))"/>
+Sphere</td></tr>
+<tr id="RangeSphereLabel" style="visibility:visible"><td colspan=4 align="right">Radius of Sphere
+<INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere" VALUE="2.5" SIZE="9">
 &nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="yes" checked />%
 &nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="no" />Angstroms</td>
 </td></tr>
 <tr><td>
-<input type="radio" name="Similarity" value="3" />Range<br />
+<input id="SimRange" type="radio" name="Similarity" value="3"
+onchange="ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangea''`));
+ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangeb''`));
+ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangec''`));
+ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`RangeSphereLabel''`));
+ifcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`NumHitsLabel''`))"/>
+Range<br />
 </td></tr>
-<tr>
+<tr id="rangea" style="visibility:hidden">
 <td>Range of A</td><td><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeA" 
 VALUE="1.0" SIZE="9"></td> 
 <td>Range of Alpha</td><td> <INPUT TYPE="text" onchange="gfloat(this)" NAME="RangeAlpha" 
 VALUE="1.0" SIZE="9"></td>
-</tr><tr>  
+</tr><tr id="rangeb" style="visibility:hidden">
 <td>Range of B</td><td><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeB" 
 VALUE="1.0" SIZE="9"> </td>
 <td>Range of Beta</td><td> <INPUT TYPE="text" onchange="gfloat(this)" NAME="RangeBeta" 
 VALUE="1.0" SIZE="9"></td>
-</tr><tr>
+</tr><tr id="rangec" style="visibility:hidden">
 <td>Range of C</td><td><INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeC" 
 VALUE="1.0" SIZE="9"> 
 <td>Range of Gamma</td><td> <INPUT TYPE="text" onchange="gfloat(this)" NAME="RangeGamma" 
@@ -374,11 +416,12 @@ FILE OR FILES AND NOT WITH AUTHORS OF THE PROGRAMS OR DOCUMENTS.
 <H2>Access to the source of SAUC</H2>
 
 <P>
-This program and related scripts are available as 
-a <a href="'SAUCTARBALLURL()`">tarball</a>
-or a 
-<a href="'SAUCZIPURL()`">zip file</a>.
+This program and related scripts are available from github
+at <a href="https://github.com/yayahjb/sauc">https://github.com/yayahjb/sauc</a>
+or as a zip file from
+<a href="https://github.com/yayahjb/sauc/archive/master.zip">https://github.com/yayahjb/sauc/archive/master.zip</a>.
 <br />The information below is available for download from 
+
 <a href="http://arxiv.org/abs/1307.1811">arxiv.org/abs/1307.1811</a>.
 <p>
 
@@ -859,7 +902,7 @@ Wyckoff, R. W. G. (1931). The structure of crystals. No. 19. The Chemical Catalo
 </center>
 
 <hr>
-Updated 25 April 2014.
+Updated 27 December 2017.
 </font>
 </body>
 </html>'
