@@ -60,8 +60,10 @@ PDBCELLINDEXURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
 PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #
 #  Default compile flag definition to select debug mode under unix
-CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 -mfpmath=sse -msse2
-CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 -mfpmath=sse -msse2
+CXXFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 -mfpmath=sse -msse2
+CFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 -mfpmath=sse -msse2
+#CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 -mfpmath=sse -msse2
+#CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 -mfpmath=sse -msse2
 CXX	?=	g++
 CC	?=	gcc
 #
@@ -144,13 +146,24 @@ SAVEDB		=	./saves
 NEWDB		=	./newdb
 
 
-BIGFILES	=  CODentries.dmp  crystal.idx  PDBcelldatabase.csv  PDBcells.dmp    \
-		sauc_NT_L1_ckp.dmp  sauc_NT_NCDist_ckp.dmp cod.tsv         entries.idx  \
-		PDBcelldatabase.tsv  PDBentries.dmp  sauc_NT_L2_ckp.dmp  sauc_NT_V7_ckp.dmp
+DMPFILES	=  CODentries.dmp  PDBcells.dmp    \
+		sauc_NT_L1_ckp.dmp  sauc_NT_NCDist_ckp.dmp  \
+		PDBentries.dmp  sauc_NT_L2_ckp.dmp  sauc_NT_V7_ckp.dmp
 
-$(BIGFILES):	CODentries.dmp.bz2  crystal.idx.bz2  PDBcelldatabase.csv.bz2  PDBcells.dmp.bz2 \
-		sauc_NT_L1_ckp.dmp.bz2  sauc_NT_NCDist_ckp.dmp.bz2 cod.tsv.bz2         entries.idx.bz2 \
-		PDBcelldatabase.tsv.bz2  PDBentries.dmp.bz2  sauc_NT_L2_ckp.dmp.bz2  sauc_NT_V7_ckp.dmp.bz2
+OBIGFILES	=  crystal.idx  PDBcelldatabase.csv  \
+		cod.tsv         entries.idx  \
+		PDBcelldatabase.tsv  
+
+BIGFILES	= $(DMPFILES) $(OBIGFILES)
+
+$(DMPFILES):	CODentries.dmp.bz2  PDBcells.dmp.bz2 \
+		sauc_NT_L1_ckp.dmp.bz2  sauc_NT_NCDist_ckp.dmp.bz2 \
+		PDBentries.dmp.bz2  sauc_NT_L2_ckp.dmp.bz2  sauc_NT_V7_ckp.dmp.bz2
+		bunzip2 < $@.bz2 > $@
+
+$(OBIGFILES):	crystal.idx.bz2  PDBcelldatabase.csv.bz2 \
+		cod.tsv.bz2         entries.idx.bz2 \
+		PDBcelldatabase.tsv.bz2  
 		bunzip2 < $@.bz2 > $@
 
 
@@ -290,7 +303,7 @@ cif2cif:  ciftbx
 getcodfields:	getcodfields.c pststrmgr.c pststrmgr.h fgetln.c
 	$(CC) $(CFLAGS) -o getcodfields getcodfields.c fgetln.c pststrmgr.c
 
-$(COD)/cif:	
+$(COD)/cif: load_cod_cifs	
 	mkdir -p $(COD)/cif; rsync -avz --delete rsync://www.crystallography.net/cif/ $(COD)/cif/
 	touch $(COD)/cif
 
@@ -317,12 +330,17 @@ $(NEWDB)/entries.idx: $(NEWDB)
 	(cd $(NEWDB); wget -N $(PDBENTRIESURL) )
 
 updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
-	    $(NEWDB) $(SAUCEXE) cod.tsv sauc_psm_files_create
+	    $(NEWDB) $(SAUCEXE) cod.tsv sauc_psm_files_create \
+	    PDBcelldatabase.tsv PDBentries.dmp PDBcells.dmp CODentries.dmp
 	-cp PDBcelldatabase.tsv $(SAVEDB)/
-	-cp *.dmp $(SAVEDB)/
+	-cp *.dmp.bz2 $(SAVEDB)/
 	-(cd $(NEWDB);rm -f *.dmp result*)
 	cp cod.tsv $(NEWDB)/
-	(cd $(NEWDB);../idx2tsv < crystal.idx > PDBcelldatabase.tsv)
+	cp PDBentries.dmp $(NEWDB)/
+	cp PDBcells.dmp $(NEWDB)/
+	cp CODentries.dmp $(NEWDB)/
+	(cd $(NEWDB);../idx2tsv < crystal.idx | \
+	  bzip2 >  PDBcelldatabase.tsv.bz2; bunzip2 <  PDBcelldatabase.tsv.bz2 > PDBcelldatabase.tsv)
 	(cd $(NEWDB);../sauc_psm_files_create PDB)
 	(cd $(NEWDB);../sauc_psm_files_create COD)
 	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../$(SAUCEXE) < ../rebuild.inp)
@@ -330,12 +348,13 @@ updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
 	(cd $(NEWDB);grep "1O51" resultL2)
 	(cd $(NEWDB);grep "1O51" resultNCDist)
 	(cd $(NEWDB);grep "1O51" resultV7)
+	(cd $(NEWDB);bzip2 *.dmp)
 	(cd $(NEWDB);date > last_update) 
 	touch updatedb
 
 last_update:	$(NEWDB)/last_update updatedb
-	cp $(NEWDB)/*.dmp .
-	cp $(NEWDB)/*.tsv .
+	cp $(NEWDB)/*.dmp.bz2 .
+	cp $(NEWDB)/*.tsv.bz2 .
 	cp $(NEWDB)/last_update .
 	cp $(NEWDB)/entries.idx .
 	touch last_update
