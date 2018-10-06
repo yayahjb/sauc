@@ -4,8 +4,13 @@
 #include "Cell.h"
 #include "V7.h"
 #include "NCDist.h"
+#include "D7Dist.h"
+#include "CS6Dist.h"
+#include "S6M_SellingReduce.h"
 
 double NCDist(double *, double *);
+double D7Dist(double *, double *);
+double S6Dist(double *, double *);
 static double pi = 3.141592653589793;
 static double torad = pi/180.;
 
@@ -130,7 +135,7 @@ public:
         db = dbid;
 	}
     
-    /* deprecated version of getCell from before introduction of db is*/
+    /* deprecated version of getCell from before introduction of dbid*/
     void getCell(double cell[6], double * row ) {
         int ii;
         for (ii=0; ii < 6; ii++) {
@@ -219,32 +224,64 @@ public:
                     (cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad*(cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad +
                     (cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad*(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad))*Scaledist;
 		}
-		else if (algorithm == 3)
+
+		else if (algorithm == 3) /* NCDist */
 		{
-            const Cell c1(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5]);
-            const Cell c2(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11]);
-            const arma::vec6 gv1(c1.Cell2V6());
-            const arma::vec6 gv2(c2.Cell2V6());
-            double dgv1[6];
-            double dgv2[6];
-            int ii;
-            for (ii=0; ii < 6; ii++){
-                dgv1[ii] = gv1[ii];
-                dgv2[ii] = gv2[ii];
-            }
-            return std::sqrt(NCDist(dgv1,dgv2))*Scaledist;
+                    double c1[6], c2[6], g1[6], g2[6];
+                    CS6M_comptovec6(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5],c1);
+                    CS6M_comptovec6(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11],c2);
+                    CS6M_CelldegtoG6(c1,g1);
+                    CS6M_CelldegtoG6(c2,g2);
+                    return std::sqrt(NCDist(g1,g2))*Scaledist;
 		}
-		else if (algorithm == 4)
+
+		else if (algorithm == 4) /* V7 */
 		{
-            const Cell c1(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5]);
-            const Cell c2(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11]);
-            const V7 gv1(c1.Cell2V6());
-            const V7 gv2(c2.Cell2V6());
+                    const Cell c1(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5]);
+                    const Cell c2(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11]);
+                    const V7 gv1(c1.Cell2V6());
+                    const V7 gv2(c2.Cell2V6());
             
 			//V7 dist
             
 			return ((gv1-gv2).Norm())*Scaledist;
 		}
+
+                else if (algorithm == 5) /* D7Dist */
+                {
+                    int red1, red2;
+                    double c1[6], c2[6], g1[6], g2[6];
+                    double d1[7], d2[7], d1red[7], d2red[7];
+
+                    CS6M_comptovec6(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5],c1);
+                    CS6M_comptovec6(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11],c2);
+                    CS6M_CelldegtoG6(c1,g1);
+                    CS6M_CelldegtoG6(c2,g2);
+                    CS6M_G6toD7(g1,d1);
+                    CS6M_G6toD7(g2,d2);
+                    CS6M_D7Reduce(d1,d1red,red1);
+                    CS6M_D7Reduce(d2,d2red,red2);
+                    return std::sqrt(D7Dist(d1red,d2red))*Scaledist;
+
+                }
+
+                else if (algorithm == 6) /* S6Dist */
+                {
+                    int red1,red2;
+                    double c1[6], c2[6], g1[6], g2[6];
+                    double s1[6], s2[6], s1red[6], s2red[6];
+                    CS6M_comptovec6(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5],c1);
+                    CS6M_comptovec6(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11],c2);
+                    CS6M_CelldegtoG6(c1,g1);
+                    CS6M_CelldegtoG6(c2,g2);
+                    CS6M_G6toS6(g1,s1);
+                    CS6M_G6toS6(g2,s2);
+                    CS6M_S6Reduce(s1,s1red,red1);
+                    CS6M_S6Reduce(s2,s2red,red2);
+                    return std::sqrt(CS6Dist(s1red,s2red))*Scaledist;
+                }
+
+
 		return 0;
 	}
 };

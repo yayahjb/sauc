@@ -31,6 +31,8 @@ if ( -e crystal.idx ) then
     touch resultL2
     touch resultNCDist
     touch resultV7
+    touch resultD7
+    touch resultS6
     grep "1O51" resultL1
     if ( $status ) set check_update=1
     grep "1O51" resultL2
@@ -38,6 +40,10 @@ if ( -e crystal.idx ) then
     grep "1O51" resultNCDist
     if ( $status ) set check_update=1
     grep "1O51" resultV7
+    if ( $status ) set check_update=1
+    grep "1O51" resultD7
+    if ( $status ) set check_update=1
+    grep "1O51" resultS6
     if ( $status ) set check_update=1
   endif
 else

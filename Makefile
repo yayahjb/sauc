@@ -20,11 +20,12 @@
 #  ***              REMOTE ACCESS                ***
 #  *************************************************
 #
-HTTPDSERVER	?=	HOST.DOMAIN/~$(USER)
+#HTTPDSERVER	?=	HOST.DOMAIN/~$(USER)
+HTTPDSERVER	=	flops.arcib.org:8084
 #
 #  SAUCVERSION is used to allow multiple co-existing versions
 #
-SAUCVERSION = 1.0.2
+SAUCVERSION = 1.0.3
 #
 #  SEARCHURL IS THE URL FOR NEW SEARCH
 #
@@ -32,11 +33,13 @@ SEARCHURL	?=	http://$(HTTPDSERVER)/sauc-$(SAUCVERSION)#search
 #
 #  BINDEST is the installation directory for the executable
 #  of sauc
-BINDEST		?=	$(HOME)/bin
+#BINDEST		?=	$(HOME)/bin
+BINDEST		=	/var/www/cgi-bin
 #
 #  CGIBIN is the installation directory for the cgi-bin script
 #  iterate.csh
 CGIBIN		?=	$(HOME)/public_html/cgi-bin
+CGIBIN		=	/var/www/cgi-bin
 #
 #  CGIMETHOD is either GET or POST
 #
@@ -48,7 +51,8 @@ CGIBINEXT	?=	/cgi-bin
 #
 #  HTDOCS is the installation directory for the HTML document
 #  $(SAUCHTML)
-HTDOCS		?=	$(HOME)/public_html/sauc-$(SAUCVERSION)
+#HTDOCS		?=	$(HOME)/public_html/sauc-$(SAUCVERSION)
+HTDOCS		=	/var/www/html/sauc-$(SAUCVERSION)
 #
 #  HTDOCSEXT is the external name of the directory for the 
 #  HTML document $(SAUCHTML)
@@ -265,7 +269,8 @@ $(SAUCEXE): \
 	triple.h \
 	TNear.h \
 	pststrmgr.c \
-	pststrmgr.h
+	pststrmgr.h \
+	S6M_SellingReduce.h
 	$(CC) $(CFLAGS) -c pststrmgr.c
 	$(CXX) $(CXXFLAGS) -o $(SAUCEXE) \
 	BasicDistance.cpp    \
@@ -345,6 +350,8 @@ updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
 	(cd $(NEWDB);grep "1O51" resultL2)
 	(cd $(NEWDB);grep "1O51" resultNCDist)
 	(cd $(NEWDB);grep "1O51" resultV7)
+	(cd $(NEWDB);grep "1O51" resultD7)
+	(cd $(NEWDB);grep "1O51" resultS6)
 	(cd $(NEWDB);rm -rf *.dmp.bz2; bzip2 *.dmp)
 	(cd $(NEWDB);date > last_update) 
 	touch updatedb
