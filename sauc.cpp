@@ -83,6 +83,7 @@
 #include <vector>
 
 #include "sauc_psm_files_create.h"
+#include "S6M_SellingReduce.h"
 
 char *fgetln(FILE *stream, size_t *len);
 
@@ -122,14 +123,16 @@ void SphereResults( std::ostream& out,
 
 using namespace std;
 
-CNearTree <unitcell> * cellTree[4] = {NULL,NULL,NULL,NULL};
-CNearTree <unitcell>::iterator cellTree_itend[4];
-string sauc_NT_ckp_names[4] =
+CNearTree <unitcell> * cellTree[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
+CNearTree <unitcell>::iterator cellTree_itend[6];
+string sauc_NT_ckp_names[6] =
 {
     "sauc_NT_L1_ckp.dmp",
     "sauc_NT_L2_ckp.dmp",
     "sauc_NT_NCDist_ckp.dmp",
-    "sauc_NT_V7_ckp.dmp"
+    "sauc_NT_V7_ckp.dmp",
+    "sauc_NT_D7_ckp.dmp",
+    "sauc_NT_S6_ckp.dmp"
 };
 
 PSM_localpsm_handle PDBentries=NULL;
@@ -156,7 +159,7 @@ arma::vec6 primredprobe;
 string probelattice;
 double avglen=1.;
 double crootvol;
-
+arma::vec6 primcell;
 int nearest = 0, numRow = 0;
 int quitAlgorithm = 0, quitSimilar = 0, quitContinue = 0, endProgram = 0, choiceAlgorithm = 0, choiceSimilar = 0, choiceContinue = 0, goBack = 0,
 priorAlgorithm = -1;
@@ -297,15 +300,15 @@ int load_cellDSGZArrays(void) {
     string codid;
     string csdref;
     string SG;
-    double a;
-    double b;
-    double c;
-    double alpha;
-    double beta;
-    double gamma;
+    double a=1.;
+    double b=1.;
+    double c=1.;
+    double alpha=90.;
+    double beta=90.;
+    double gamma=90.;
     int Z;
     size_t ii;
-    size_t rejected;
+    size_t rejected=0;
     
     PDBcells_fields   = (PSM_string*)malloc(PDBcells_numfields*sizeof(PSM_string));
     CODentries_fields = (PSM_string*)malloc(CODentries_numfields*sizeof(PSM_string));
@@ -492,7 +495,7 @@ int make_mmapfiles(void) {
     size_t CSDfieldnumbers[2] = {CSDcells_refcode+1,
         CSDcells_refcode_family+1};
     size_t CODfieldnumbers[2] = {CODentries_id+1,CODentries_chemical_formula_sum+1};
-    size_t numdb;
+    size_t numdb=0;
     
     PDBentries = make_psmfile(PDBentries_mmap_file, PDBentries_raw_file,
                               2, PDBefieldnumbers,
@@ -537,9 +540,13 @@ bool makeprimredprobe( void )
     char clatsym;
     arma::vec6 v6cell;
     arma::vec6 redprimcell;
+    double d7cell[7];
+    double d7red[7];
+    double s6cell[6];
+    double s6red[6];
+    int reduced;
     arma::mat66 mc;
     arma::mat66 m;
-    arma::vec6 primcell;
     arma::vec6 recipcell;
     arma::vec6 reducedBase;
     Cell rawcell(probeArray[0],probeArray[1],probeArray[2],
@@ -585,7 +592,25 @@ bool makeprimredprobe( void )
             primcell = mc*(rawcell.Cell2V6());
             break;
     }
-    ret = Reducer::Reduce(primcell,m,redprimcell,0.0);
+    switch (choiceAlgorithm) {
+        case 1:  /* L1 */
+        case 2:  /* L2 */
+        case 3:  /* NCDist */
+        case 4:  /* V7 */
+             CS6M_G6Reduce(primcell,redprimcell,reduced);
+             break;
+        case 5:  /* D7Dist */
+             CS6M_G6toD7(primcell,d7cell);
+             CS6M_D7Reduce(d7cell,d7red,reduced);
+             CS6M_D7toG6(d7red,redprimcell);
+             break;
+        default: /* S6Dist and anything else */
+             CS6M_G6toS6(primcell,s6cell);
+             CS6M_S6Reduce(s6cell,s6red,reduced);
+             CS6M_S6toG6(s6red,redprimcell);
+             break;
+    }
+
     primredprobe = Cell(redprimcell).CellWithDegrees();
     std::cout << "Primitive Reduced Probe Cell: " <<
     primredprobe[0]<<" "<<
@@ -652,7 +677,6 @@ void buildNearTree( void )
     arma::mat66 m;
     arma::mat66 mc;
     arma::vec6 primcell;
-    arma::vec6 redprimcell;
     arma::vec6 searchcell;
     std::ofstream serialout;
     std::ifstream serialin;
@@ -1033,25 +1057,51 @@ void buildNearTree( void )
     
     for (int i = 0; i < (int)(cellDArray.size()); i++)
     {
+        double redprimcell[6];
+        double d7cell[7];
+        double d7red[7];
+        double s6cell[6];
+        double s6red[6];
+        int reduced;
         Cell rawcell(cellDArray[i][0], cellDArray[i][1], cellDArray[i][2], cellDArray[i][3], cellDArray[i][4], cellDArray[i][5]);
         if (i%20000 == 0) std::cout << "." ; 
         mc = rawcell.LatSymMat66((spaceArray[i]).substr(0,1));
         primcell = mc*(rawcell.Cell2V6());
-        if (!Reducer::Reduce(primcell,m,redprimcell,0.0)){
-            std::cout << "Reduction failed for "<<idArray[i]<<" "<<
-            cellDArray[i][3]<<" "<<
-            cellDArray[i][4]<<" "<<
-            cellDArray[i][5]<<" "<<
-            cellDArray[i][0]<<" "<<
-            cellDArray[i][1]<<" "<<
-            cellDArray[i][2]<<" "<<
-            spaceArray[i] << std::endl;
-            std::cout << "Primitive G6 " << primcell[0]<<" "<<
-            primcell[1]<<" "<<
-            primcell[2]<<" "<<
-            primcell[3]<<" "<<
-            primcell[4]<<" "<<
-            primcell[5] << std::endl;
+        switch (choiceAlgorithm) {
+            case 1:  /* L1 */
+            case 2:  /* L2 */
+            case 3:  /* NCDist */
+            case 4:  /* V7 */
+                 CS6M_G6Reduce(primcell,redprimcell,reduced);
+                 break;
+            case 5:  /* D7Dist */
+                 CS6M_G6toD7(primcell,d7cell);
+                 CS6M_D7Reduce(d7cell,d7red,reduced);
+                 CS6M_D7toG6(d7red,redprimcell);
+                 break;
+            default: /* S6Dist and anything else */
+                 CS6M_G6toS6(primcell,s6cell);
+                 CS6M_S6Reduce(s6cell,s6red,reduced);
+                 CS6M_S6toG6(s6red,redprimcell);
+                 break;
+
+        }
+             
+        if (!reduced){
+              std::cout << "Reduction failed for "<<idArray[i]<<" "<<
+              cellDArray[i][3]<<" "<<
+              cellDArray[i][4]<<" "<<
+              cellDArray[i][5]<<" "<<
+              cellDArray[i][0]<<" "<<
+              cellDArray[i][1]<<" "<<
+              cellDArray[i][2]<<" "<<
+              spaceArray[i] << std::endl;
+              std::cout << "Primitive G6 " << primcell[0]<<" "<<
+              primcell[1]<<" "<<
+              primcell[2]<<" "<<
+              primcell[3]<<" "<<
+              primcell[4]<<" "<<
+              primcell[5] << std::endl;
         };
         searchcell = Cell(redprimcell).CellWithDegrees();
         unitcell cellData(searchcell[0],searchcell[1],searchcell[2],
@@ -1301,7 +1351,7 @@ void SphereResults( std::ostream& out,
     vector<long> mythread;
     PSM_string * split_fields = NULL;
     std::string myfamily;
-    size_t myfamily_index;
+    size_t myfamily_index=0;
     
     int numRow;
     myentries.assign(myvector.size(),-1L);   /* The entry with this PDB ID */
@@ -1761,6 +1811,7 @@ int main ()
     std::cout << "See the program documentation for details" << std::endl;
     std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
     std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
+    std::cout << "Rev 1.0, 4 Oct 2018, Herbert J. Bernstein" << std::endl;
     
     // Check for sauc html run
     
@@ -1845,19 +1896,52 @@ int main ()
             if (!sauc_batch_mode) std::cout << "\n2. L2";
             if (!sauc_batch_mode) std::cout << "\n3. NCDist";
             if (!sauc_batch_mode) std::cout << "\n4. V7";
-            if (!sauc_batch_mode) std::cout << "\n5. Quit";
+            if (!sauc_batch_mode) std::cout << "\n5. D7Dist";
+            if (!sauc_batch_mode) std::cout << "\n6. S6Dist";
+            if (!sauc_batch_mode) std::cout << "\n7. Quit";
             if (!sauc_batch_mode) std::cout << "\nChoose a Metric: ";
             priorAlgorithm = choiceAlgorithm;
             std::cin >> choiceAlgorithm; std::cin.clear();
             std::cin.ignore(100000,'\n');
             
-            if (sauc_batch_mode && choiceAlgorithm > 0 && choiceAlgorithm < 5 ) {
+            if (sauc_batch_mode && choiceAlgorithm > 0 && choiceAlgorithm < 7 ) {
+                double d7cell[7],d7red[7],s6cell[6],s6red[6];
+                int reduced;
+                arma::vec6 redprimcell;
                 switch (choiceAlgorithm) {
                     case 1: std::cout << "L1 metric search algorithm" << std::endl; break;
                     case 2: std::cout << "L2 metric search algorithm" << std::endl; break;
                     case 3: std::cout << "NCDist metric search algorithm" << std::endl; break;
                     case 4: std::cout << "V7 metric search algorithm" << std::endl; break;
+                    case 5: std::cout << "D7Dist metric search algorithm" << std::endl; break;
+                    case 6: std::cout << "S6Dist metric search algorithm" << std::endl; break;
                 }
+                switch (choiceAlgorithm) {
+                    case 1:  /* L1 */
+                    case 2:  /* L2 */
+                    case 3:  /* NCDist */
+                    case 4:  /* V7 */  
+                         CS6M_G6Reduce(primcell,redprimcell,reduced);
+                         break; 
+                    case 5:  /* D7Dist */
+                         CS6M_G6toD7(primcell,d7cell);
+                         CS6M_D7Reduce(d7cell,d7red,reduced);
+                         CS6M_D7toG6(d7red,redprimcell);
+                         break;
+                    default: /* S6Dist and anything else */
+                         CS6M_G6toS6(primcell,s6cell);
+                         CS6M_S6Reduce(s6cell,s6red,reduced);
+                         CS6M_S6toG6(s6red,redprimcell);
+                         break;
+                }
+                primredprobe = Cell(redprimcell).CellWithDegrees();
+                std::cout << "Primitive Reduced Probe Cell: " <<
+                    primredprobe[0]<<" "<<
+                    primredprobe[1]<<" "<<
+                    primredprobe[2]<<" "<<
+                    primredprobe[3]<<" "<<
+                    primredprobe[4]<<" "<<
+                    primredprobe[5] << std::endl;
             }
             
             if (choiceAlgorithm == 1 && priorAlgorithm!= 1)
@@ -1898,11 +1982,29 @@ int main ()
             }
             else if (choiceAlgorithm == 5 && priorAlgorithm!= 5)
             {
+                cell.changeOperator(2);
+                cell.changeAlgorithm(5);
+                cell.changeScaledist(0.1);
+                quitAlgorithm = 1;
+                //Build Tree
+                if (!cellTree[choiceAlgorithm-1]) buildNearTree();
+            }
+            else if (choiceAlgorithm == 6 && priorAlgorithm!= 6)
+            {
+                cell.changeOperator(2);
+                cell.changeAlgorithm(6);
+                cell.changeScaledist(0.1);
+                quitAlgorithm = 1;
+                //Build Tree
+                if (!cellTree[choiceAlgorithm-1]) buildNearTree();
+            }
+            else if (choiceAlgorithm == 7 && priorAlgorithm!= 7)
+            {
                 quitAlgorithm = 1;
                 endProgram = 1;
                 quitContinue = 1;
             }
-            else if (choiceAlgorithm < 1 || choiceAlgorithm > 5)
+            else if (choiceAlgorithm < 1 || choiceAlgorithm > 7)
             {
                 std::cout << "Incorrect Choice. Please Choose Again.\n";
                 choiceAlgorithm = priorAlgorithm;
