@@ -80,13 +80,19 @@
     s6vec[CS6M_S6CD] = (-d7vec[CS6M_D7_B_D_2]-d7vec[CS6M_D7_A_D_2]+d7vec[CS6M_D7B2]+d7vec[CS6M_D7A2])/2;\
 }
 
-#define CS6M_G6toCell(g6vec,cell) \
+#define CS6M_G6toCell(g6vec,cell) { \
+    double cosalpha, cosbeta, cosgamma; \
     cell[CS6M_CellA] = dsqrt(g6vec[CS6M_G6A2]); \
     cell[CS6M_CellB] = dsqrt(g6vec[CS6M_G6B2]); \
     cell[CS6M_CellC] = dsqrt(g6vec[CS6M_G6C2]); \
-    cell[CS6M_CellAlpha] = 45./atan2(1.,1)*atan2(dsqrt(1.-g6vec[CS6M_G62BC]*g6vec[CS6M_G62BC]),g6vec[CS6M_G62BC]); \
-    cell[CS6M_CellBetal] = 45./atan2(1.,1)*atan2(dsqrt(1.-g6vec[CS6M_G62AC]*g6vec[CS6M_G62AC]),g6vec[CS6M_G62AC]); \
-    cell[CS6M_CellGamma] = 45./atan2(1.,1)*atan2(dsqrt(1.-g6vec[CS6M_G62AB]*g6vec[CS6M_G62AB]),g6vec[CS6M_G62AB]); 
+    cosalpha =  g6vec[CS6M_G62BC]/(2.*cell[CS6M_CellB]*cell[CS6M_CellC]); \
+    cosbeta  =  g6vec[CS6M_G62AC]/(2.*cell[CS6M_CellA]*cell[CS6M_CellC]); \
+    cosgamma =  g6vec[CS6M_G62AB]/(2.*cell[CS6M_CellA]*cell[CS6M_CellB]); \
+    cell[CS6M_CellAlpha] = 45./atan2(1.,1)*atan2(dsqrt(1.-cosalpha*cosalpha),cosalpha); \
+    cell[CS6M_CellBetal] = 45./atan2(1.,1)*atan2(dsqrt(1.-cosbeta*cosbeta),cosbeta); \
+    cell[CS6M_CellGamma] = 45./atan2(1.,1)*atan2(dsqrt(1.-cosgamma*cosgamma)),cosgamma); \
+    std::cout << cell[0] << " " << cell[1] << " " << cell[2] << " " << cell[3] << " " << cell[4] << " " << cell[5] << std::endl;\
+} 
 
 #define CS6M_G6toD7(g6vec,d7vec) { \
     d7vec[CS6M_D7A2] = g6vec[CS6M_G6A2]; \
@@ -125,6 +131,25 @@
     g6vec[CS6M_G62BC] = 2.*s6vec[CS6M_S6BC];\
     g6vec[CS6M_G62AC] = 2.*s6vec[CS6M_S6AC];\
     g6vec[CS6M_G62AB] = 2.*s6vec[CS6M_S6AB];\
+}
+
+#define ARMA_DONT_USE_BLAS
+#define ARMA_DONT_USE_LAPACK
+#include <armadillo>
+#include "Reducer.h"
+
+
+
+#define CS6M_G6Reduce(in,out,reduced) {\
+  arma::mat66 m;\
+  arma::vec6 vi;\
+  arma::vec6 vout;\
+  int ii;\
+  reduced=0;\
+  for(ii=0;ii<6;ii++) vi[ii]=in[ii];\
+  Reducer::Reduce(vi,m,vout,0.);\
+  for(ii=0;ii<6;ii++) out[ii]=vout[ii];\
+  reduced=1;\
 }
 
 #define CS6M_S6Reduce(in,out,reduced) {       \
@@ -168,7 +193,7 @@
         }                                               \
         ++reductionCycleCount;                          \
         if (reductionCycleCount > 1000 ) {              \
-          /* std::cout << "reductionCycleCount: " << reductionCycleCount << std::endl;*/ \
+            /* std::cout << "reductionCycleCount: " << reductionCycleCount << std::endl;*/ \
           reduced = 0;break;                            \
         }                                               \
         reduced = 1;                                    \
@@ -177,178 +202,222 @@
 
 
 
-#define CS6M_G6Reduce(g6unred,g6red,reduced) { \
+#define CS6M_oG6Reduce(g6unred,g6red,reduced) { \
     int notdone;                              \
     int ii;                                   \
     notdone = 1;                              \
     int redpass;                              \
     double temp;                              \
+    double delta;                             \
+    int countsign[3];                         \
     reduced=1;                                \
-    for (ii=0; ii < 6; ii++) g6red[ii]=g6unred[ii];\
-    redpass=0;                                                         \
-    while ( notdone && redpass < 1000) {                               \
-    if (g6red[CS6M_G6A2] < 0.                                          \
-        || g6red[CS6M_G6B2] < 0.                                       \
-        || g6red[CS6M_G6C2] < 0.                                       \
-        || g6red[CS6M_G6B2] + g6red[CS6M_G6C2] + g6red[CS6M_G62BC] < 0.\
-        || g6red[CS6M_G6A2] + g6red[CS6M_G6C2] + g6red[CS6M_G62AC] < 0.\
-        || g6red[CS6M_G6A2] + g6red[CS6M_G6B2] + g6red[CS6M_G62AB] < 0.\
-        || g6red[CS6M_G6B2] + g6red[CS6M_G6C2] - g6red[CS6M_G62BC] < 0.\
-        || g6red[CS6M_G6A2] + g6red[CS6M_G6C2] - g6red[CS6M_G62AC] < 0.\
-        || g6red[CS6M_G6A2] + g6red[CS6M_G6B2] - g6red[CS6M_G62AB] < 0.\
-    ) {                                                                \
-      notdone=0; break;                                                \
-    }                                                                  \
-      if ( g6red[CS6M_G6A2] > g6red[CS6M_G6B2]                         \
-           || ( g6red[CS6M_G6A2] == g6red[CS6M_G6B2]                   \
-           && CS6M_abs(g6red[CS6M_G62BC]) > CS6M_abs(g6red[CS6M_G62AC])) ) { \
-        temp = g6red[CS6M_G6A2];                                 \
-        g6red[CS6M_G6A2] = g6red[CS6M_G6B2];                     \
-        g6red[CS6M_G6B2] = temp;                                 \
-        temp = g6red[CS6M_G62BC];                                \
-        g6red[CS6M_G62BC] = g6red[CS6M_G62AC];                   \
-        g6red[CS6M_G62AC] = temp;                                \
-        /*std::cout<<"bd1 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl; */\
-        redpass++; continue;                                     \
-      }                                                          \
-      if ( g6red[CS6M_G6B2] > g6red[CS6M_G6C2]                   \
-            ||  (g6red[CS6M_G6B2] == g6red[CS6M_G6C2]            \
-            && CS6M_abs(g6red[CS6M_G62AC]) > CS6M_abs(g6red[CS6M_G62AB])) ) {\
-        temp = g6red[CS6M_G6B2];                                 \
-        g6red[CS6M_G6B2] = g6red[CS6M_G6C2];                     \
-        g6red[CS6M_G6C2] = temp;                                 \
-        temp = g6red[CS6M_G62AC];                                \
-        g6red[CS6M_G62AC] = g6red[CS6M_G62AB];                   \
-        g6red[CS6M_G62AB] = temp;                                \
-        /*std::cout<<"bd1 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
-        redpass++; continue;                                     \
-      }                                                          \
-      if ( g6red[CS6M_G62BC]*g6red[CS6M_G62AC]*g6red[CS6M_G62AB] > 0. ) { \
-        if (g6red[CS6M_G62BC] < 0. || g6red[CS6M_G62AC] < 0. || g6red[CS6M_G62AC] < 0. ) { \
-          if ( g6red[CS6M_G62BC] < 0. ) g6red[CS6M_G62BC] = -g6red[CS6M_G62BC]; \
-          if ( g6red[CS6M_G62AC] < 0. ) g6red[CS6M_G62AC] = -g6red[CS6M_G62AC]; \
-          if ( g6red[CS6M_G62AB] < 0. ) g6red[CS6M_G62AB] = -g6red[CS6M_G62AB]; \
-          /*std::cout<<"+++ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
-          redpass++; continue;                                                  \
-        }                                                                       \
-      } else {                                                                  \
-        if (g6red[CS6M_G62BC] > 0. || g6red[CS6M_G62AC] > 0. || g6red[CS6M_G62AC] > 0. ) { \
-          if ( g6red[CS6M_G62BC] > 0. ) g6red[CS6M_G62BC] = -g6red[CS6M_G62BC];   \
-          if ( g6red[CS6M_G62AC] > 0. ) g6red[CS6M_G62AC] = -g6red[CS6M_G62AC];   \
-          if ( g6red[CS6M_G62AB] > 0. ) g6red[CS6M_G62AB] = -g6red[CS6M_G62AB];   \
-          /*std::cout<<"--- "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+    for (ii=0; ii < 6; ii++) g6red[ii]=g6unred[ii];                              \
+    redpass=0;                                                                   \
+    delta=(g6red[CS6M_G6A2]+g6red[CS6M_G6B2]+g6red[CS6M_G6C2])*1.e-12;           \
+    while ( notdone && redpass < 1000) {                                         \
+    if (g6red[CS6M_G6A2] < 0.                                                    \
+        || g6red[CS6M_G6B2] < 0.                                                 \
+        || g6red[CS6M_G6C2] < 0.                                                 \
+        || g6red[CS6M_G6B2] + g6red[CS6M_G6C2] + g6red[CS6M_G62BC] < 0.          \
+        || g6red[CS6M_G6A2] + g6red[CS6M_G6C2] + g6red[CS6M_G62AC] < 0.          \
+        || g6red[CS6M_G6A2] + g6red[CS6M_G6B2] + g6red[CS6M_G62AB] < 0.          \
+        || g6red[CS6M_G6B2] + g6red[CS6M_G6C2] - g6red[CS6M_G62BC] < 0.          \
+        || g6red[CS6M_G6A2] + g6red[CS6M_G6C2] - g6red[CS6M_G62AC] < 0.          \
+        || g6red[CS6M_G6A2] + g6red[CS6M_G6B2] - g6red[CS6M_G62AB] < 0.          \
+    ) {                                                                          \
+      notdone=0; break;                                                          \
+    }                                                                            \
+      if ( g6red[CS6M_G6A2] > g6red[CS6M_G6B2]+delta                             \
+           || ( g6red[CS6M_G6A2] == g6red[CS6M_G6B2]                             \
+           && CS6M_abs(g6red[CS6M_G62BC]) > CS6M_abs(g6red[CS6M_G62AC]+delta)) ) { \
+        temp = g6red[CS6M_G6A2];                                                 \
+        g6red[CS6M_G6A2] = g6red[CS6M_G6B2];                                     \
+        g6red[CS6M_G6B2] = temp;                                                 \
+        temp = g6red[CS6M_G62BC];                                                \
+        g6red[CS6M_G62BC] = g6red[CS6M_G62AC];                                   \
+        g6red[CS6M_G62AC] = temp;                                                \
+        /* std::cout<<"bd1 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]             \
+        <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/         \
+        redpass++; continue;                                                     \
+      }                                                                          \
+      if ( g6red[CS6M_G6B2] > g6red[CS6M_G6C2]+delta                             \
+            ||  (g6red[CS6M_G6B2] == g6red[CS6M_G6C2]                            \
+            && CS6M_abs(g6red[CS6M_G62AC]) > CS6M_abs(g6red[CS6M_G62AB]+delta)) ) {\
+        temp = g6red[CS6M_G6B2];                                                 \
+        g6red[CS6M_G6B2] = g6red[CS6M_G6C2];                                     \
+        g6red[CS6M_G6C2] = temp;                                                 \
+        temp = g6red[CS6M_G62AC];                                                \
+        g6red[CS6M_G62AC] = g6red[CS6M_G62AB];                                   \
+        g6red[CS6M_G62AB] = temp;                                                \
+        /* std::cout<<"bd2 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]             \
+        <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/         \
+        redpass++; continue;                                                     \
+      }                                                                          \
+      countsign[0]=g6red[CS6M_G62BC]>0?1:-1;                                     \
+      countsign[1]=g6red[CS6M_G62AC]>0?1:-1;                                     \
+      countsign[2]=g6red[CS6M_G62AB]>0?1:-1;                                     \
+                                                                                 \
+      if ( countsign[0]*countsign[1]*countsign[2] > 0. ) {                       \
+        if (g6red[CS6M_G62BC] < 0.                                               \
+            || g6red[CS6M_G62AC] < 0.                                            \
+            || g6red[CS6M_G62AC] < 0. ) {                                        \
+          if ( g6red[CS6M_G62BC] < 0. ) g6red[CS6M_G62BC] = -g6red[CS6M_G62BC];  \
+          if ( g6red[CS6M_G62AC] < 0. ) g6red[CS6M_G62AC] = -g6red[CS6M_G62AC];  \
+          if ( g6red[CS6M_G62AB] < 0. ) g6red[CS6M_G62AB] = -g6red[CS6M_G62AB];  \
+          /* std::cout<<"+++ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
+          redpass++; continue;                                                   \
+        }                                                                        \
+      } else {                                                                   \
+        if (g6red[CS6M_G62BC] > 0.                                               \
+            || g6red[CS6M_G62AC] > 0.                                            \
+            || g6red[CS6M_G62AC] > 0. ) {                                        \
+          if ( g6red[CS6M_G62BC] > 0. ) g6red[CS6M_G62BC] = -g6red[CS6M_G62BC];  \
+          if ( g6red[CS6M_G62AC] > 0. ) g6red[CS6M_G62AC] = -g6red[CS6M_G62AC];  \
+          if ( g6red[CS6M_G62AB] > 0. ) g6red[CS6M_G62AB] = -g6red[CS6M_G62AB];  \
+          /* std::cout<<"--- "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
         }                                                                        \
       }                                                                          \
                                                                                  \
-      /* 678 boundaries outside */                                               \
-      if (g6red[CS6M_G62BC] >  g6red[CS6M_G6B2]) {                               \
+      /* R5 678 boundaries outside */                                            \
+      if (g6red[CS6M_G62BC] >  g6red[CS6M_G6B2]+delta) {                         \
           g6red[CS6M_G6C2] = g6red[CS6M_G6B2]+g6red[CS6M_G6C2]-g6red[CS6M_G62BC];\
           g6red[CS6M_G62BC] = -2.*g6red[CS6M_G6B2]+g6red[CS6M_G62BC];            \
           g6red[CS6M_G62AC] = g6red[CS6M_G62AC]-g6red[CS6M_G62AB];               \
-          /*std::cout<<"bd6+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bd6+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]          \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      if (g6red[CS6M_G62BC] < -g6red[CS6M_G6B2]) {                               \
+      if (g6red[CS6M_G62BC] < -g6red[CS6M_G6B2]-delta) {                         \
           g6red[CS6M_G6C2] = g6red[CS6M_G6B2]+g6red[CS6M_G6C2]+g6red[CS6M_G62BC];\
           g6red[CS6M_G62BC] = 2.*g6red[CS6M_G6B2]+g6red[CS6M_G62BC];             \
           g6red[CS6M_G62AC] = g6red[CS6M_G62AC]+g6red[CS6M_G62AB];               \
-          /*std::cout<<"bd8+"<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3 ]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bd8+"<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3 ]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/      \
           redpass++; continue;                                                   \
       }                                                                          \
-      /* 9AB boundaries outside */                                               \
-      if (g6red[CS6M_G62AC] > g6red[CS6M_G6A2]) {                                \
+      /* R6 9AB boundaries outside */                                            \
+      if (g6red[CS6M_G62AC] > g6red[CS6M_G6A2]+delta) {                          \
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2]+g6red[CS6M_G6C2]-g6red[CS6M_G62AC];\
           g6red[CS6M_G62AC] = -2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AC];            \
-          g6red[CS6M_G62BC] = g6red[CS6M_G62BC]-g6red[CS6M_G62AB];              \
-          /*std::cout<<"bd9+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          g6red[CS6M_G62BC] = g6red[CS6M_G62BC]-g6red[CS6M_G62AB];               \
+          /* std::cout<<"bd9+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]          \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl; */      \
           redpass++; continue;                                                   \
       }                                                                          \
-      if (g6red[CS6M_G62AC] < -g6red[CS6M_G6A2]) {                               \
+      if (g6red[CS6M_G62AC] < -g6red[CS6M_G6A2]-delta) {                         \
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2]+g6red[CS6M_G6C2]+g6red[CS6M_G62AC];\
           g6red[CS6M_G62AC] = 2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AC];             \
           g6red[CS6M_G62BC] = g6red[CS6M_G62BC]+g6red[CS6M_G62AB];               \
-          /*std::cout<<"bdB+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bdB+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]          \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      /*  CDE boundaries outside */                                              \
-      if (g6red[CS6M_G62AB] > g6red[CS6M_G6A2]) {                                \
+      /* R7 CDE boundaries outside */                                            \
+      if (g6red[CS6M_G62AB] > g6red[CS6M_G6A2]+delta) {                          \
           g6red[CS6M_G6B2] = g6red[CS6M_G6A2]+g6red[CS6M_G6B2]-g6red[CS6M_G62AB];\
           g6red[CS6M_G62AB] = -2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AB];            \
           g6red[CS6M_G62BC] = g6red[CS6M_G62BC]-g6red[CS6M_G62AB];               \
-          /*std::cout<<"bdC+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bdC+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]          \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      if (g6red[CS6M_G62AB] < -g6red[CS6M_G6A2]) {                               \
+      if (g6red[CS6M_G62AB] < -g6red[CS6M_G6A2]-delta) {                         \
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2]+g6red[CS6M_G6B2]+g6red[CS6M_G62AB];\
-          g6red[CS6M_G62AC] = 2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AB];             \
+          g6red[CS6M_G62AB] = 2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AB];             \
           g6red[CS6M_G62BC] = g6red[CS6M_G62BC]+g6red[CS6M_G62AB];               \
-          /*std::cout<<"bdE+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bdE+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]          \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      /* F+ boundary outside */                                                  \
+      /* R8 F+ boundary outside */                                               \
       if (g6red[CS6M_G6A2] + g6red[CS6M_G6B2] + g6red[CS6M_G62BC]                \
-          + g6red[CS6M_G62AC] + g6red[CS6M_G62AB] < 0.) {                        \
+          + g6red[CS6M_G62AC] + g6red[CS6M_G62AB] < -delta) {                    \
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2] + g6red[CS6M_G6B2]                 \
-          + g6red[CS6M_G6C2] + g6red[CS6M_G62BC] + g6red[CS6M_G62AC] + g6red[CS6M_G62AB]; \
-          g6red[CS6M_G62AC] = 2.*g6red[CS6M_G6A2] + g6red[CS6M_G62AC] + g6red[CS6M_G62AB];     \
-          g6red[CS6M_G62BC] = 2.*g6red[CS6M_G6B2] + g6red[CS6M_G62BC] + g6red[CS6M_G62AB];     \
-          /*std::cout<<"bdF+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          + g6red[CS6M_G6C2] + g6red[CS6M_G62BC] + g6red[CS6M_G62AC] + g6red[CS6M_G62AB];  \
+          g6red[CS6M_G62AC] = 2.*g6red[CS6M_G6A2] + g6red[CS6M_G62AC] + g6red[CS6M_G62AB]; \
+          g6red[CS6M_G62BC] = 2.*g6red[CS6M_G6B2] + g6red[CS6M_G62BC] + g6red[CS6M_G62AB]; \
+          /* std::cout<<"bdF+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]          \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      /* 678 boundaries exact */                                                 \
-      if (g6red[CS6M_G62BC] ==  g6red[CS6M_G6B2] && 2.*g6red[CS6M_G62AC] < g6red[CS6M_G62AB]) { \
+      /* R9 678 boundaries exact */                                              \
+      if (g6red[CS6M_G62BC] >=  g6red[CS6M_G6B2] - delta                         \
+          && g6red[CS6M_G62BC] <=  g6red[CS6M_G6B2] + delta                      \
+          && 2.*g6red[CS6M_G62AC] < g6red[CS6M_G62AB] + delta) {                 \
           g6red[CS6M_G6C2] = g6red[CS6M_G6B2]+g6red[CS6M_G6C2]-g6red[CS6M_G62BC];\
           g6red[CS6M_G62BC] = -2.*g6red[CS6M_G6B2]+g6red[CS6M_G62BC];            \
           g6red[CS6M_G62AC] = g6red[CS6M_G62AC]-g6red[CS6M_G62AB];               \
-          /*std::cout<<"bd6 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bd6 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl; */      \
           redpass++; continue;                                                   \
       }                                                                          \
-      if (g6red[CS6M_G62BC] == -g6red[CS6M_G6B2] && g6red[CS6M_G62AB] < 0.) {    \
+      if (g6red[CS6M_G62BC] >= -g6red[CS6M_G6B2] - delta                         \
+          && g6red[CS6M_G62BC] <= -g6red[CS6M_G6B2] + delta                      \
+          && g6red[CS6M_G62AB] < 0     ) {                                       \
           g6red[CS6M_G6C2] = g6red[CS6M_G6B2]+g6red[CS6M_G6C2]+g6red[CS6M_G62BC];\
           g6red[CS6M_G62BC] = 2.*g6red[CS6M_G6B2]+g6red[CS6M_G62BC];             \
           g6red[CS6M_G62AC] = g6red[CS6M_G62AC]+g6red[CS6M_G62AB];               \
-          /*std::cout<<"bd8 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3 ]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bd8 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3 ]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl; */     \
           redpass++; continue;                                                   \
       }                                                                          \
       /* 9AB boundaries exsct */                                                 \
-      if (g6red[CS6M_G62AC] == g6red[CS6M_G6A2] && 2.*g6red[CS6M_G62BC] < g6red[CS6M_G62AB]) { \
+      if (g6red[CS6M_G62AC] >= g6red[CS6M_G6A2] - delta                          \
+          && g6red[CS6M_G62AC] <= g6red[CS6M_G6A2] + delta                       \
+          && 2.*g6red[CS6M_G62BC] < g6red[CS6M_G62AB] + delta) {                 \
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2]+g6red[CS6M_G6C2]-g6red[CS6M_G62AC];\
           g6red[CS6M_G62AC] = -2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AC];            \
-          g6red[CS6M_G62BC] = g6red[CS6M_G62BC]-g6red[CS6M_G62AB];              \
-          /*std::cout<<"bd9 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          g6red[CS6M_G62BC] = g6red[CS6M_G62BC]-g6red[CS6M_G62AB];               \
+          /* std::cout<<"bd9 "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      if (g6red[CS6M_G62AC] < -g6red[CS6M_G6A2] && g6red[CS6M_G62AB] < 0.) {     \
+      if (g6red[CS6M_G62AC] >= -g6red[CS6M_G6A2] - delta                         \
+          && g6red[CS6M_G62AC] <= -g6red[CS6M_G6A2] + delta                      \
+          && g6red[CS6M_G62AB] < 0.) {                                           \
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2]+g6red[CS6M_G6C2]+g6red[CS6M_G62AC];\
           g6red[CS6M_G62AC] = 2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AC];             \
           g6red[CS6M_G62BC] = g6red[CS6M_G62BC]+g6red[CS6M_G62AB];               \
-          /*std::cout<<"bdB "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bdB "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      /*  CDE boundaries exact */                                                \
-      if (g6red[CS6M_G62AB] == g6red[CS6M_G6A2] && 2.*g6red[CS6M_G62BC] < g6red[CS6M_G62AC]) {  \
+      /*  R11 CDE boundaries exact */                                            \
+      if (g6red[CS6M_G62AB] >= g6red[CS6M_G6A2] - delta                          \
+          && g6red[CS6M_G62AB] <= g6red[CS6M_G6A2] + delta                       \
+          && 2.*g6red[CS6M_G62BC] < g6red[CS6M_G62AC] + delta) {                 \
           g6red[CS6M_G6B2] = g6red[CS6M_G6A2]+g6red[CS6M_G6B2]-g6red[CS6M_G62AB];\
           g6red[CS6M_G62AB] = -2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AB];            \
           g6red[CS6M_G62BC] = g6red[CS6M_G62BC]-g6red[CS6M_G62AB];               \
-          /*std::cout<<"bdC "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bdC "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      if (g6red[CS6M_G62AB] == -g6red[CS6M_G6A2] &&  g6red[CS6M_G62AB] < 0.) {   \
+      if (g6red[CS6M_G62AB] >= -g6red[CS6M_G6A2] - delta                         \
+          && g6red[CS6M_G62AB] <= -g6red[CS6M_G6A2] + delta                      \
+          &&  g6red[CS6M_G62AB] < 0.) {                                          \
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2]+g6red[CS6M_G6B2]+g6red[CS6M_G62AB];\
-          g6red[CS6M_G62AC] = 2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AB];             \
+          g6red[CS6M_G62AB] = 2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AB];             \
           g6red[CS6M_G62BC] = g6red[CS6M_G62BC]+g6red[CS6M_G62AB];               \
-          /*std::cout<<"bdE "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          /* std::cout<<"bdE "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
-      /* F boundary exact */                                                     \
+      /* R12 F boundary exact */                                                 \
       if (g6red[CS6M_G6A2] + g6red[CS6M_G6B2] + g6red[CS6M_G62BC]                \
-          + g6red[CS6M_G62AC] + g6red[CS6M_G62AB] == 0. && 2.*g6red[CS6M_G6A2]+2.*g6red[CS6M_G62AC]+g6red[CS6M_G62AB]> 0.) { \
+          + g6red[CS6M_G62AC] + g6red[CS6M_G62AB] >= -delta                      \
+          && g6red[CS6M_G6A2] + g6red[CS6M_G6B2] + g6red[CS6M_G62BC]             \
+          + g6red[CS6M_G62AC] + g6red[CS6M_G62AB] <= delta                       \
+          && 2.*g6red[CS6M_G6A2]+2.*g6red[CS6M_G62AC]+g6red[CS6M_G62AB]> delta) {\
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2] + g6red[CS6M_G6B2]                 \
           + g6red[CS6M_G6C2] + g6red[CS6M_G62BC] + g6red[CS6M_G62AC] + g6red[CS6M_G62AB]; \
-          g6red[CS6M_G62AC] = 2.*g6red[CS6M_G6A2] + g6red[CS6M_G62AC] + g6red[CS6M_G62AB];\
-          g6red[CS6M_G62BC] = 2.*g6red[CS6M_G6B2] + g6red[CS6M_G62BC] + g6red[CS6M_G62AB];\
-          /*std::cout<<"bdF "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/\
+          g6red[CS6M_G62AC] = -2.*g6red[CS6M_G6A2] - g6red[CS6M_G62AC] - g6red[CS6M_G62AB];\
+          g6red[CS6M_G62BC] = -2.*g6red[CS6M_G6B2] - g6red[CS6M_G62BC] - g6red[CS6M_G62AB];\
+          /* std::cout<<"bdF "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]           \
+          <<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/       \
           redpass++; continue;                                                   \
       }                                                                          \
       notdone = 0;                                                               \

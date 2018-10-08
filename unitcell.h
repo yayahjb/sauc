@@ -208,7 +208,7 @@ public:
 	{
 		if (algorithm == 1)
 		{
-			return (std::abs(cellD[0]-cellD[6]) +
+			return (std::fabs(cellD[0]-cellD[6]) +
                    std::abs(cellD[1]-cellD[7]) +
                    std::abs(cellD[2]-cellD[8]) +
                    std::abs(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
@@ -217,7 +217,7 @@ public:
 		}
 		else if (algorithm == 2)
 		{
-			return (std::sqrt((cellD[0]-cellD[6])*(cellD[0]-cellD[6]) +
+			return (std::sqrt(std::fabs(cellD[0]-cellD[6])*(cellD[0]-cellD[6]) +
                     (cellD[1]-cellD[7])*(cellD[1]-cellD[7]) +
                     (cellD[2]-cellD[8])*(cellD[2]-cellD[8]) +
 			        (cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad*(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
@@ -251,7 +251,7 @@ public:
                 {
                     int red1, red2;
                     double c1[6], c2[6], g1[6], g2[6];
-                    double d1[7], d2[7], d1red[7], d2red[7];
+                    double d1[7], d2[7];
 
                     CS6M_comptovec6(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5],c1);
                     CS6M_comptovec6(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11],c2);
@@ -259,9 +259,7 @@ public:
                     CS6M_CelldegtoG6(c2,g2);
                     CS6M_G6toD7(g1,d1);
                     CS6M_G6toD7(g2,d2);
-                    CS6M_D7Reduce(d1,d1red,red1);
-                    CS6M_D7Reduce(d2,d2red,red2);
-                    return std::sqrt(D7Dist(d1red,d2red))*Scaledist;
+                    return std::sqrt(D7Dist(d1,d2))*Scaledist;
 
                 }
 
@@ -269,16 +267,14 @@ public:
                 {
                     int red1,red2;
                     double c1[6], c2[6], g1[6], g2[6];
-                    double s1[6], s2[6], s1red[6], s2red[6];
+                    double s1[6], s2[6];
                     CS6M_comptovec6(cellD[0],cellD[1],cellD[2],cellD[3],cellD[4],cellD[5],c1);
                     CS6M_comptovec6(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11],c2);
                     CS6M_CelldegtoG6(c1,g1);
                     CS6M_CelldegtoG6(c2,g2);
                     CS6M_G6toS6(g1,s1);
                     CS6M_G6toS6(g2,s2);
-                    CS6M_S6Reduce(s1,s1red,red1);
-                    CS6M_S6Reduce(s2,s2red,red2);
-                    return std::sqrt(CS6Dist(s1red,s2red))*Scaledist;
+                    return std::sqrt(CS6Dist(s1,s2))*Scaledist;
                 }
 
 

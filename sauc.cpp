@@ -1073,6 +1073,15 @@ void buildNearTree( void )
             case 3:  /* NCDist */
             case 4:  /* V7 */
                  CS6M_G6Reduce(primcell,redprimcell,reduced);
+                 if (i > 19 && i < 23 || i > 246 && i < 253) {
+                   std::cout << "i:  " << i  << (spaceArray[i]).substr(0,1) 
+                   << " " << cellDArray[i][0] << " " << cellDArray[i][1] << " " <<  cellDArray[i][2] 
+                   << " " << cellDArray[i][3] << " " << cellDArray[i][4] << " " <<  cellDArray[i][5] << std::endl
+                   << "primcell: " << primcell[0] << " " << primcell[1] << " " << primcell[2] << " " 
+                   << primcell[3] << " " << primcell[4] << " " << primcell[5] << std::endl
+                   << "redprimcell: " << redprimcell[0] << " " << redprimcell[1] << " " << redprimcell[2] << " " 
+                   << redprimcell[3] << " " << redprimcell[4] << " " << redprimcell[5] << std::endl;
+                 }
                  break;
             case 5:  /* D7Dist */
                  CS6M_G6toD7(primcell,d7cell);
@@ -1903,11 +1912,10 @@ int main ()
             priorAlgorithm = choiceAlgorithm;
             std::cin >> choiceAlgorithm; std::cin.clear();
             std::cin.ignore(100000,'\n');
+            std::cout << choiceAlgorithm << std::endl;
+
             
             if (sauc_batch_mode && choiceAlgorithm > 0 && choiceAlgorithm < 7 ) {
-                double d7cell[7],d7red[7],s6cell[6],s6red[6];
-                int reduced;
-                arma::vec6 redprimcell;
                 switch (choiceAlgorithm) {
                     case 1: std::cout << "L1 metric search algorithm" << std::endl; break;
                     case 2: std::cout << "L2 metric search algorithm" << std::endl; break;
@@ -1916,6 +1924,11 @@ int main ()
                     case 5: std::cout << "D7Dist metric search algorithm" << std::endl; break;
                     case 6: std::cout << "S6Dist metric search algorithm" << std::endl; break;
                 }
+            }
+            if ( choiceAlgorithm > 0 && choiceAlgorithm < 7 ) {
+                double d7cell[7],d7red[7],s6cell[6],s6red[6];
+                int reduced;
+                arma::vec6 redprimcell;
                 switch (choiceAlgorithm) {
                     case 1:  /* L1 */
                     case 2:  /* L2 */
@@ -2027,6 +2040,8 @@ int main ()
             if (!sauc_batch_mode) std::cout << "\nChoose A Similarity: ";
             std::cin >> choiceSimilar;
             std::cin.clear(); std::cin.ignore(10000,'\n');
+            std::cout << choiceSimilar << std::endl;
+
             if (sauc_batch_mode && choiceSimilar > 0 && choiceSimilar < 5) {
                 switch(choiceSimilar) {
                     case 1:  std::cout << "Finding Nearest Cell" << std::endl; break;
@@ -2116,7 +2131,7 @@ int main ()
                     endProgram = 1;
                     quitContinue = 1;
                 } else {
-                    std::cout << "Inncorrect Choice. Please Choose Again.\n";
+                    std::cout << "Incorrect Choice. Please Choose Again.\n";
                 }
             }
             std::cout << std::endl;
@@ -2132,6 +2147,7 @@ int main ()
             if (!sauc_batch_mode) std::cout << "\nChoice: ";
             std::cin >> choiceContinue; std::cin.clear();
             std::cin.ignore(100000,'\n');
+            std::cout << choiceContinue << std::endl;
             if (choiceContinue == 1)
             {
                 goBack = 0; //Added so that it would loop back to main menu
@@ -2159,7 +2175,7 @@ int main ()
                     endProgram = 1;
                     quitContinue = 1;
                 } else {
-                    std::cout << "Inncorrect Choice. Please Choose Again.\n";
+                    std::cout << "Incorrect Choice. Please Choose Again.\n";
                 }
             }
             std::cout << std::endl;
