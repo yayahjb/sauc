@@ -69,18 +69,18 @@ Cell::Cell( const double a, const double b, const double c,
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 Cell::Cell( const arma::vec6& v )
 {
-   m_cell[0] = sqrt( v[0] );
-   m_cell[1] = sqrt( v[1] );
-   m_cell[2] = sqrt( v[2] );
+   m_cell[0] = std::sqrt( v[0] );
+   m_cell[1] = std::sqrt( v[1] );
+   m_cell[2] = std::sqrt( v[2] );
 
    const double cosalpha( 0.5*v[3]/(m_cell[1]*m_cell[2]) );
    const double cosbeta ( 0.5*v[4]/(m_cell[0]*m_cell[2]) );
    const double cosgamma( 0.5*v[5]/(m_cell[0]*m_cell[1]) );
 
 // compute the cell angles in radians
-   m_cell[3] = atan2( sqrt(1.0-pow(cosalpha,2)),cosalpha);
-   m_cell[4] = atan2( sqrt(1.0-pow(cosbeta ,2)),cosbeta );
-   m_cell[5] = atan2( sqrt(1.0-pow(cosgamma,2)),cosgamma);
+   m_cell[3] = atan2( sqrt(fabs(1.0-cosalpha*cosalpha)),cosalpha);
+   m_cell[4] = atan2( sqrt(fabs(1.0-cosbeta*cosbeta)),cosbeta );
+   m_cell[5] = atan2( sqrt(fabs(1.0-cosgamma*cosgamma)),cosgamma);
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -102,8 +102,8 @@ double Cell::Volume( void ) const
    const double c3(cos(c[3]));
    const double c4(cos(c[4]));
    const double c5(cos(c[5]));
-   const double volume( c[0]*c[1]*c[2] * sqrt( 1.0-pow(c3,2)-pow(c4,2)-pow(c5,2)
-       + 2.0*c3*c4*c5 ) );
+   const double volume( c[0]*c[1]*c[2] * sqrt( fabs(1.0-c3*c3-c4*c4-c5*c5
+       + 2.0*c3*c4*c5 )) );
    return( volume );
 }
 
@@ -167,9 +167,9 @@ Cell Cell::Inverse( void ) const
    cell.m_cell[0] = astar;
    cell.m_cell[1] = bstar;
    cell.m_cell[2] = cstar;
-   cell.m_cell[3] = atan2( sqrt(1.0-pow(cosAlphaStar,2)), cosAlphaStar);
-   cell.m_cell[4] = atan2( sqrt(1.0-pow(cosBetaStar ,2)), cosBetaStar );
-   cell.m_cell[5] = atan2( sqrt(1.0-pow(cosGammaStar,2)), cosGammaStar);
+   cell.m_cell[3] = atan2( fabs(sqrt(1.0-cosAlphaStar*cosAlphaStar)), cosAlphaStar);
+   cell.m_cell[4] = atan2( fabs(sqrt(1.0-cosBetaStar*cosBetaStar)), cosBetaStar );
+   cell.m_cell[5] = atan2( fabs(sqrt(1.0-cosGammaStar*cosGammaStar)), cosGammaStar);
 
    return( cell );
 }
@@ -307,15 +307,16 @@ arma::mat66 Cell::LatSymMat66( const std::string& latsym ) const
         {   arma::vec6 cwd=(*this).CellWithDegrees();
             g = (*this).Cell2V6();
             ge = arma::norm(g,2)*.005;
+            if ( fabs(cwd[3]-90.) > 0.005 && fabs(cwd[4]-90.) > 0.005 && fabs(cwd[5]-120.) > 0.005 && fabs(cwd[0]-cwd[1] > ge) ){
+
             // For R, as distinct from H, detect primitive R cases
-            if (std::abs(g[0]-g[1])<ge) {
+            if (fabs(g[0]-g[1])<ge) {
                 // (r,r,?,?,?,?)
-                if (std::abs(g[3]-g[4]) < ge
-                   &&  std::abs(g[4]-g[5]) < ge) {
+                if (fabs(g[3]-g[4]) < ge
+                   &&  fabs(g[4]-g[5]) < ge) {
                 // (r,r,?,s,s,s), (r,r,?,-s,-s,-s)
-                    if (std::abs(g[3]-g[0]) < ge
-                        || std::abs(g[1]-g[2]) < ge ) {
-                        arma::vec6 cwd=(*this).CellWithDegrees();
+                    if (fabs(g[3]-g[0]) < ge
+                        || fabs(g[1]-g[2]) < ge ) {
                         // (r,r,s,r,r,r), (r,r,r,s,s,s), (r,r,r,-s,-s,-s)
                         M[fi[1]]=M[fi[8]]=M[fi[15]]=M[fi[22]]=M[fi[29]]=M[fi[36]]=1.;
                         //fprintf(stderr,"Treated non-hexagonal R as P: %g %g %g %g %g %g\n",
@@ -324,11 +325,10 @@ arma::mat66 Cell::LatSymMat66( const std::string& latsym ) const
                     }
                 }
             }
-            if (std::abs(g[1]-g[2]) < ge ) {
-                if (std::abs(3.*g[4]/2.+g[0]) < ge
-                    && std::abs(3.*g[5]/2.+g[0]) < ge
-                    && std::abs(3.*(g[3]+g[1])-g[0]) < ge){
-                    arma::vec6 cwd=(*this).CellWithDegrees();
+            if (fabs(g[1]-g[2]) < ge ) {
+                if (fabs(3.*g[4]/2.+g[0]) < ge
+                    && fabs(3.*g[5]/2.+g[0]) < ge
+                    && fabs(3.*(g[3]+g[1])-g[0]) < ge){
                     M[fi[1]]=M[fi[8]]=M[fi[15]]=M[fi[22]]=M[fi[29]]=M[fi[36]]=1.;
                     // fprintf(stderr,"Treated non-hexagonal R as P: %g %g %g %g %g %g\n",
                     //        cwd[0],cwd[1],cwd[2],cwd[3],cwd[4],cwd[5]);
@@ -337,6 +337,7 @@ arma::mat66 Cell::LatSymMat66( const std::string& latsym ) const
             }
             /* fprintf(stderr,"Treated non-rhombodedral R as H: %g %g %g %g %g %g\n",
                    cwd[0],cwd[1],cwd[2],cwd[3],cwd[4],cwd[5]); */
+            }
         }
 
         case 'H':
@@ -497,7 +498,7 @@ arma::mat33 mat66tomat33(const arma::mat66& m6) {
     for (l=0; l<9; l++) {
         i = l/3;
         j = l - 3*i;
-        if (std::abs(m(i,j))< 1.e-8) m(i,j) = 0.;
+        if (fabs(m(i,j))< 1.e-8) m(i,j) = 0.;
     }
     return m;
 }
