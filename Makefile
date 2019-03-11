@@ -25,7 +25,7 @@ HTTPDSERVER	=	flops.arcib.org:8084
 #
 #  SAUCVERSION is used to allow multiple co-existing versions
 #
-SAUCVERSION = 1.1.0
+SAUCVERSION = 1.1.1
 #
 #  SEARCHURL IS THE URL FOR NEW SEARCH
 #

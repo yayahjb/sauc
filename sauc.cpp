@@ -341,7 +341,13 @@ int load_cellDSGZArrays(void) {
                                        PDBcells_fields[PDBcells_cell_angle_gamma].length).c_str());
                 Z = atoi(std::string(PDBcells->chars+PDBcells_fields[PDBcells_Z].offset,
                                      PDBcells_fields[PDBcells_Z].length).c_str());
-                
+                /* if (ii < 25) {
+                  std::cout << " ii: " << ii << " pdbid: " << pdbid
+                            << " SG: " << SG 
+                            << " a, b, c, alpha, beta, gamma: " 
+                            << a << ", " << b << ", " << c << ", " << alpha << ", " << beta << ", " << gamma 
+                            << " Z: " << Z  << std::endl; 
+                } */
                 if (pdbid.length() == 4 && a > 1. && b > 1. && c > 1.
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
@@ -511,19 +517,19 @@ int make_mmapfiles(void) {
                               CODentries_skip_lines, CODentries_sep_char, 0);
     if (PDBcells != 0) {
         numdb++;
-        std::cout << "PDB cells available" << PDBcells->str_index_len <<std::endl;
+        std::cout << "PDB cells available: " << PDBcells->str_index_len <<std::endl;
     }
     if (PDBentries != 0 ) {
         numdb++;
-        std::cout << "PDB entries available" << PDBentries->str_index_len <<std::endl;
+        std::cout << "PDB entries available: " << PDBentries->str_index_len <<std::endl;
     }
     if (CSDcells != 0 ) {
         numdb++;
-        std::cout << "CSD data available:" << CSDcells->str_index_len << std::endl;
+        std::cout << "CSD data available: " << CSDcells->str_index_len << std::endl;
     }
     if (CODentries != 0 ) {
         numdb++;
-        std::cout << "COD data available:" << CODentries->str_index_len << std::endl;
+        std::cout << "COD data available: " << CODentries->str_index_len << std::endl;
     }
     
     return (numdb > 0)?0:1;
@@ -547,6 +553,7 @@ bool makeprimredprobe( void )
     int reduced;
     arma::mat66 mc;
     arma::mat66 m;
+    arma::vec6 xrawcell;
     arma::vec6 recipcell;
     arma::vec6 reducedBase;
     Cell rawcell(probeArray[0],probeArray[1],probeArray[2],
@@ -559,6 +566,9 @@ bool makeprimredprobe( void )
         latsym = probelattice.substr(0,1);
     }
     clatsym = latsym[0];
+    xrawcell = rawcell.Cell2V6();
+    std::cout << "xrawcell: " << xrawcell[0] << ", " << xrawcell[1] << ", "  << xrawcell[2] << ", "
+    << xrawcell[3] << ", "  << xrawcell[4] << ", "  << xrawcell[5] <<  std::endl;
     switch (clatsym) {
         case 'P':
         case 'p':
@@ -1073,15 +1083,6 @@ void buildNearTree( void )
             case 3:  /* NCDist */
             case 4:  /* V7 */
                  CS6M_G6Reduce(primcell,redprimcell,reduced);
-                 if (i > 19 && i < 23 || i > 246 && i < 253) {
-                   std::cout << "i:  " << i  << (spaceArray[i]).substr(0,1) 
-                   << " " << cellDArray[i][0] << " " << cellDArray[i][1] << " " <<  cellDArray[i][2] 
-                   << " " << cellDArray[i][3] << " " << cellDArray[i][4] << " " <<  cellDArray[i][5] << std::endl
-                   << "primcell: " << primcell[0] << " " << primcell[1] << " " << primcell[2] << " " 
-                   << primcell[3] << " " << primcell[4] << " " << primcell[5] << std::endl
-                   << "redprimcell: " << redprimcell[0] << " " << redprimcell[1] << " " << redprimcell[2] << " " 
-                   << redprimcell[3] << " " << redprimcell[4] << " " << redprimcell[5] << std::endl;
-                 }
                  break;
             case 5:  /* D7Dist */
                  CS6M_G6toD7(primcell,d7cell);
@@ -1095,22 +1096,31 @@ void buildNearTree( void )
                  break;
 
         }
+        /* if (i < 25 || (i > 357200 &&  i < 357210)) {
+          std::cout << "i:  " << i  << (spaceArray[i]).substr(0,1) 
+          << " " << cellDArray[i][0] << " " << cellDArray[i][1] << " " <<  cellDArray[i][2] 
+          << " " << cellDArray[i][3] << " " << cellDArray[i][4] << " " <<  cellDArray[i][5] << std::endl
+          << "primcell: " << primcell[0] << " " << primcell[1] << " " << primcell[2] << " " 
+          << primcell[3] << " " << primcell[4] << " " << primcell[5] << std::endl
+          << "redprimcell: " << redprimcell[0] << " " << redprimcell[1] << " " << redprimcell[2] << " " 
+          << redprimcell[3] << " " << redprimcell[4] << " " << redprimcell[5] << std::endl; 
+        } */
              
         if (!reduced){
-              std::cout << "Reduction failed for "<<idArray[i]<<" "<<
-              cellDArray[i][3]<<" "<<
-              cellDArray[i][4]<<" "<<
-              cellDArray[i][5]<<" "<<
-              cellDArray[i][0]<<" "<<
-              cellDArray[i][1]<<" "<<
-              cellDArray[i][2]<<" "<<
-              spaceArray[i] << std::endl;
-              std::cout << "Primitive G6 " << primcell[0]<<" "<<
-              primcell[1]<<" "<<
-              primcell[2]<<" "<<
-              primcell[3]<<" "<<
-              primcell[4]<<" "<<
-              primcell[5] << std::endl;
+          std::cout << "Reduction failed for "<<idArray[i]<<" "<<
+          cellDArray[i][3]<<" "<<
+          cellDArray[i][4]<<" "<<
+          cellDArray[i][5]<<" "<<
+          cellDArray[i][0]<<" "<<
+          cellDArray[i][1]<<" "<<
+          cellDArray[i][2]<<" "<<
+          spaceArray[i] << std::endl;
+          std::cout << "Primitive G6 " << primcell[0]<<" "<<
+          primcell[1]<<" "<<
+          primcell[2]<<" "<<
+          primcell[3]<<" "<<
+          primcell[4]<<" "<<
+          primcell[5] << std::endl;
         };
         searchcell = Cell(redprimcell).CellWithDegrees();
         unitcell cellData(searchcell[0],searchcell[1],searchcell[2],
