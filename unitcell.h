@@ -206,23 +206,34 @@ public:
 
 	double Norm(void) const
 	{
+                double dnorm;
 		if (algorithm == 1)
 		{
-			return (std::fabs(cellD[0]-cellD[6]) +
-                   std::abs(cellD[1]-cellD[7]) +
-                   std::abs(cellD[2]-cellD[8]) +
-                   std::abs(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
-                   std::abs(cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad +
-                   std::abs(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad)*Scaledist;
+	           dnorm =  (fabs(cellD[0]-cellD[6]) +
+                   fabs(cellD[1]-cellD[7]) +
+                   fabs(cellD[2]-cellD[8]) +
+                   fabs(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
+                   fabs(cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad +
+                   fabs(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad)*Scaledist;
+                   if (dnorm != dnorm || dnorm > DBL_MAX || dnorm < -DBL_MAX) dnorm=DBL_MAX;
+                   return dnorm;
 		}
 		else if (algorithm == 2)
 		{
-			return (std::sqrt(std::fabs(cellD[0]-cellD[6])*(cellD[0]-cellD[6]) +
-                    (cellD[1]-cellD[7])*(cellD[1]-cellD[7]) +
-                    (cellD[2]-cellD[8])*(cellD[2]-cellD[8]) +
-			        (cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad*(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
-                    (cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad*(cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad +
-                    (cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad*(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad))*Scaledist;
+	           dnorm = (std::sqrt(
+                          (cellD[0]-cellD[6])*(cellD[0]-cellD[6]) +
+                          (cellD[1]-cellD[7])*(cellD[1]-cellD[7]) +
+                          (cellD[2]-cellD[8])*(cellD[2]-cellD[8]) +
+			  (cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad
+                         *(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
+                          (cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad
+                         *(cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad +
+                          (cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad
+                         *(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad))
+                         *Scaledist;
+                   if (dnorm != dnorm || dnorm > DBL_MAX || dnorm < -DBL_MAX) dnorm=DBL_MAX;
+                   return dnorm;
+
 		}
 
 		else if (algorithm == 3) /* NCDist */
@@ -232,7 +243,9 @@ public:
                     CS6M_comptovec6(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11],c2);
                     CS6M_CelldegtoG6(c1,g1);
                     CS6M_CelldegtoG6(c2,g2);
-                    return std::sqrt(NCDist(g1,g2))*Scaledist;
+                    dnorm = std::sqrt(NCDist(g1,g2))*Scaledist;
+                    if (dnorm != dnorm || dnorm > DBL_MAX || dnorm < -DBL_MAX) dnorm=DBL_MAX;
+                    return dnorm;
 		}
 
 		else if (algorithm == 4) /* V7 */
@@ -244,7 +257,10 @@ public:
             
 			//V7 dist
             
-			return ((gv1-gv2).Norm())*Scaledist;
+	            dnorm = ((gv1-gv2).Norm())*Scaledist;
+                    if (dnorm != dnorm || dnorm > DBL_MAX || dnorm < -DBL_MAX) dnorm=DBL_MAX;
+                    return dnorm;
+
 		}
 
                 else if (algorithm == 5) /* D7Dist */
@@ -259,7 +275,9 @@ public:
                     CS6M_CelldegtoG6(c2,g2);
                     CS6M_G6toD7(g1,d1);
                     CS6M_G6toD7(g2,d2);
-                    return std::sqrt(D7Dist(d1,d2))*Scaledist;
+                    dnorm = std::sqrt(D7Dist(d1,d2))*Scaledist;
+                    if (dnorm != dnorm || dnorm > DBL_MAX || dnorm < -DBL_MAX) dnorm=DBL_MAX;
+                    return dnorm;
 
                 }
 
@@ -274,7 +292,10 @@ public:
                     CS6M_CelldegtoG6(c2,g2);
                     CS6M_G6toS6(g1,s1);
                     CS6M_G6toS6(g2,s2);
-                    return std::sqrt(CS6Dist(s1,s2))*Scaledist;
+                    dnorm = std::sqrt(CS6Dist(s1,s2))*Scaledist;
+                    if (dnorm != dnorm || dnorm > DBL_MAX || dnorm < -DBL_MAX) dnorm=DBL_MAX;
+                    return dnorm;
+
                 }
 
 
