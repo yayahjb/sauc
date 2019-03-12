@@ -349,6 +349,7 @@ int load_cellDSGZArrays(void) {
                             << " Z: " << Z  << std::endl; 
                 } */
                 if (pdbid.length() == 4 && a > 1. && b > 1. && c > 1.
+                    && a==a && b==b && c==c && a <  1.e6 && b < 1.e6 && c < 1.e6
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
                     && gamma >= 5. && gamma <= 175.
@@ -408,6 +409,7 @@ int load_cellDSGZArrays(void) {
             } 
                 
             if (codid.length() >= 6 && a > 1. && b > 1. && c > 1.
+                    && a==a && b==b && c==c && a <  1.e6 && b < 1.e6 && c < 1.e6
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
                     && gamma >= 5. && gamma <= 175.
@@ -461,6 +463,7 @@ int load_cellDSGZArrays(void) {
                 Z = 0;
                 
                 if (csdref.length() >= 6 && a > 1. && b > 1. && c > 1.
+                    && a==a && b==b && c==c && a <  1.e6 && b < 1.e6 && c < 1.e6
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
                     && gamma >= 5. && gamma <= 175.
