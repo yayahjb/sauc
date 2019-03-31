@@ -1,7 +1,7 @@
 #ifndef CS6M_SELLING_REDUCE
   #define CS6M_SELLING_REDUCE
 
-  #define CS6M_DEBUG zz 
+  /* #define CS6M_DEBUG zz/* 
   #ifdef CS6M_DEBUG_PRINT_COUT
     #undef CS6M_DEBUG_PRINT_COUT
   #endif
@@ -25,7 +25,7 @@
   #endif
 
 
-  #define CS6M_DEBUG_PRINT_COUT yes
+ /* #define CS6M_DEBUG_PRINT_COUT yes */
   #define CS6M_S6BC 0
   #define CS6M_S6AC 1
   #define CS6M_S6AB 2
