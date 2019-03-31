@@ -66,10 +66,10 @@ PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #  Default compile flag definition to select debug mode under unix
 #CXXFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8
 #CFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 
-#CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
-#CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
-CXXFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
-CFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
+CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
+CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
+#CXXFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
+#CFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
 CXX	?=	g++
 CC	?=	gcc
 #
