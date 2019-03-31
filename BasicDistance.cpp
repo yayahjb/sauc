@@ -1,4 +1,5 @@
 #include "BasicDistance.h"
+#include "G6.h"
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 // Name: g123dist()
@@ -6,9 +7,9 @@
 //              allowing for permutations of g1, g2, g3 as
 //              well as sign changes
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-double BasicDistance::g123dist( const arma::vec6& v1, const arma::vec6& v2 )
+double BasicDistance::g123dist( const G6& v1, const G6& v2 )
 {
-   arma::vec6 vtemp(v2); // copy v2 into vtemp
+   G6 vtemp(v2); // copy v2 into vtemp
    //C     123
    double g123temp = g456dist( v1, vtemp );
    //C     213
@@ -50,9 +51,9 @@ double BasicDistance::g123dist( const arma::vec6& v1, const arma::vec6& v2 )
 //              allowing for cell-preserving sign changes in
 //              g4,5,6
 /*+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-double BasicDistance::g456dist( const arma::vec6& v1, const arma::vec6& v2 )
+double BasicDistance::g456dist( const G6& v1, const G6& v2 )
 {
-   const double xdot = arma::dot( v1-v2, v1-v2 ); 
+   const double xdot = (v1-v2).dot(v1-v2);
    const double g456temp = sqrt( xdot 
       + 4.0*std::min( std::min(0.0, 
                v1[3]*v2[3]+v1[4]*v2[4]),

@@ -1,26 +1,41 @@
 #ifndef V7_H
 #define V7_H
 
-#define ARMA_DONT_USE_BLAS
-#define ARMA_DONT_USE_LAPACK
-#include <armadillo>
+#include "VecN.h"
+#include "V7.h"
+#include "G6.h"
 #include "Cell.h"
 
-class V7
-{
+class Cell;
+class G6;
+
+#include <ostream>
+#include <string>
+#include <vector>
+
+class V7: public VecN {
 public:
-   V7(void);
-   explicit V7( const arma::vec7& v7 );
-   explicit V7( const arma::vec6& v );
-   explicit V7( const Cell& c );
-   ~V7(void);
+   friend std::ostream& operator<< ( std::ostream&, const V7& );
 
-   double Norm( void ) const;
-   const V7 operator- ( const V7& v7 ) const;
-   double operator[](const int n ) const { return( m_v7[n] ); }
+   V7( void );
+   V7( const V7& v );
+   explicit V7( const double v[7] );
+   explicit V7( const G6& v );
+   V7(const Cell& c);
+   V7( const VecN& v );
+   V7( const std::string& s );
+   V7( const std::vector<double>& v );
+   ~V7(void) {}
 
-private:
-   arma::vec7 m_v7;
+   V7& operator= (const V7& v);
+   V7& operator= (const std::string& s);
+   V7& operator= (const G6& v);
+   V7& operator= (const Cell& v);
+
+   static double DistanceBetween( const V7& v1, const V7& v2 );
+
 };
 
-#endif //V7_H
+
+#endif
+

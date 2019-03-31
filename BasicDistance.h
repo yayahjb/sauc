@@ -1,9 +1,8 @@
 #ifndef BASICDISTANCE_H
 #define BASICDISTANCE_H
 
-#define ARMA_DONT_USE_BLAS
-#define ARMA_DONT_USE_LAPACK
-#include <armadillo>
+#include "G6.h"
+
 class BasicDistance
 
 /*
@@ -13,8 +12,8 @@ and in MakeGaol.
 */
 {
 public:
-   static double g456dist( const arma::vec6& v1, const arma::vec6& v2 );
-   static double g123dist( const arma::vec6& v1, const arma::vec6& v2 );
+   static double g456dist( const G6& v1, const G6& v2 );
+   static double g123dist( const G6& v1, const G6& v2 );
 };
 
 #endif // BASICDISTANCE_H

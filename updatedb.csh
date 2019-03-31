@@ -1,0 +1,61 @@
+#!/bin/csh
+#
+#  Example script for updating the cell database
+#  from the PDB crystal.idx cell index
+#
+#  Assumes a working sauc kit in SAUCDIR
+#
+cd /home/hbernstein/sauc
+setenv HTTPDSERVER flops.arcib.org:8084
+setenv SEARCHURL http://r21-001.nsls2.bnl.gov/~hbernstein/sauc-1.1.1/
+setenv CGIPATH http://r21-001.nsls2.bnl.gov/~hbernstein/cgi-bin
+setenv PDBCELLINDEXURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
+setenv PDBENTRIESURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
+setenv CGIMETHOD GET
+setenv CGIBIN /var/www/cgi-bin
+setenv BINDEST /var/www/cgi-bin
+setenv HTDOCS /var/www/html/sauc-1.1.1
+if ( -e crystal.idx ) then
+  rm -f newdb/crystal.idx
+  make newdb/crystal.idx
+  diff crystal.idx newdb/crystal.idx > /dev/null
+  if ( $status ) then
+    make last_update
+    cp newdb/crystal.idx crystal.idx
+    set check_update=1
+  else
+    set check_update=0
+    make sauc-1.1.1.exe
+    ./sauc-1.1.1.exe < rebuild.inp
+    touch resultL1
+    touch resultL2
+    touch resultNCDist
+    touch resultV7
+    touch resultD7
+    touch resultS6
+    grep "1O51" resultL1
+    if ( $status ) set check_update=1
+    grep "1O51" resultL2
+    if ( $status ) set check_update=1
+    grep "1O51" resultNCDist
+    if ( $status ) set check_update=1
+    grep "1O51" resultV7
+    if ( $status ) set check_update=1
+    grep "1O51" resultD7
+    if ( $status ) set check_update=1
+    grep "1O51" resultS6
+    if ( $status ) set check_update=1
+  endif
+else
+  make last_update
+  cp newdb/crystal.idx crystal.idx
+  set check_update=1
+endif
+if ( $check_update) then
+  (setenv SAUC_BATCH_MODE 1;./sauc < rebuild.inp)
+  make install
+  rm -f newdb/*.dmp
+  rm -f newdb/*.csv
+  rm -f newdb/*.idx
+  rm -f newdb/result*
+endif

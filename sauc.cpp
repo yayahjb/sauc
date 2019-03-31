@@ -65,7 +65,6 @@
 #include <ctype.h>
 #include <iostream>
 #include <cstring>
-#define USE_ARMADILLO_LIBRARY
 #include "TNear.h"
 #include "triple.h"
 #include "rhrand.h"
@@ -73,13 +72,12 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include "G6.h"
 #include "V7.h"
 #include "Cell.h"
 #include "Reducer.h"
+#include "Mat66.h"
 #include "pststrmgr.h"
-#define ARMA_DONT_USE_BLAS
-#define ARMA_DONT_USE_LAPACK
-#include <armadillo>
 #include <vector>
 
 #include "sauc_psm_files_create.h"
@@ -155,11 +153,12 @@ vector <std::string> spaceArray;
 vector <int> zArray;
 vector <std::string> idArray;
 double probeArray[6];
-arma::vec6 primredprobe;
+G6 primredprobe;
 string probelattice;
 double avglen=1.;
 double crootvol;
-arma::vec6 primcell;
+G6 primcell;
+G6 redprimcell;
 int nearest = 0, numRow = 0;
 int quitAlgorithm = 0, quitSimilar = 0, quitContinue = 0, endProgram = 0, choiceAlgorithm = 0, choiceSimilar = 0, choiceContinue = 0, goBack = 0,
 priorAlgorithm = -1;
@@ -542,23 +541,27 @@ int make_mmapfiles(void) {
 
 
 
-//*****************************************************************************
+/*****************************************************************************/
 bool makeprimredprobe( void )
 {
+    int iii;
     string latsym;
     char clatsym;
-    arma::vec6 v6cell;
-    arma::vec6 redprimcell;
+    G6 v6cell;
     double d7cell[7];
     double d7red[7];
     double s6cell[6];
     double s6red[6];
+    G6 g6cent;
     int reduced;
-    arma::mat66 mc;
-    arma::mat66 m;
-    arma::vec6 xrawcell;
-    arma::vec6 recipcell;
-    arma::vec6 reducedBase;
+    double dmc[36];
+    Mat66 mc;
+    Mat66 m;
+    G6 xrawcell;
+    G6 recipcell;
+    G6 reducedBase;
+    G6 xreducedBase;
+    int xreduced;
     Cell rawcell(probeArray[0],probeArray[1],probeArray[2],
                  probeArray[3],probeArray[4],probeArray[5]);
     int ii;
@@ -589,8 +592,10 @@ bool makeprimredprobe( void )
         case 'r':
         case 'H':
         case 'h':
-            mc = rawcell.LatSymMat66(latsym);
-            primcell = mc*(rawcell.Cell2V6());
+            g6cent=rawcell.Cell2V6();
+            CS6M_LatSymMat66(g6cent,clatsym,dmc,primcell);
+            /*mc = rawcell.LatSymMat66(latsym);
+            primcell = mc*(rawcell.Cell2V6());*/
             break;
         case 'V':
         case 'v':
@@ -601,8 +606,8 @@ bool makeprimredprobe( void )
         default:
             cerr << "Unrecognized lattice symbol "<< probelattice<<" treated as P" << std::endl;
             latsym = "P";
-            mc = rawcell.LatSymMat66(latsym);
-            primcell = mc*(rawcell.Cell2V6());
+            /* mc = rawcell.LatSymMat66(latsym);*/
+            primcell = rawcell.Cell2V6();
             break;
     }
     switch (choiceAlgorithm) {
@@ -634,7 +639,39 @@ bool makeprimredprobe( void )
     primredprobe[5] << std::endl;
     std::cout << "Volume :" << Cell(redprimcell).Volume() << std::endl;
     crootvol = pow(Cell(redprimcell).Volume(),1./3.);
-    Reducer::Reduce((Cell(redprimcell).Inverse()).Cell2V6(),m,reducedBase,0.0);
+    Reducer::Reduce((Cell(redprimcell).Inverse()).Cell2V6(),m,xreducedBase,0.0);
+    CS6M_G6Reduce((Cell(redprimcell).Inverse()).Cell2V6(),reducedBase,xreduced);
+    for (iii=0; iii<6; iii++ ) {
+      if (xreducedBase[iii] != reducedBase[iii] ) {
+          std::cout<< "redprimcell : " << redprimcell[0]<<", " 
+                                       << redprimcell[1]<<", "
+                                       << redprimcell[2]<<", "
+                                       << redprimcell[3]<<", "
+                                       << redprimcell[4]<<", "
+                                       << redprimcell[5]<<std::endl;
+          std::cout<< "Inverse : "     << (Cell(redprimcell).Inverse())[0]<<", " 
+                                       << (Cell(redprimcell).Inverse())[1]<<", "
+                                       << (Cell(redprimcell).Inverse())[2]<<", "
+                                       << (Cell(redprimcell).Inverse())[3]<<", "
+                                       << (Cell(redprimcell).Inverse())[4]<<", "
+                                       << (Cell(redprimcell).Inverse())[5]<<std::endl;
+          std::cout<< "xreducedBase : "<< xreducedBase[0]<<", " 
+                                       << xreducedBase[1]<<", "
+                                       << xreducedBase[2]<<", "
+                                       << xreducedBase[3]<<", "
+                                       << xreducedBase[4]<<", "
+                                       << xreducedBase[5]<<std::endl;
+          std::cout<< "reducedBase : "<< reducedBase[0]<<", " 
+                                       << reducedBase[1]<<", "
+                                       << reducedBase[2]<<", "
+                                       << reducedBase[3]<<", "
+                                       << reducedBase[4]<<", "
+                                       << reducedBase[5]<<std::endl;
+
+        break;
+      }
+    }
+    
     recipcell = (Cell(redprimcell).Inverse()).CellWithDegrees();
     
     std::cout << "Reciprocal of Primitive Probe Cell: " <<
@@ -687,10 +724,9 @@ if (value != ULONG_MAX) { \
 //*****************************************************************************
 void buildNearTree( void )
 {
-    arma::mat66 m;
-    arma::mat66 mc;
-    arma::vec6 primcell;
-    arma::vec6 searchcell;
+    Mat66 m;
+    Mat66 mc;
+    G6 searchcell;
     std::ofstream serialout;
     std::ifstream serialin;
     size_t si;
@@ -1070,7 +1106,6 @@ void buildNearTree( void )
     
     for (int i = 0; i < (int)(cellDArray.size()); i++)
     {
-        double redprimcell[6];
         double d7cell[7];
         double d7red[7];
         double s6cell[6];
@@ -1257,7 +1292,7 @@ void buildNearTree( void )
 
 
 //*****************************************************************************
-void NearestInputReport( std::ostream& out, const arma::vec6& probeArray, const arma::vec6& primredprobe )
+void NearestInputReport( std::ostream& out, const G6& probeArray, const G6& primredprobe )
 {
     out << "Raw Unknown Cell [" <<
     probeArray[0] << ", " <<
@@ -1941,7 +1976,7 @@ int main ()
             if ( choiceAlgorithm > 0 && choiceAlgorithm < 7 ) {
                 double d7cell[7],d7red[7],s6cell[6],s6red[6];
                 int reduced;
-                arma::vec6 redprimcell;
+                G6 redprimcell;
                 switch (choiceAlgorithm) {
                     case 1:  /* L1 */
                     case 2:  /* L2 */

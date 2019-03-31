@@ -66,8 +66,10 @@ PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #  Default compile flag definition to select debug mode under unix
 #CXXFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8
 #CFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8 
-CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=24 
-CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=24 
+#CXXFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
+#CFLAGS ?= -Wall -O3 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
+CXXFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
+CFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g  -ffloat-store -fopenmp  -ftree-parallelize-loops=24 
 CXX	?=	g++
 CC	?=	gcc
 #
@@ -257,28 +259,64 @@ $(SAUCEXE): \
 	BasicDistance.h    \
 	Cell.cpp \
 	Cell.h \
+	D6.h \
+	D6.cpp \
+	D7.h \
+	D7.cpp \
+	DeloneTetrahedron.h \
+	DeloneTetrahedron.cpp \
+	G6.h \
+	G6.cpp \
 	fgetln.c \
-	sauc.cpp \
+	inverse.h \
+	inverse.cpp \
+	Mat66.h \
+	Mat66.cpp \
+	MatMN.h \
+	MatMN.cpp \
+	MatN.h \
+	MatN.cpp \
 	NCDist.h \
-	Reducer.cpp \
-	Reducer.h \
-	V7.cpp \
-	V7.h \
-	unitcell.h \
-	rhrand.h \
-	triple.h \
-	TNear.h \
 	pststrmgr.c \
 	pststrmgr.h \
-	S6M_SellingReduce.h
+	Reducer.cpp \
+	Reducer.h \
+	rhrand.h \
+	S6M_SellingReduce.h \
+	sauc.cpp \
+	TNear.h \
+	triple.h \
+	unitcell.h \
+	V7.cpp \
+	V7.h \
+	vector_3d.h \
+	vector_3d.cpp \
+	Vec_N_Tools.h \
+	Vec_N_Tools.cpp \
+	VecN.h \
+	VecN.cpp \
+	VectorTools.h \
+	VectorTools.cpp
 	$(CC) $(CFLAGS) -c pststrmgr.c
 	$(CXX) $(CXXFLAGS) -o $(SAUCEXE) \
 	BasicDistance.cpp    \
 	Cell.cpp \
+	D6.cpp \
+	D7.cpp \
+	DeloneTetrahedron.cpp \
 	fgetln.c \
+	G6.cpp \
+	inverse.cpp \
+	Mat66.cpp \
+	MatMN.cpp \
+	MatN.cpp \
 	sauc.cpp \
 	Reducer.cpp \
 	V7.cpp \
+	VecN.cpp \
+	VectorTools.cpp \
+	Vec_N_Tools.cpp \
+	vector_3d.cpp \
 	pststrmgr.o -lpthread
 
 sauc_psm_files_create: \
