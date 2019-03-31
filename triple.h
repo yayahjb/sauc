@@ -53,18 +53,29 @@
 #ifndef TRIPLE_H
 #define TRIPLE_H
 
-template <class TR1, class TR2, class TR3>
+#include <cstdlib>
+#include <iostream>
+
+template <typename TR1, typename TR2, typename TR3>
 class triple {
 private:
     TR1 m_first;
     TR2 m_second;
     TR3 m_third;
 public:
-    triple() : m_first(TR1()), m_second(TR2()), m_third(TR3()) {}
-    triple(const TR1& first, const TR2& second, const TR3& third ) : m_first(first), m_second(second), m_third(third) {}
-    inline TR1 GetFirst( void ) const  { return m_first;  }  
+
+   friend std::ostream& operator<< ( std::ostream& o, const triple<TR1, TR2, TR3>& v ) {
+      o << v.first  << std::endl;
+      o << v.second << std::endl;
+      o << v.third  << std::endl;
+      return o;
+   }
+
+    triple() : m_first(TR1()), m_second(TR2()), m_third(TR3()), first(m_first), second(m_second), third(m_third) {}
+    triple(const TR1& ifirst, const TR2& isecond, const TR3& ithird ) : m_first(ifirst), m_second(isecond), m_third(ithird), first(m_first), second(m_second), third(m_third) {}
+    inline TR1 GetFirst ( void ) const  { return m_first;  }  
     inline TR2 GetSecond( void ) const { return m_second; }  
-    inline TR3 GetThird( void ) const  { return m_third;  }  
+    inline TR3 GetThird ( void ) const  { return m_third;  }  
 
 inline bool operator==(const triple<TR1, TR2, TR3>& rhs) { 
     return m_first == rhs.GetFirst() && m_second == rhs.m_second && m_third == rhs.m_third; 
@@ -75,6 +86,30 @@ inline bool operator<(const triple<TR1, TR2, TR3>& rhs) {
       || (m_first == rhs.GetFirst() && m_second < rhs.GetSecond)
       || (m_first == rhs.GetFirst() && m_second < rhs.GetSecond && m_third < rhs.GetThird); 
 }
+
+inline triple& operator=( const triple& tr )
+{
+   m_first  = tr.m_first;
+   m_second = tr.m_second;
+   m_third  = tr.m_third;
+   return ( *this );
+}
+
+   // copy constructor
+   triple( const triple& tr )
+      : m_first (tr.m_first)
+      , m_second(tr.m_second)
+      , m_third (tr.m_third)
+      , first ( m_first )
+      , second( m_second )
+      , third ( m_third )
+   {
+   }
+
+public:
+   TR1 first;
+   TR2 second;
+   TR3 third;
 
 };
 

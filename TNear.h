@@ -303,7 +303,6 @@
 #include <iostream>
 #endif
 
-/* #define USE_ARMADILLO_LIBRARY */
 
 #ifdef _MSC_VER
 #define USE_LOCAL_HEADERS
@@ -316,11 +315,8 @@
 #include "triple.h"
 #endif
 
-#ifdef USE_ARMADILLO_LIBRARY
-#define ARMA_DONT_USE_BLAS
-#define ARMA_DONT_USE_LAPACK
-#include <armadillo>
-#endif
+#include "G6.h"
+
 
 #include <vector>
 #include <set>
@@ -403,14 +399,11 @@ public:
         return( d>0?d:-d );  // apparent compiler error makes this necessary
     }
     
-#ifdef USE_ARMADILLO_LIBRARY
-    // Specific version for 6-D vectors using the armadillo library
-    static inline DistanceType DistanceBetween( const arma::vec6& t1, const arma::vec6& t2 )
+    static inline DistanceType DistanceBetween( const G6& t1, const G6& t2 )
     {
-        DistanceType d = arma::norm( t1-t2,2 );
+        DistanceType d = (t1-t2).norm();
         return( d>0?d:-d );
     }
-#endif
     
     static inline DistanceType DistanceBetween( const double t1, const double t2 )
     {
@@ -4498,8 +4491,15 @@ public:
                 m_imultRight = 1;
 #endif
                 m_ObjectCollide[n] = ULONG_MAX;
-                SumSpacings += dTempLeft;
-                SumSpacingsSq += dTempLeft*dTempLeft;
+                if (dTempLeft > 0. && dTempLeft < 1.e10) {
+                  SumSpacings += dTempLeft;
+                  SumSpacingsSq += dTempLeft*dTempLeft;
+                } else {
+                  double rescale=m_ObjectStore.size();
+                  rescale = (rescale+2.0/rescale+1.0);
+                  SumSpacings *= rescale;
+                  SumSpacingsSq *= rescale;
+                }
                 return;
             }
             
@@ -4529,8 +4529,15 @@ public:
                 if ( m_NearTreeNodes[m_pRightBranch]->m_ptLeft == ULONG_MAX ) {
                     m_NearTreeNodes[m_pRightBranch]->m_ptLeft = n;
                     m_ObjectCollide[n] = ULONG_MAX;
-                    SumSpacings += dTempRight;
-                    SumSpacingsSq += dTempRight*dTempRight;
+                    if (dTempRight > 0. && dTempRight < 1.e10) {
+                      SumSpacings += dTempRight;
+                      SumSpacingsSq += dTempRight*dTempRight;
+                    } else {
+                      double rescale=m_ObjectStore.size();
+                      rescale = (rescale+2.0/rescale+1.0);
+                      SumSpacings *= rescale;
+                      SumSpacingsSq *= rescale;
+                    }
                     ++localDepth;
                     ++(m_NearTreeNodes[m_pRightBranch]->m_iTreeSize);
 #ifdef CNEARTREE_INSTRUMENTED
@@ -4570,8 +4577,15 @@ public:
                 if ( m_NearTreeNodes[m_pLeftBranch]->m_ptLeft == ULONG_MAX ) {
                     m_NearTreeNodes[m_pLeftBranch]->m_ptLeft = n;
                     m_ObjectCollide[n] = ULONG_MAX;
-                    SumSpacings += dTempLeft;
-                    SumSpacingsSq += dTempLeft*dTempLeft;
+                    if (dTempLeft > 0. && dTempLeft < 1.e10) {
+                      SumSpacings += dTempLeft;
+                      SumSpacingsSq += dTempLeft*dTempLeft;
+                    } else {
+                      double rescale=m_ObjectStore.size();
+                      rescale = (rescale+2.0/rescale+1.0);
+                      SumSpacings *= rescale;
+                      SumSpacingsSq *= rescale;
+                    }
                     ++localDepth;
                     ++(m_NearTreeNodes[m_pLeftBranch]->m_iTreeSize);
 #ifdef CNEARTREE_INSTRUMENTED
@@ -4644,8 +4658,16 @@ public:
                 m_imultRight = 1;
 #endif
                 m_ObjectCollide[n] = ULONG_MAX;
-                SumSpacings += dTempLeft;
-                SumSpacingsSq += dTempLeft*dTempLeft;
+
+                if (dTempLeft> 0. && dTempLeft < 1.e10) {
+                  SumSpacings += dTempLeft;
+                  SumSpacingsSq += dTempLeft*dTempLeft;
+                } else {
+                  double rescale=m_ObjectStore.size();
+                  rescale = (rescale+2.0)/(rescale+1.0);
+                  SumSpacings *= rescale; 
+                  SumSpacingsSq *= rescale;
+                } 
                 return;
             }
             
@@ -4675,8 +4697,15 @@ public:
                 if ( m_NearTreeNodes[m_pRightBranch]->m_ptLeft == ULONG_MAX) {
                     m_NearTreeNodes[m_pRightBranch]->m_ptLeft = n;
                     m_ObjectCollide[n] = ULONG_MAX;
-                    SumSpacings += dTempRight;
-                    SumSpacingsSq += dTempRight*dTempRight;
+                    if (dTempRight > 0. && dTempRight < 1.e10) {
+                      SumSpacings += dTempRight;
+                      SumSpacingsSq += dTempRight*dTempRight;
+                    } else {
+                      double rescale = m_ObjectStore.size();
+                      rescale = (rescale+2.0)/(rescale+1.0);
+                      SumSpacings  *= rescale;
+                      SumSpacingsSq *= rescale;
+                    }
                     ++localDepth;
                     ++(m_NearTreeNodes[m_pRightBranch]->m_iTreeSize);
 #ifdef CNEARTREE_INSTRUMENTED
@@ -4706,8 +4735,15 @@ public:
                 if ( m_NearTreeNodes[m_pLeftBranch]->m_ptLeft == ULONG_MAX ) {
                     m_NearTreeNodes[m_pLeftBranch]->m_ptLeft = n;
                     m_ObjectCollide[n] = ULONG_MAX;
-                    SumSpacings += dTempLeft;
-                    SumSpacingsSq += dTempLeft*dTempLeft;
+                    if (dTempLeft > 0. && dTempLeft < 1.e10) {
+                      SumSpacings += dTempLeft;
+                      SumSpacingsSq += dTempLeft*dTempLeft;
+                    } else {
+                      double rescale=m_ObjectStore.size();
+                      rescale=(rescale+2.0)/(rescale+1.0);
+                      SumSpacings *= rescale;
+                      SumSpacingsSq *= rescale;
+                    }
                     ++localDepth;
                     ++(m_NearTreeNodes[m_pLeftBranch]->m_iTreeSize);
 #ifdef CNEARTREE_INSTRUMENTED
@@ -8450,7 +8486,7 @@ public:
 #endif
                     if (pt->m_ptRight < dDistanceCache.size()) {
                         dDR = dDistanceCache[pt->m_ptRight];
-                        if (dDistanceCache[pt->m_ptRight] == DBL_MAX) {
+                        if (dDistanceCache[pt->m_ptRight] =- DBL_MAX) {
                             dDistanceCache[pt->m_ptRight]
                             = (double)(dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]));
                         }
