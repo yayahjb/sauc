@@ -4496,7 +4496,7 @@ public:
                   SumSpacingsSq += dTempLeft*dTempLeft;
                 } else {
                   double rescale=m_ObjectStore.size();
-                  rescale = (rescale+2.0/rescale+1.0);
+                  rescale = (rescale+2.0)/(rescale+1.0);
                   SumSpacings *= rescale;
                   SumSpacingsSq *= rescale;
                 }
@@ -4534,7 +4534,7 @@ public:
                       SumSpacingsSq += dTempRight*dTempRight;
                     } else {
                       double rescale=m_ObjectStore.size();
-                      rescale = (rescale+2.0/rescale+1.0);
+                      rescale = (rescale+2.0)/(rescale+1.0);
                       SumSpacings *= rescale;
                       SumSpacingsSq *= rescale;
                     }
@@ -4582,7 +4582,7 @@ public:
                       SumSpacingsSq += dTempLeft*dTempLeft;
                     } else {
                       double rescale=m_ObjectStore.size();
-                      rescale = (rescale+2.0/rescale+1.0);
+                      rescale = (rescale+2.0)/(rescale+1.0);
                       SumSpacings *= rescale;
                       SumSpacingsSq *= rescale;
                     }
@@ -8486,7 +8486,7 @@ public:
 #endif
                     if (pt->m_ptRight < dDistanceCache.size()) {
                         dDR = dDistanceCache[pt->m_ptRight];
-                        if (dDistanceCache[pt->m_ptRight] =- DBL_MAX) {
+                        if (dDistanceCache[pt->m_ptRight] == DBL_MAX) {
                             dDistanceCache[pt->m_ptRight]
                             = (double)(dDR = DistanceBetween( t, m_ObjectStore[pt->m_ptRight]));
                         }

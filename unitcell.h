@@ -286,8 +286,8 @@ public:
                 CS6M_comptovec6(cellD[6],cellD[7],cellD[8],cellD[9],cellD[10],cellD[11],c2);
                 CS6M_CelldegtoG6(c1,g1);
                 CS6M_CelldegtoG6(c2,g2);
-                if (std::isinf(dnorm) || std::isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
                 dnorm = std::sqrt(NCDist(g1,g2))*Scaledist;
+                if (std::isinf(dnorm) || std::isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
                     dnorm=DBL_MAX;
                 }
                 return dnorm;
