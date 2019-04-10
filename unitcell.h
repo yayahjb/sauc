@@ -8,7 +8,7 @@
 
 double NCDist(double *, double *);
 double D7Dist(double *, double *);
-double S6Dist(double *, double *);
+double CS6Dist(double *, double *);
 static double pi = 3.141592653589793;
 static double torad = pi/180.;
 

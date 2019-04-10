@@ -56,7 +56,7 @@
   #define CS6M_CELLGAMMA 5
 
 
-  #define CS6M_abs(x) (x<0?-x:x)
+  #define CS6M_abs(x) ((x)<0?-(x):(x))
 
   #define CS6M_CountPositive(s6vec,delta)  \
     ( ((s6vec[CS6M_S6BC]>delta)?1:0)  \
@@ -248,7 +248,6 @@
     double temp;                              \
     double delta = 0;                         \
     CS6M_VOLCHECK_PREP(g6unred);              \
-    reduced=0;                                \
     CS6M_G6toS6(g6unred,s6in);                \
     reduced=1;                                \
     CS6M_S6Reduce(s6in,s6out,reduced);        \
@@ -284,7 +283,7 @@
       /* g1 < g2 or g1=g2 && |g4| < |g5| */                            \
       if ( g6red[CS6M_G6A2] > g6red[CS6M_G6B2]+delta                   \
            || ( CS6M_abs(g6red[CS6M_G6A2] - g6red[CS6M_G6B2]) < delta      \
-           && CS6M_abs(g6red[CS6M_G62BC]) > CS6M_abs(g6red[CS6M_G62AC]+delta)) ) { \
+           && CS6M_abs(g6red[CS6M_G62BC]) > CS6M_abs(g6red[CS6M_G62AC])+delta) ) { \
         temp = g6red[CS6M_G6A2];                                 \
         g6red[CS6M_G6A2] = g6red[CS6M_G6B2];                     \
         g6red[CS6M_G6B2] = temp;                                 \
@@ -294,13 +293,13 @@
         /* std::cout<<"bd1 "<<g6red[0]<<" "<<g6red[1]<<" "       \
         <<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]  \
         <<" "<<std::endl; */                                     \
-        CS6M_VOLCHECK("swap a b ",g6red);                                    \
+        CS6M_VOLCHECK("swap a b ",g6red);                        \
         redpass++; continue;                                     \
       }                                                          \
       /* g2 < g3 or g2=g3 && |g5| < |g6| */                      \
       if ( g6red[CS6M_G6B2] > g6red[CS6M_G6C2]+delta             \
             ||  (fabs(g6red[CS6M_G6B2] - g6red[CS6M_G6C2]) < delta \
-            && CS6M_abs(g6red[CS6M_G62AC]) > CS6M_abs(g6red[CS6M_G62AB]+delta)) ) {\
+            && CS6M_abs(g6red[CS6M_G62AC]) > CS6M_abs(g6red[CS6M_G62AB])+delta) ) {\
         temp = g6red[CS6M_G6B2];                                 \
         g6red[CS6M_G6B2] = g6red[CS6M_G6C2];                     \
         g6red[CS6M_G6C2] = temp;                                 \
@@ -308,7 +307,7 @@
         g6red[CS6M_G62AC] = g6red[CS6M_G62AB];                   \
         g6red[CS6M_G62AB] = temp;                                \
         CS6M_VOLCHECK("swap b c ",g6red);                        \
-        /* std::cout<<"bd1 "<<g6red[0]<<" "<<g6red[1]<<" "       \
+        /* std::cout<<"bd2 "<<g6red[0]<<" "<<g6red[1]<<" "       \
         <<g6red[2]<<" "<<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]  \
         <<" "<<std::endl; */                                     \
         redpass++; continue;                                     \
@@ -407,7 +406,7 @@
           g6red[CS6M_G62BC] = -2.*g6red[CS6M_G6B2] - g6red[CS6M_G62BC] - g6red[CS6M_G62AB];\
           /* std::cout<<"bdF+ "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "     \
           <<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/            \
-          CS6M_VOLCHECK("F= ",g6red);                                            \
+          CS6M_VOLCHECK("F+ ",g6red);                                            \
           redpass++; continue;                                                   \
       }                                                                          \
       /* 678 boundaries exact */                                                 \
@@ -460,7 +459,7 @@
           CS6M_VOLCHECK("C= ",g6red);                                            \
           redpass++; continue;                                                   \
       }                                                                          \
-      if (fabs(g6red[CS6M_G62AB] + g6red[CS6M_G6A2]) < delta &&                  \
+      if (g6red[CS6M_G62AB] < -g6red[CS6M_G6A2] -delta &&                        \
           g6red[CS6M_G62AB] < -delta) {                                          \
           g6red[CS6M_G6B2] = g6red[CS6M_G6A2]+g6red[CS6M_G6B2]+g6red[CS6M_G62AB];\
           g6red[CS6M_G62AB] = 2.*g6red[CS6M_G6A2]+g6red[CS6M_G62AB];             \
@@ -473,15 +472,15 @@
       }                                                                          \
       /* F boundary exact */                                                     \
       if (fabs(g6red[CS6M_G6A2] + g6red[CS6M_G6B2] + g6red[CS6M_G62BC]           \
-          + g6red[CS6M_G62AC] + g6red[CS6M_G62AB]) < delta &&                   \
-          fabs(2.*g6red[CS6M_G6A2]+2.*g6red[CS6M_G62AC]+g6red[CS6M_G62AB]) <delta) { \
+          + g6red[CS6M_G62AC] + g6red[CS6M_G62AB]) < -delta &&                   \
+          2.*g6red[CS6M_G6A2]+2.*g6red[CS6M_G62AC]+g6red[CS6M_G62AB] > delta) {  \
           g6red[CS6M_G6C2] = g6red[CS6M_G6A2] + g6red[CS6M_G6B2]                 \
           + g6red[CS6M_G6C2] + g6red[CS6M_G62BC] + g6red[CS6M_G62AC] + g6red[CS6M_G62AB]; \
           g6red[CS6M_G62AC] = -2.*g6red[CS6M_G6A2] - g6red[CS6M_G62AC] - g6red[CS6M_G62AB];\
           g6red[CS6M_G62BC] = -2.*g6red[CS6M_G6B2] - g6red[CS6M_G62BC] - g6red[CS6M_G62AB];\
           /* std::cout<<"bdF "<<g6red[0]<<" "<<g6red[1]<<" "<<g6red[2]<<" "      \
           <<g6red[3]<<" "<<g6red[4]<<" "<<g6red[5]<<" "<<std::endl;*/            \
-          CS6M_VOLCHECK("F= ",g6red);                                                         \
+          CS6M_VOLCHECK("F= ",g6red);                                            \
           redpass++; continue;                                                   \
       }                                                                          \
       notdone = 0;                                                               \
@@ -595,6 +594,7 @@
     double s6in[6];                           \
     double s6out[6];                          \
     double temp;                              \
+    double delta;                             \
     int ii;                                   \
     CS6M_D7toS6(in,s6in);                     \
     reduced=1;                                \
@@ -604,8 +604,14 @@
     } else {                                  \
       for (ii=0; ii < 7; ii++) out[ii]=in[ii];\
     }                                         \
-    while (out[0] > out[1] || out[1] > out[2] || out[2] > out[3] ) {\
-       if (out[2] > out[3]) {                 \
+    delta=out[3];                             \
+    if (out[2] > delta) delta=out[2];         \
+    if (out[1] > delta) delta=out[1];         \
+    if (out[0] > delta) delta=out[0];         \
+    delta = delta * 1.e-10;                   \
+    if (delta < 1.e-20) delta=1.e-20;         \
+    while (out[0] > out[1]+delta || out[1] > out[2]+delta || out[2] > out[3]+delta ) {\
+       if (out[2] > out[3]+delta) {           \
          temp = out[2];                       \
          out[2] = out[3];                     \
          out[3]=temp;                         \
@@ -614,7 +620,7 @@
          out[5] = temp;                       \
          continue;                            \
        }                                      \
-       if (out[1] > out[2]) {                 \
+       if (out[1] > out[2]+delta) {           \
          temp = out[1];                       \
          out[1] = out[2];                     \
          out[2]=temp;                         \
@@ -623,7 +629,7 @@
          out[6] = temp;                       \
          continue;                            \
        }                                      \
-       if (out[0] > out[1]) {                 \
+       if (out[0] > out[1]+delta) {           \
          temp = out[0];                       \
          out[0] = out[1];                     \
          out[1]=temp;                         \
