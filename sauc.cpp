@@ -1146,12 +1146,12 @@ void buildNearTree( void )
              
         if (!reduced){
           std::cout << "Reduction failed for "<<idArray[i]<<" "<<
-          cellDArray[i][3]<<" "<<
-          cellDArray[i][4]<<" "<<
-          cellDArray[i][5]<<" "<<
           cellDArray[i][0]<<" "<<
           cellDArray[i][1]<<" "<<
           cellDArray[i][2]<<" "<<
+          cellDArray[i][3]<<" "<<
+          cellDArray[i][4]<<" "<<
+          cellDArray[i][5]<<" "<<
           spaceArray[i] << std::endl;
           std::cout << "Primitive G6 " << primcell[0]<<" "<<
           primcell[1]<<" "<<

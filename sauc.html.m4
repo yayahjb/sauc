@@ -172,7 +172,7 @@ Search of Alternate Unit Cells
 <br />Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein
 <br />Rev 0.9, 21 Jul 2015, Herbert J. Bernstein
 <br />Rev 1.0, 22 Nov 2016, Herbert J. Bernstein
-<br />formerly Dowling College and Micro Encoder Inc.
+<br />Rev 1.1, 11 Apr 2019, Herbert J. Bernstein
 <br />Work Supported In Part By NIGMS
 <br />Original Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
 <br />Support Contact Email: <a href=mailto:yayahjb@gmail.com>yayahjb@gmail.com</a>
@@ -191,9 +191,15 @@ choices of cells and differing choices of lattice centering representing the
 same lattice, simple searches based on raw cell edges and angles can miss similarities
 among lattices. A database of lattices using the G<sup>6</sup> representation of the
 Niggli-reduced cell as the search key provides a more robust and complete search.
+A database using the S<sup>6</sup> representation provides very similar results
+with much faster times both for database builds and searches, and is now the preferred
+metric,
+<p>
 Searching is implemented by finding the distance from the probe cell to related
 cells using a topological embedding of the Niggli reduction in G<sup>6</sup>, so that all cells
-representing similar lattices will be found. Comparison of results with those from
+representing similar lattices will be found.  The space S<sup>6</sup> uses Selling reduction
+to restrict the reduced cells considered to only cell with obtuse or 90 degree angles, 
+avoiding much of the complexity of boundaries for Niggli reduced cells. The comparison of results with those from
 older cell-based search algorithms suggests significant value in the new approach.
 </font>
 <center>
@@ -232,8 +238,10 @@ Metric:</th>
 <tr><td>
 <input type="radio" name="Algorithm" value="1" />L1<br />
 <input type="radio" name="Algorithm" value="2" />L2<br />
-<input type="radio" name="Algorithm" value="3" /checked>NCDist<br />
+<input type="radio" name="Algorithm" value="3" />NCDist<br />
 <input type="radio" name="Algorithm" value="4" />V7<br />
+<input type="radio" name="Algorithm" value="5" />D7<br />
+<input type="radio" name="Algorithm" value="6" checked  />S6<br />
 </td></tr>
 </table>
 </td>
