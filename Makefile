@@ -154,7 +154,9 @@ NEWDB		=	./newdb
 
 DMPFILES	=  CODentries.dmp  PDBcells.dmp    \
 		sauc_NT_L1_ckp.dmp  sauc_NT_NCDist_ckp.dmp  \
-		PDBentries.dmp  sauc_NT_L2_ckp.dmp  sauc_NT_V7_ckp.dmp
+		PDBentries.dmp  sauc_NT_L2_ckp.dmp  \
+		sauc_NT_V7_ckp.dmp sauc_NT_D7_ckp.dmp \
+		sauc_NT_S6_ckp.dmp
 
 OBIGFILES	=  crystal.idx  PDBcelldatabase.csv  \
 		cod.tsv         entries.idx  \
@@ -164,7 +166,9 @@ BIGFILES	= $(DMPFILES) $(OBIGFILES)
 
 $(DMPFILES):	CODentries.dmp.bz2  PDBcells.dmp.bz2 \
 		sauc_NT_L1_ckp.dmp.bz2  sauc_NT_NCDist_ckp.dmp.bz2 \
-		PDBentries.dmp.bz2  sauc_NT_L2_ckp.dmp.bz2  sauc_NT_V7_ckp.dmp.bz2
+		PDBentries.dmp.bz2  sauc_NT_L2_ckp.dmp.bz2  \
+		sauc_NT_V7_ckp.dmp.bz2 sauc_NT_D7_ckp.dmp.bz2\
+		sauc_NT_S6_ckp.dmp.bz2
 		bunzip2 < $@.bz2 > $@
 
 $(OBIGFILES):	crystal.idx.bz2  PDBcelldatabase.csv.bz2 \
@@ -383,7 +387,12 @@ updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
 	  bzip2 >  PDBcelldatabase.tsv.bz2; bunzip2 <  PDBcelldatabase.tsv.bz2 > PDBcelldatabase.tsv)
 	(cd $(NEWDB);valgrind ../sauc_psm_files_create PDB)
 	(cd $(NEWDB);valgrind ../sauc_psm_files_create COD)
-	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);../$(SAUCEXE) < ../rebuild.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_L1.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_L2.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_NCDist.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_V7.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_D6.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_S6.inp)
 	(cd $(NEWDB);grep "1O51" resultL1)
 	(cd $(NEWDB);grep "1O51" resultL2)
 	(cd $(NEWDB);grep "1O51" resultNCDist)
