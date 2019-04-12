@@ -85,6 +85,8 @@ CIFTBXURL  ?= https://github.com/yayahjb/ciftbx.git
 #  Fortran compile (needed for database updates)
 FC	=	gfortran
 #
+#  The SHELL chosen must have "time"
+SHELL	=	/bin/bash
 #
 #  You should not have to edit below this line
 #********************************************************************
@@ -393,12 +395,12 @@ updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
 	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_V7.inp)
 	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_D6.inp)
 	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_S6.inp)
-	(cd $(NEWDB);grep "1O51" resultL1)
-	(cd $(NEWDB);grep "1O51" resultL2)
-	(cd $(NEWDB);grep "1O51" resultNCDist)
-	(cd $(NEWDB);grep "1O51" resultV7)
-	(cd $(NEWDB);grep "1O51" resultD7)
-	(cd $(NEWDB);grep "1O51" resultS6)
+	(cd $(NEWDB);grep "6B37" resultL1)
+	(cd $(NEWDB);grep "6B37" resultL2)
+	(cd $(NEWDB);grep "6B37" resultNCDist)
+	(cd $(NEWDB);grep "6B37" resultV7)
+	(cd $(NEWDB);grep "6B37" resultD7)
+	(cd $(NEWDB);grep "6B37" resultS6)
 	(cd $(NEWDB);rm -rf *.dmp.bz2; bzip2 *.dmp)
 	(cd $(NEWDB);date > last_update) 
 	touch updatedb
