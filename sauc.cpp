@@ -1869,6 +1869,7 @@ int main ()
     std::cout << "Rev 0.8, 24 Apr 2014, Mojgan Asadi, Herbert J. Bernstein" << std::endl;
     std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
     std::cout << "Rev 1.0, 4 Oct 2018, Herbert J. Bernstein" << std::endl;
+    std::cout << "Rev 1.1, 11 Apr 2019, Herbert J. Bernstein" << std::endl;
     
     // Check for sauc html run
     
