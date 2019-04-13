@@ -164,7 +164,9 @@ OBIGFILES	=  crystal.idx  PDBcelldatabase.csv  \
 		cod.tsv         entries.idx  \
 		PDBcelldatabase.tsv  
 
-BIGFILES	= $(DMPFILES) $(OBIGFILES)
+BIGFILES	=  crystal.idx.bz2  PDBcelldatabase.csv.bz2  \
+		cod.tsv.bz2         entries.idx.bz2  \
+		PDBcelldatabase.tsv.bz2  
 
 $(DMPFILES):	CODentries.dmp.bz2  PDBcells.dmp.bz2 \
 		sauc_NT_L1_ckp.dmp.bz2  sauc_NT_NCDist_ckp.dmp.bz2 \
@@ -212,7 +214,7 @@ edit:
 		@/bin/echo "**************************************"
 
 #
-edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create $(BIGFILES)
+edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create $(OBIGFILES)
 		touch edit
 #
 clean:
@@ -393,7 +395,7 @@ updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
 	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_L2.inp)
 	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_NCDist.inp)
 	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_V7.inp)
-	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_D6.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_D7.inp)
 	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;cd $(NEWDB);time ../$(SAUCEXE) < ../rebuild_S6.inp)
 	(cd $(NEWDB);grep "6B37" resultL1)
 	(cd $(NEWDB);grep "6B37" resultL2)
@@ -404,6 +406,20 @@ updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
 	(cd $(NEWDB);rm -rf *.dmp.bz2; bzip2 *.dmp)
 	(cd $(NEWDB);date > last_update) 
 	touch updatedb
+
+checkdmp:   $(SAUCEXE)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;time ./$(SAUCEXE) < ./rebuild_L1.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;time ./$(SAUCEXE) < ./rebuild_L2.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;time ./$(SAUCEXE) < ./rebuild_NCDist.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;time ./$(SAUCEXE) < ./rebuild_V7.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;time ./$(SAUCEXE) < ./rebuild_D7.inp)
+	(SAUC_BATCH_MODE=1;export SAUC_BATCH_MODE;time ./$(SAUCEXE) < ./rebuild_S6.inp)
+	(grep "6B37" resultL1)
+	(grep "6B37" resultL2)
+	(grep "6B37" resultNCDist)
+	(grep "6B37" resultV7)
+	(grep "6B37" resultD7)
+	(grep "6B37" resultS6)
 
 last_update:	$(NEWDB)/last_update updatedb
 	cp $(NEWDB)/*.dmp.bz2 .
