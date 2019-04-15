@@ -81,7 +81,7 @@ else if ($Algorithm == 6) then
 	echo "S6"
 else
         echo "??"
-endif
+fi
 if ($Similarity == 1) then
   if ($NumHits != 1) then
     set Similarity="2"
