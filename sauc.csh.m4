@@ -73,8 +73,14 @@ else if ($Algorithm == 2) then
 	echo "L2"
 else if ($Algorithm == 3) then
 	echo "NCDist"
+else if ($Algorithm == 4) then
+        echo "V7"
+else if ($Algorithm == 5) then
+        echo "D7"
+else if ($Algorithm == 6) then
+	echo "S6"
 else
-	echo "V7"
+        echo "??"
 endif
 if ($Similarity == 1) then
   if ($NumHits != 1) then
