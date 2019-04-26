@@ -154,11 +154,22 @@ SAVEDB		=	./saves
 NEWDB		=	./newdb
 
 
-DMPFILES	=  CODentries.dmp  PDBcells.dmp    \
-		sauc_NT_L1_ckp.dmp  sauc_NT_NCDist_ckp.dmp  \
-		PDBentries.dmp  sauc_NT_L2_ckp.dmp  \
-		sauc_NT_V7_ckp.dmp sauc_NT_D7_ckp.dmp \
+DMPFILES	=  CODentries.dmp  PDBcells.dmp PDBentries.dmp   \
+		sauc_NT_L1_ckp.dmp     \
+		sauc_NT_L2_ckp.dmp     \
+		sauc_NT_NCDist_ckp.dmp \
+		sauc_NT_V7_ckp.dmp     \
+		sauc_NT_D7_ckp.dmp     \
 		sauc_NT_S6_ckp.dmp
+
+$(DMPFILES):	CODentries.dmp.bz2  PDBcells.dmp.bz2 PDBentries.dmp.bz2 \
+		sauc_NT_L1_ckp.dmp.bz2     \
+		sauc_NT_NCDist_ckp.dmp.bz2 \
+		sauc_NT_L2_ckp.dmp.bz2     \
+		sauc_NT_V7_ckp.dmp.bz2     \
+		sauc_NT_D7_ckp.dmp.bz2     \
+		sauc_NT_S6_ckp.dmp.bz2
+		bunzip2 < $@.bz2 > $@
 
 OBIGFILES	=  crystal.idx  PDBcelldatabase.csv  \
 		cod.tsv         entries.idx  \
@@ -167,13 +178,6 @@ OBIGFILES	=  crystal.idx  PDBcelldatabase.csv  \
 BIGFILES	=  crystal.idx.bz2  PDBcelldatabase.csv.bz2  \
 		cod.tsv.bz2         entries.idx.bz2  \
 		PDBcelldatabase.tsv.bz2  
-
-$(DMPFILES):	CODentries.dmp.bz2  PDBcells.dmp.bz2 \
-		sauc_NT_L1_ckp.dmp.bz2  sauc_NT_NCDist_ckp.dmp.bz2 \
-		PDBentries.dmp.bz2  sauc_NT_L2_ckp.dmp.bz2  \
-		sauc_NT_V7_ckp.dmp.bz2 sauc_NT_D7_ckp.dmp.bz2\
-		sauc_NT_S6_ckp.dmp.bz2
-		bunzip2 < $@.bz2 > $@
 
 $(OBIGFILES):	crystal.idx.bz2  PDBcelldatabase.csv.bz2 \
 		cod.tsv.bz2         entries.idx.bz2 \
@@ -354,6 +358,7 @@ cif2cif:  ciftbx
 getcodfields:	getcodfields.c pststrmgr.c pststrmgr.h fgetln.c
 	$(CC) $(CFLAGS) -o getcodfields getcodfields.c fgetln.c pststrmgr.c
 
+#if load_cod_cifs is newer than $(COD)/cif, retrieve updates to $(COD)/cif
 $(COD)/cif: load_cod_cifs	
 	mkdir -p $(COD)/cif; rsync -avz --delete rsync://www.crystallography.net/cif/ $(COD)/cif/
 	touch $(COD)/cif

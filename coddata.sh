@@ -1,4 +1,5 @@
 #!/bin/bash
+# creates a new cod.tsv.bz2
 for level in `seq 1 9`
 do
 bash ./exdata.sh $level &

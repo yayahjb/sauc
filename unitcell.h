@@ -6,6 +6,9 @@
 #include "S6M_SellingReduce.h"
 #include <cmath>
 
+#define isnan(x) ((x)!=(x))
+#define isinf(x) ((x)>DBL_MAX||(x)<(-DBL_MAX))
+
 double NCDist(double *, double *);
 double D7Dist(double *, double *);
 double CS6Dist(double *, double *);
@@ -254,7 +257,7 @@ public:
                fabs(cellD[3]*(cellD[1]+cellD[2])/2.-cellD[9]*(cellD[7]+cellD[8])/2.)*torad +
                fabs(cellD[4]*(cellD[0]+cellD[2])/2.-cellD[10]*(cellD[6]+cellD[8])/2.)*torad +
                fabs(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad)*Scaledist;
-               if (std::isinf(dnorm) || std::isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
+               if (isinf(dnorm) || isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
                    dnorm=DBL_MAX;
                }
                return dnorm;
@@ -272,7 +275,7 @@ public:
                       (cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad
                      *(cellD[5]*(cellD[0]+cellD[1])/2.-cellD[11]*(cellD[6]+cellD[7])/2.)*torad))
                      *Scaledist;
-               if (std::isinf(dnorm) || std::isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
+               if (isinf(dnorm) || isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
                    dnorm=DBL_MAX;
                }
                return dnorm;
@@ -287,7 +290,7 @@ public:
                 CS6M_CelldegtoG6(c1,g1);
                 CS6M_CelldegtoG6(c2,g2);
                 dnorm = std::sqrt(NCDist(g1,g2))*Scaledist;
-                if (std::isinf(dnorm) || std::isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
+                if (isinf(dnorm) || isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
                     dnorm=DBL_MAX;
                 }
                 return dnorm;
@@ -308,7 +311,7 @@ public:
                 gv3= VecN(gv1)-VecN(gv2);
         
                 dnorm = (gv3.Norm())*Scaledist;
-                if (std::isinf(dnorm) || std::isnan(dnorm)) {
+                if (isinf(dnorm) || isnan(dnorm)) {
                   dnorm=DBL_MAX;
                   std::cerr<<" numRow: "<< numRow<< std::endl;
                   std::cerr<< "cellD: [" << cellD[0] <<", "<< cellD[1] <<","<< cellD[2] <<","<< cellD[3] <<","<< cellD[4]<<","<< cellD[5]  <<","<<std::endl; 
@@ -344,7 +347,7 @@ public:
                 CS6M_G6toD7(g1,d1);
                 CS6M_G6toD7(g2,d2);
                 dnorm = std::sqrt(D7Dist(d1,d2))*Scaledist;
-                if (std::isinf(dnorm) || std::isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
+                if (isinf(dnorm) || isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
                     dnorm=DBL_MAX;
                 }
                 return dnorm;
@@ -363,7 +366,7 @@ public:
                 CS6M_G6toS6(g1,s1);
                 CS6M_G6toS6(g2,s2);
                 dnorm = std::sqrt(CS6Dist(s1,s2))*Scaledist;
-                if (std::isinf(dnorm) || std::isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
+                if (isinf(dnorm) || isnan(dnorm)  || dnorm > DBL_MAX || dnorm < -DBL_MAX) {
                    dnorm=DBL_MAX;
                 }
                 return dnorm;
