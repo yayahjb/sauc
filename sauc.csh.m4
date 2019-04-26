@@ -51,6 +51,7 @@ echo "<br />Copyright Keith J. McGill 2013"
 echo "<br />Rev 0.8, 24 Apr 2014 Mojgan Asadi, Herbert J. Bernstein"
 echo "<br />Rev 0.9.0, 14 Aug 2015 Herbert J. Bernstein"
 echo "<br />Rev 1.0.0, 22 Nov 2016 Herbert J. Bernstein"
+echo "<br />Rev 1.0.1, 11 Apr 2019 Herbert J. Bernstein"
 echo ''`</center>''`
 echo "<p>"
 echo "<center>"
@@ -74,14 +75,14 @@ else if ($Algorithm == 2) then
 else if ($Algorithm == 3) then
 	echo "NCDist"
 else if ($Algorithm == 4) then
-        echo "V7"
+	echo "V7"
 else if ($Algorithm == 5) then
-        echo "D7"
+	echo "D7"
 else if ($Algorithm == 6) then
 	echo "S6"
 else
-        echo "??"
-fi
+	echo "??"
+endif
 if ($Similarity == 1) then
   if ($NumHits != 1) then
     set Similarity="2"
