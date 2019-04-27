@@ -117,7 +117,8 @@ void SphereResults( std::ostream& out,
                    const std::vector<unitcell>&  myvector,
                    const std::vector<size_t>&    myindices,
                    const std::vector<double>&    mydistances,
-                   const unitcell&               unknownCell);
+                   const unitcell&               unknownCell,
+                   const int&			 dont_sort_by_family);
 
 using namespace std;
 
@@ -1312,7 +1313,7 @@ void NearestInputReport( std::ostream& out, const G6& probeArray, const G6& prim
 }
 
 //*****************************************************************************
-void findNearest( int k, double distance )
+void findNearest( int k, double distance, int dont_sort_by_family )
 {
     vector <unitcell> myvector;
     vector <size_t> myindices;
@@ -1364,7 +1365,7 @@ void findNearest( int k, double distance )
      }*/
     if (spheredata != 0) {
         std::cout << "Depth: " << cellTree[choiceAlgorithm-1]->GetDepth() << std::endl;
-        SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
+        SphereResults( std::cout, myvector, myindices, mydistances, unknownCell, dont_sort_by_family);
         
         if (!sauc_batch_mode)
             std::cout << "File name if you want the output saved" << std::endl << std::flush;
@@ -1381,7 +1382,7 @@ void findNearest( int k, double distance )
                 std::cout << " ";
                 std::ofstream output( filename.c_str() );
                 NearestInputReport( output, probeArray, primredprobe );
-                SphereResults( output, myvector, myindices, mydistances, unknownCell);
+                SphereResults( output, myvector, myindices, mydistances, unknownCell, dont_sort_by_family);
                 output.close();
                 if (sauc_batch_mode)
                     std::cout << "Output saved to: " << filename << std::endl;
@@ -1396,7 +1397,8 @@ void SphereResults( std::ostream& out,
                    const std::vector<unitcell>&  myvector,
                    const std::vector<size_t>&    myindices,
                    const std::vector<double>&    mydistances,
-                   const unitcell&               unknownCell)
+                   const unitcell&               unknownCell,
+                   const int&                    dont_sort_by_family)
 {
     long entry;
     string head;
@@ -1548,8 +1550,178 @@ void SphereResults( std::ostream& out,
 	if (CSDcount > 0 && CODcount > 0 ) out << ", ";
 	if (CODcount > 0) out << "COD formula";
 	out << std::endl << std::endl;
-    
-    for (ii = 0; ii < family_size; ii++) {
+
+    if (dont_sort_by_family) for (ind=0; ind < (long)myvector.size(); ind++) {
+        char dbtype;
+        std::string dbname;
+        size_t numfields;
+        ssize_t compoundfield;
+        ssize_t sourcefield;
+        ssize_t resfield;
+        ssize_t expfield;
+        std::string myfamily;
+        long familyordinal;
+        myfamily = myfamilies[ind];
+        string pdbid;
+        {
+            char dbtype;
+            const unitcell * const cell = & myvector[ind];
+            numRow = (int)(*cell).getRow();
+            dbtype = cellDB[numRow];
+            entry =  PSM_getstrindex_by_key(
+                                            (dbtype==PDB_DBTYPE)?PDBentries:
+                                            ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                            idArray[numRow].c_str(),0);
+            /* Split the entry row into fields and extract the family */
+            
+            switch (dbtype) {
+                    
+                case PDB_DBTYPE:
+                    if (PSM_split_psm_string(PDBentries,split_fields,PDBentries->maxfieldno,
+                                             PDBentries->str_index[entry],PDBentries_sep_char)) {
+                        dbname = std::string("PDB");
+                        myfamily = PSM_getstringfield(PDBentries,split_fields[PDBentries_head]);
+                        myfamily_index = PSM_getstrindex_by_key(PDBentries,myfamily.c_str(),1);
+                    }
+                    break;
+                case CSD_DBTYPE:
+                    if (PSM_split_psm_string(CSDcells,split_fields,CSDcells->maxfieldno,
+                                             CSDcells->str_index[entry],CSDcells_sep_char)) {
+                        dbname = std::string("CSD");
+                        myfamily = PSM_getstringfield(CSDcells,split_fields[CSDcells_refcode_family]);
+                        myfamily_index = PSM_getstrindex_by_key(CSDcells,myfamily.c_str(),1);
+                    }
+                    break;
+                case COD_DBTYPE:
+                    if (PSM_split_psm_string(CODentries,split_fields,CODentries->maxfieldno,
+                                             CODentries->str_index[entry],CODentries_sep_char)) {
+                        dbname = std::string("COD");
+                        myfamily = PSM_getstringfield(CODentries,split_fields[CODentries_chemical_formula_sum]);
+                        myfamily_index = PSM_getstrindex_by_key(CODentries,myfamily.c_str(),1);
+                        break;
+                        
+                    }
+                default:  myfamily_index=-1; myfamily = "UNKNOWN FAMILY";break;
+            }
+            
+            if (sauc_javascript) {
+                if (dbtype==CSD_DBTYPE) {
+                    pdbid = "<b><a href=\"https://summary.ccdc.cam.ac.uk/structure-summary?refcode=" +
+                    idArray[numRow] + "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
+                } else if (dbtype==COD_DBTYPE) {
+                    pdbid = "<b><a href=\"http://www.crystallography.net/cod/"+idArray[numRow]+".html\"" +
+                    "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
+                } else {
+                    pdbid = "<b><a href=\"http://www.rcsb.org/pdb/explore.do?structureId=" +
+                    idArray[numRow] + "\" target=\"_blank\">" + idArray[numRow] + "</a></b>";
+                }
+            } else {
+                if (dbtype==CSD_DBTYPE) {
+                    pdbid = "CSD:"+idArray[numRow];
+                } else if (dbtype==COD_DBTYPE) {
+                    pdbid = "COD:"+idArray[numRow];
+                } else {
+                    pdbid = "PDB:"+idArray[numRow];
+                }
+            }
+            {
+                char dbtype;
+                
+                dbtype = cellDB[numRow];
+                entry = PSM_getstrindex_by_key(
+                                               (dbtype==PDB_DBTYPE)?PDBentries:
+                                               ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                               idArray[numRow].c_str(),0);
+                out << ind+1 << ": "<< myfamily;
+
+                out << std::endl;
+            }
+            out << "    " << pdbid << " Dist: " <<
+            mydistances[ind] << " Cell: [" <<
+            cellDArray[numRow][0] << ", " <<
+            cellDArray[numRow][1] << ", " <<
+            cellDArray[numRow][2] << ", " <<
+            cellDArray[numRow][3] << ", " <<
+            cellDArray[numRow][4] << ", " <<
+            cellDArray[numRow][5] << "], SG: " <<
+            spaceArray[numRow];
+            if (zArray[numRow] > 0) {
+                out << ", Z: " <<
+                zArray[numRow] << " ";
+            } else {
+                out << ", ";
+            }
+            out << " Prim. Red. Cell: ["<<
+            (*cell).getData(0) << ", " <<
+            (*cell).getData(1) << ", " <<
+            (*cell).getData(2) << ", " <<
+            (*cell).getData(3) << ", " <<
+            (*cell).getData(4) << ", " <<
+            (*cell).getData(5) << "]" << std::endl;
+            dbtype = cellDB[numRow];
+            entry =  PSM_getstrindex_by_key(
+                                            (dbtype==PDB_DBTYPE)?PDBentries:
+                                            ((dbtype==CSD_DBTYPE)?CSDcells:CODentries),
+                                            idArray[numRow].c_str(),0);
+            if (entry >= 0) {
+                PSM_localpsm_handle psm_handle;
+                if (dbtype==PDB_DBTYPE) {
+                    dbname = std::string("PDB");
+                    psm_handle = PDBentries;
+                    numfields = PDBentries_numfields;
+                    compoundfield = PDBentries_cmpd;
+                    sourcefield = PDBentries_src;
+                    resfield = PDBentries_res;
+                    expfield = PDBentries_exp;
+                    
+                }
+                else if (dbtype==CSD_DBTYPE) {
+                    dbname = std::string("CSD");
+                    psm_handle = CSDcells;
+                    numfields = CSDcells_numfields;
+                    compoundfield = CSDcells_refcode_family;
+                    sourcefield = -1;
+                    resfield = -1;
+                    expfield = -1;
+                    
+                }
+                else {
+                    dbname = std::string("COD");
+                    psm_handle = CODentries;
+                    numfields = CODentries_numfields;
+                    compoundfield = CODentries_chemical_formula_sum;;
+                    sourcefield = CODentries_chemical_name_common;
+                    resfield = -1;
+                    expfield = -1;
+                }
+                
+                PSM_split_psm_string(psm_handle,split_fields,psm_handle->maxfieldno,
+                                     psm_handle->str_index[entry],psm_handle->split_char);
+                if (compoundfield >= 0 && split_fields[compoundfield].length > 0 &&
+                    compoundfield < psm_handle->maxfieldno) {
+                    out << "      " <<
+                    PSM_getstringfield(psm_handle,split_fields[(size_t)compoundfield]) << std::endl;
+                }
+                if (sourcefield >= 0 && split_fields[sourcefield].length > 0 &&
+                    sourcefield < psm_handle->maxfieldno) {
+                    out << "      " <<
+                    PSM_getstringfield(psm_handle,split_fields[(size_t)sourcefield]);
+                }
+                if (resfield >= 0 && split_fields[resfield].length > 0 &&
+                    resfield < psm_handle->maxfieldno) {
+                    out << " " << PSM_getstringfield(psm_handle,split_fields[(size_t)resfield]);
+                }
+                if (expfield >= 0 && split_fields[expfield].length> 0 &&
+                    expfield < psm_handle->maxfieldno) {
+                    out << " " << PSM_getstringfield(psm_handle,split_fields[(size_t)expfield]);;
+                }
+                out << std::endl << std::flush;
+            }
+        }
+        out << std::endl << std::flush;
+    }
+
+    if (!dont_sort_by_family) for (ii = 0; ii < family_size; ii++) {
         char dbtype;
         std::string dbname;
         size_t numfields;
@@ -1765,7 +1937,7 @@ void SphereInputReport( std::ostream& out )
 }
 
 //*****************************************************************************
-void findSphere( int limit )
+void findSphere( int limit, int dont_sort_by_family )
 {
     unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
     
@@ -1777,7 +1949,7 @@ void findSphere( int limit )
     const long sphereData = cellTree[choiceAlgorithm-1]->FindK_NearestNeighbors(limit,sphereRange, myvector,
                                                                                 myindices,mydistances,unknownCell);
     
-    SphereResults( std::cout, myvector, myindices, mydistances, unknownCell);
+    SphereResults( std::cout, myvector, myindices, mydistances, unknownCell, dont_sort_by_family);
     
     if (!sauc_batch_mode)
         std::cout << "File name if you want the output saved" << std::endl;
@@ -1794,7 +1966,7 @@ void findSphere( int limit )
             std::cout << " ";
             std::ofstream output( filename.c_str() );
             SphereInputReport( output );
-            SphereResults( output, myvector, myindices, mydistances, unknownCell);
+            SphereResults( output, myvector, myindices, mydistances, unknownCell, dont_sort_by_family);
             output.close();
             if (sauc_batch_mode)
                 std::cout << "Output saved to: " << filename << std::endl << std::flush;
@@ -2100,7 +2272,7 @@ int main ()
             }
             if (choiceSimilar == 1)
             {
-                findNearest(1,0.);
+                findNearest(1,0.0,0);
                 quitSimilar = 1;
             }
             else if (choiceSimilar == 2)
@@ -2108,9 +2280,11 @@ int main ()
                 string token;
                 string sradline;
                 int limit, klimit;
+                int sortmode, dont_sort_by_family;
                 int ll;
                 klimit = 10;
-                if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Radius and Optional Limit K: ";
+                dont_sort_by_family = 0;
+                if (!sauc_batch_mode) std::cout << "\nPlease Input Your Sphere's Radius, Optional Limit K, Sort Mode: ";
                 std::getline(std::cin,sradline);
                 std::stringstream ssradline(sradline);
                 ssradline >> token;
@@ -2127,10 +2301,17 @@ int main ()
                 } else {
                     klimit = 100000;
                 }
+                if (ssradline >> sortmode) {
+                    if (sortmode > 0) dont_sort_by_family=1;;
+                } else {
+                    dont_sort_by_family=0;
+                }
+             
                 if (sauc_batch_mode) {
                     std::cout << "Sphere Radius: "<< sphereRange << " Limit: " << klimit << std::endl;
+                    if (dont_sort_by_family == 1) std::cout << "Don't sort by family" << std::endl;
                 }
-                findNearest(klimit,sphereRange);
+                findNearest(klimit,sphereRange,dont_sort_by_family);
                 quitSimilar = 1;
             }
             else if (choiceSimilar == 3)

@@ -183,6 +183,7 @@ $(OBIGFILES):	crystal.idx.bz2  PDBcelldatabase.csv.bz2 \
 		cod.tsv.bz2         entries.idx.bz2 \
 		PDBcelldatabase.tsv.bz2  
 		bunzip2 < $@.bz2 > $@
+		touch $@
 
 
 all:		edit
