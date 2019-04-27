@@ -43,7 +43,7 @@ CGIBIN		=	/var/www/cgi-bin
 #
 #  CGIMETHOD is either GET or POST
 #
-CGIMETHOD	?=	POST
+CGIMETHOD	?=	GET
 #
 #  CGIBINEXT is the external name of the directory for the
 #  cgi-bin script $(SAUCCGI)
