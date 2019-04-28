@@ -278,6 +278,7 @@ onchange="ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getE
 ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangeb''`));
 ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangec''`));
 ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`RangeSphereLabel''`));
+ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`SortSphereLabel''`));
 ifcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`NumHitsLabel''`))"/>
 Nearest</td></tr>
 <tr><td>&nbsp;</td></tr>
@@ -287,19 +288,22 @@ onchange="ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getE
 ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangeb''`));
 ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangec''`));
 ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`RangeSphereLabel''`));
+ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`SortSphereLabel''`));
 ifcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`NumHitsLabel''`))"/>
 Sphere</td></tr>
 <tr id="RangeSphereLabel" style="visibility:visible"><td colspan=4 align="right">Radius of Sphere
 <INPUT TYPE="text" onchange="pfloat(this)" NAME="RangeSphere" VALUE="2.5" SIZE="9">
 &nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="yes" checked />%
-&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="no" />Angstroms</td>
-</td></tr>
+&nbsp;&nbsp;&nbsp;&nbsp;<input type="radio" name="UsePercent" value="no" />Angstroms</td></tr>
+<tr id="SortSphereLabel" style="visibility:visible"><td colspan=4 align="center">Sort by <input type="radio" name="SortbyFam" value="yes" checked />family
+&nbsp;<input type="radio" name="SortbyFam" value="no" />distance</td></tr>
 <tr><td>
 <input id="SimRange" type="radio" name="Similarity" value="3"
 onchange="ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangea''`));
 ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangeb''`));
 ifnotcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`rangec''`));
 ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`RangeSphereLabel''`));
+ifnotcheckedhide(document.getElementById(''`SimSphere''`),document.getElementById(''`SortSphereLabel''`));
 ifcheckedhide(document.getElementById(''`SimRange''`),document.getElementById(''`NumHitsLabel''`))"/>
 Range<br />
 </td></tr>
