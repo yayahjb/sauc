@@ -51,7 +51,7 @@ echo "<br />Copyright Keith J. McGill 2013"
 echo "<br />Rev 0.8, 24 Apr 2014 Mojgan Asadi, Herbert J. Bernstein"
 echo "<br />Rev 0.9.0, 14 Aug 2015 Herbert J. Bernstein"
 echo "<br />Rev 1.0.0, 22 Nov 2016 Herbert J. Bernstein"
-echo "<br />Rev 1.0.1, 11 Apr 2019 Herbert J. Bernstein"
+echo "<br />Rev 1.1.1, 17 Apr 2019 Herbert J. Bernstein"
 echo ''`</center>''`
 echo "<p>"
 echo "<center>"
@@ -99,13 +99,20 @@ else if ($Similarity == 2) then
 else
         echo "Range"
 endif
-if ($Similarity == 2) then
-if ($UsePercent == "yes") then
-        echo ${RangeSphere}% ${NumHits} >> /tmp/instr$$
-        echo "| Radius of S: " ${RangeSphere}%", Max Hits: " ${NumHits} " |"
+if ( $Similarity == 2) then
+if ( $SortbyFam == "yes" ) then
+    set sortflag=" "
 else
-	echo ${RangeSphere}  ${NumHits} >> /tmp/instr$$
+    set sortflag=1
+endif
+if ($UsePercent == "yes") then
+        echo ${RangeSphere}% ${NumHits} ${sortflag} >> /tmp/instr$$
+        echo "| Radius of S: " ${RangeSphere}%", Max Hits: " ${NumHits} " |"
+        echo "| Sort by Family: " ${SortbyFam} " |"
+else
+	echo ${RangeSphere}  ${NumHits} ${sortflag} >> /tmp/instr$$
 	echo "| Radius of S: " ${RangeSphere}", Max Hits: " ${NumHits} " |"
+        echo "| Sort by Family: " ${SortbyFam} " |"
 endif
 else if ($Similarity == 3) then
 	echo ${RangeA} >> /tmp/instr$$
@@ -134,7 +141,7 @@ setenv ITERATE_QUERY NO
 setenv OUTPUT_STYLE $OutputStyle
 echo ''`<PRE><font face="Monaco, Anadale Mono" size="2">''`
 cd' HTDOCS()`
-'BINPATH()` < /tmp/instr$$
+time 'BINPATH()` < /tmp/instr$$
 rm /tmp/instr$$
 #cat /tmp/instr$$ 
 echo "</font></pre>"
