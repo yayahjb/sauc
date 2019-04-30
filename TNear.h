@@ -2745,8 +2745,9 @@ public:
             if (lFound < 1) return (0L);
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tClosest.insert( tClosest.end( ), K_Storage[i].second );
+                tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
             }
+            /* now work out in layers until we have k */
             while ( tClosest.size() < k && dRadiusOuter < radius) {
                 if (numrad < cneartree_dimsamples) {
                     foundatrad[numrad] = (double)tClosest.size();
@@ -2823,9 +2824,17 @@ public:
 
                 } while (lFound == 0 && dRadiusOuterSave < radius);
                 /*fprintf(stderr,"found %ld points\n",lFound); */
+                /*Clear out distance 0 points from last element in tClosest at start of K_Storage*/
+                if (tClosest.size( ) > 0) while (K_Storage.size( )>0 ) {
+                   if (DistanceBetween(tClosest[tClosest.size( )-1],K_Storage[0].GetSecond()) < CNEARTREE_COLLIDE){
+                       K_Storage.erase(K_Storage.begin());
+                       continue;
+                   }
+                   break;
+                }
                 for( unsigned int i=0; i<K_Storage.size( ); ++i )
                 {
-                    tClosest.insert( tClosest.end( ), K_Storage[i].second );
+                    tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
                 }
 
                 if (dRadiusOuter >= radius-1.e-36) break;
@@ -2992,6 +3001,14 @@ public:
                     
                 } while (lFound == 0 && dRadiusOuterSave < radius);
                 /* fprintf(stderr,"found %ld points\n",lFound); */
+                /*Clear out distance 0 points from last element in tClosest at start of K_Storage*/
+                if (tClosest.size( ) > 0) while (K_Storage.size( )>0 ) {
+                   if (DistanceBetween(tClosest[tClosest.size( )-1],K_Storage[0].GetSecond()) < CNEARTREE_COLLIDE){
+                       K_Storage.erase(K_Storage.begin());
+                       continue;
+                   }
+                   break;
+                }
                 for( unsigned int i=0; i<K_Storage.size( ); ++i )
                 {
                     tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
@@ -3166,6 +3183,14 @@ public:
                     
                 } while (lFound == 0 && dRadiusOuterSave < radius);
                 /* fprintf(stderr,"found %ld points\n",lFound); */
+                /*Clear out distance 0 points from last element in tClosest at start of K_Storage*/
+                if (tClosest.size( ) > 0) while (K_Storage.size( )>0 ) {
+                   if (DistanceBetween(tClosest[tClosest.size( )-1],K_Storage[0].GetSecond()) < CNEARTREE_COLLIDE){
+                       K_Storage.erase(K_Storage.begin());
+                       continue;
+                   }
+                   break;
+                }
                 for( unsigned int i=0; i<K_Storage.size( ); ++i )
                 {
                     tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
@@ -3264,7 +3289,7 @@ public:
             if (lFound < 1) return (0L);
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tClosest.insert( tClosest.end( ), K_Storage[i].second );
+                tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
             }
             while ( tClosest.size() < k && dRadiusOuter < radius) {
                 /* fprintf (stderr,"Doing annuli, k %d, iFound %d, radius %g dRadiusOuter %g\n",
@@ -3329,9 +3354,17 @@ public:
                     
                 } while (lFound == 0 && dRadiusOuterSave < radius);
                 /* fprintf(stderr,"found %ld points\n",lFound); */
+                /*Clear out distance 0 points from last element in tClosest at start of K_Storage*/
+                if (tClosest.size( ) > 0) while (K_Storage.size( )>0 ) {
+                   if (DistanceBetween(tClosest[tClosest.size( )-1],K_Storage[0].GetSecond()) < CNEARTREE_COLLIDE){
+                       K_Storage.erase(K_Storage.begin());
+                       continue;
+                   }
+                   break;
+                }
                 for( unsigned int i=0; i<K_Storage.size( ); ++i )
                 {
-                    tClosest.insert( tClosest.end( ), K_Storage[i].second );
+                    tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
                 }
                 
                 if (dRadiusOuter >= radius-1.e-36) break;
@@ -3485,6 +3518,14 @@ public:
                     
                 } while (lFound == 0 && dRadiusOuterSave < radius);
                 /* fprintf(stderr,"found %ld points\n",lFound); */
+                /*Clear out distance 0 points from last element in tClosest at start of K_Storage*/
+                if (tClosest.size( ) > 0) while (K_Storage.size( )>0 ) {
+                   if (DistanceBetween(tClosest[tClosest.size( )-1],K_Storage[0].GetSecond()) < CNEARTREE_COLLIDE){
+                       K_Storage.erase(K_Storage.begin());
+                       continue;
+                   }
+                   break;
+                }
                 for( unsigned int i=0; i<K_Storage.size( ); ++i )
                 {
                     tClosest.insert( tClosest.end( ), K_Storage[i].GetSecond() );
@@ -3538,7 +3579,7 @@ public:
                                                          );
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tFarthest.insert( tFarthest.end( ), K_Storage[i].second );
+                tFarthest.insert( tFarthest.end( ), K_Storage[i].GetSecond() );
             }
             return( lFound );
         }
@@ -3566,8 +3607,8 @@ public:
                                                          );
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tFarthest.insert( tFarthest.end( ), K_Storage[i].second);
-                tIndices.insert( tIndices.end( ), K_Storage[i].third);
+                tFarthest.insert( tFarthest.end( ), K_Storage[i].GetSecond());
+                tIndices.insert( tIndices.end( ), K_Storage[i].GetThird());
             }
             return( lFound );
         }
@@ -3612,7 +3653,7 @@ public:
                                                              );
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tFarthest.insert( tFarthest.end( ), K_Storage[i].second );
+                tFarthest.insert( tFarthest.end( ), K_Storage[i].GetSecond() );
             }
             return( lFound );
         }
@@ -3641,8 +3682,8 @@ public:
                                                              );
             for( unsigned int i=0; i<K_Storage.size( ); ++i )
             {
-                tFarthest.insert( tFarthest.end( ), K_Storage[i].second);
-                tIndices.insert( tIndices.end( ), K_Storage[i].third);
+                tFarthest.insert( tFarthest.end( ), K_Storage[i].GetSecond());
+                tIndices.insert( tIndices.end( ), K_Storage[i].GetThird());
             }
             return( lFound );
         }
