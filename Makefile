@@ -179,11 +179,20 @@ BIGFILES	=  crystal.idx.bz2  PDBcelldatabase.csv.bz2  \
 		cod.tsv.bz2         entries.idx.bz2  \
 		PDBcelldatabase.tsv.bz2  
 
-$(OBIGFILES):	crystal.idx.bz2  PDBcelldatabase.csv.bz2 \
+$(OBIGFILES):	prepbigfiles crystal.idx.bz2  PDBcelldatabase.csv.bz2 \
 		cod.tsv.bz2         entries.idx.bz2 \
 		PDBcelldatabase.tsv.bz2  
 		bunzip2 < $@.bz2 > $@
 		touch $@
+
+prepbigfiles:
+		touch crystal.tsv.bz2
+		touch cod.tsv.bz2
+		touch entries.idx.bz2
+		touch PDBcelldatabase.csv.bz2
+		touch PDBcelldatabase.tsv.bz2
+		touch *.m4
+		rm *.exe
 
 
 all:		edit
