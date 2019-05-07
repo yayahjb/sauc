@@ -21,7 +21,7 @@
 #  *************************************************
 #
 #HTTPDSERVER	?=	HOST.DOMAIN/~$(USER)
-HTTPDSERVER	=	flops.arcib.org:8084
+HTTPDSERVER	?=	flops.arcib.org:8084
 #
 #  SAUCVERSION is used to allow multiple co-existing versions
 #
@@ -33,13 +33,13 @@ SEARCHURL	?=	http://$(HTTPDSERVER)/sauc-$(SAUCVERSION)#search
 #
 #  BINDEST is the installation directory for the executable
 #  of sauc
-#BINDEST		?=	$(HOME)/bin
-BINDEST		=	/var/www/cgi-bin
+#BINDEST	?=	$(HOME)/bin
+BINDEST		?=	/var/www/cgi-bin
 #
 #  CGIBIN is the installation directory for the cgi-bin script
 #  iterate.csh
 CGIBIN		?=	$(HOME)/public_html/cgi-bin
-CGIBIN		=	/var/www/cgi-bin
+CGIBIN		?=	/var/www/cgi-bin
 #
 #  CGIMETHOD is either GET or POST
 #
@@ -52,7 +52,7 @@ CGIBINEXT	?=	/cgi-bin
 #  HTDOCS is the installation directory for the HTML document
 #  $(SAUCHTML)
 #HTDOCS		?=	$(HOME)/public_html/sauc-$(SAUCVERSION)
-HTDOCS		=	/var/www/html/sauc-$(SAUCVERSION)
+HTDOCS		?=	/var/www/html/sauc-$(SAUCVERSION)
 #
 #  HTDOCSEXT is the external name of the directory for the 
 #  HTML document $(SAUCHTML)
