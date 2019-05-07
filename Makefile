@@ -192,7 +192,6 @@ prepbigfiles:
 		touch PDBcelldatabase.csv.bz2
 		touch PDBcelldatabase.tsv.bz2
 		touch *.m4
-		rm *.exe
 
 
 all:		edit
@@ -397,7 +396,7 @@ $(NEWDB)/entries.idx: $(NEWDB)
 
 updatedb:   $(NEWDB)/crystal.idx $(NEWDB)/entries.idx idx2tsv $(SAVEDB) \
 	    $(NEWDB) $(SAUCEXE) cod.tsv sauc_psm_files_create \
-	    PDBcelldatabase.tsv 
+	    PDBcelldatabase.tsv  $(SAUCEXE)
 	-cp PDBcelldatabase.tsv $(SAVEDB)/
 	-cp *.dmp.bz2 $(SAVEDB)/
 	-(cd $(NEWDB);rm -f *.dmp result*)
