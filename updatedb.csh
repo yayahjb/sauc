@@ -7,8 +7,8 @@
 #
 cd /home/hbernstein/sauc_test_27Apr19
 setenv HTTPDSERVER flops.arcib.org:8084
-setenv SEARCHURL http://r21-001.nsls2.bnl.gov/~hbernstein/sauc-1.1.1/
-setenv CGIPATH http://r21-001.nsls2.bnl.gov/~hbernstein/cgi-bin
+setenv SEARCHURL http://r21-001.nsls2.bnl.gov:8125/sauc-1.1.1/
+setenv CGIPATH http://r21-001.nsls2.bnl.gov:8125/cgi-bin
 setenv PDBCELLINDEXURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
 setenv PDBENTRIESURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 setenv CGIMETHOD GET
