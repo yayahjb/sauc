@@ -227,7 +227,7 @@ edit:
 		@/bin/echo "**************************************"
 
 #
-edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create $(OBIGFILES)
+edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create $(OBIGFILES) $(DMPFILES)
 		touch edit
 #
 clean:
@@ -280,6 +280,7 @@ $(SAUCEXE): \
 	BasicDistance.h    \
 	Cell.cpp \
 	Cell.h \
+	S6M_SellingReduce.h \
 	D6.h \
 	D6.cpp \
 	D7.h \

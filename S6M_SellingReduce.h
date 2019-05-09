@@ -834,7 +834,7 @@
       0., 0.,0., 0., 0., 0.,
       0., 0., 0.,-1., 0., 0.,
       0., 0., 0., 0.,-1., 0.,
-      .3333333333333, .333333333333, 0., 0., 0., 0.
+      .3333333333333, .333333333333, 0., 0., 0., .6666666666667
    };
    static double CS6M_RHMPERP[36]={
       .6666666666667,-.3333333333333,-.3333333333333, 0., 0., 0.,
@@ -877,6 +877,8 @@
       case 'f':                                       \
          for (ii=0; ii<36; ii++) mat66[ii]= CS6M_MAT_F[ii];\
         break;                                        \
+      case 'H':                                       \
+      case 'h':                                       \
       case 'R':                                       \
       case 'r':                                       \
         CS6M_Mat66_Vector_Mult(CS6M_HEXPERP,g6vec,hexperp);  \
@@ -892,6 +894,9 @@
         break;                                        \
     }                                                 \
     CS6M_Mat66_Vector_Mult(mat66,g6vec,g6vecout);     \
+    std::cout<< "mat66: " << mat66  << std::endl;     \
+    std::cout<< "g6vec: " << g6vec  << std::endl;     \
+    std::cout<< "g6vecout: " << g6vecout << std::endl;\
   }
 
 #endif

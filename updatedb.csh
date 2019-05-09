@@ -6,15 +6,15 @@
 #  Assumes a working sauc kit in SAUCDIR
 #
 cd /home/hbernstein/sauc_test_27Apr19
-setenv HTTPDSERVER http://r21-001.nsls2.bnl.gov
-setenv SEARCHURL http://r21-001.nsls2.bnl.gov/~hbernstein/sauc-1.1.1/
-setenv CGIPATH http://r21-001.nsls2.bnl.gov/~hbernstein/cgi-bin
-setenv PDBCELLINDEXURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
-setenv PDBENTRIESURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
+setenv HTTPDSERVER flops.arcib.org:8084
+setenv SEARCHURL http://flops.arcib.org:8084/sauc-1.1.1
+setenv CGIPATH http://flops.arcib.org:8084/cgi-bin
+setenv PDBCELLINDEXURL ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
+setenv PDBENTRIESURL ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 setenv CGIMETHOD GET
-setenv CGIBIN /home/hbernstein/pubic_html/cgi-bin
-setenv BINDEST /home/hbernstein/public_html/cgi-bin
-setenv HTDOCS /home/hbernstein/public_html/sauc-1.1.1
+setenv CGIBIN /home/hbernstein/public_html/cgi-bin
+setenv BINDEST /var/www/cgi-bin
+setenv HTDOCS /var/www/html/sauc-1.1.1
 if ( -e crystal.idx ) then
   rm -f newdb/crystal.idx
   make newdb/crystal.idx
