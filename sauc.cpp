@@ -625,7 +625,10 @@ bool makeprimredprobe( void )
              break;
         default: /* S6Dist and anything else */
              CS6M_G6toS6(primcell,s6cell);
+             std::cout<<"G6toS6: " << "[" <<primcell[0]<<","  <<primcell[1]<<"," <<primcell[2]<<"," <<primcell[3]<<"," <<primcell[4]<<"," <<primcell[5]<<"],"
+             << "[" <<s6cell[0]<<","  <<s6cell[1]<<"," <<s6cell[2]<<"," <<s6cell[3]<<"," <<s6cell[4]<<"," <<s6cell[5]<<"]"<<std::endl;
              CS6M_S6Reduce(s6cell,s6red,reduced);
+             std::cout<<"S6Reduce: " << "[" <<s6red[0]<<","  <<s6red[1]<<"," <<s6red[2]<<"," <<s6red[3]<<"," <<s6red[4]<<"," <<s6red[5]<<"]"<<std::endl;
              CS6M_S6toG6(s6red,redprimcell);
              break;
     }
