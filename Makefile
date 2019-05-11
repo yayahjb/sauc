@@ -227,7 +227,8 @@ edit:
 		@/bin/echo "**************************************"
 
 #
-edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create $(OBIGFILES) $(DMPFILES)
+edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create \
+		$(OBIGFILES) $(DMPFILES)
 		touch edit
 #
 clean:
@@ -436,7 +437,7 @@ checkdmp:   $(SAUCEXE)
 	(grep "6B37" resultD7)
 	(grep "6B37" resultS6)
 
-last_update:	$(NEWDB)/last_update updatedb
+last_update:	$(NEWDB)/last_update
 	cp $(NEWDB)/*.dmp.bz2 .
 	cp $(NEWDB)/*.tsv.bz2 .
 	cp $(NEWDB)/last_update .
