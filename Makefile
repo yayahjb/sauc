@@ -227,7 +227,7 @@ edit:
 		@/bin/echo "**************************************"
 
 #
-edit_done:	$(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create \
+edit_done:	current_cod $(SAUCEXE) $(SAUCHTML) $(SAUCCGI) updatedb.csh sauc_psm_files_create \
 		$(OBIGFILES) $(DMPFILES)
 		touch edit
 #
@@ -372,6 +372,10 @@ getcodfields:	getcodfields.c pststrmgr.c pststrmgr.h fgetln.c
 #if load_cod_cifs is newer than $(COD)/cif, retrieve updates to $(COD)/cif
 $(COD)/cif: load_cod_cifs	
 	mkdir -p $(COD)/cif; rsync -avz --delete rsync://www.crystallography.net/cif/ $(COD)/cif/
+	touch $(COD)/cif
+
+current_cod:
+	mkdir -p $(COD)/cif
 	touch $(COD)/cif
 
 cod.tsv.bz2:	$(COD)/cif getcodfields exdata.sh coddata.sh Zinc/src/cifZinc cif2cif $(SAVEDB)
