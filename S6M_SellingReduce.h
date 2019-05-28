@@ -894,9 +894,9 @@
         break;                                        \
     }                                                 \
     CS6M_Mat66_Vector_Mult(mat66,g6vec,g6vecout);     \
-    std::cout<< "mat66: " << mat66  << std::endl;     \
-    std::cout<< "g6vec: " << g6vec  << std::endl;     \
-    std::cout<< "g6vecout: " << g6vecout << std::endl;\
+    /* std::cout<< "mat66: " << mat66  << std::endl;*/\
+    /* std::cout<< "g6vec: " << g6vec  << std::endl;*/\
+    /* std::cout<< "g6vecout: " << g6vecout << std::endl; */\
   }
 
 #endif

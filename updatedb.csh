@@ -5,7 +5,7 @@
 #
 #  Assumes a working sauc kit in SAUCDIR
 #
-cd /home/yaya/sauc_9May19/sauc
+cd /home/yaya/sauc_11May19/sauc_test_12May19/sauc
 setenv HTTPDSERVER http://flops.arcib.org:8084
 setenv SEARCHURL http://flops.arcib.org:8084/sauc-1.1.1/
 setenv CGIPATH http://flops.arcib.org:8084/cgi-bin
