@@ -1114,11 +1114,13 @@ void buildNearTree( void )
         double d7red[7];
         double s6cell[6];
         double s6red[6];
+        G6 g6cent;
+        double dmc[36];
         int reduced;
         Cell rawcell(cellDArray[i][0], cellDArray[i][1], cellDArray[i][2], cellDArray[i][3], cellDArray[i][4], cellDArray[i][5]);
-        if (i%20000 == 0) std::cout << "." ; 
-        mc = rawcell.LatSymMat66((spaceArray[i]).substr(0,1));
-        primcell = mc*(rawcell.Cell2V6());
+        if (i%20000 == 0) std::cout << "." ;
+        g6cent=rawcell.Cell2V6();
+        CS6M_LatSymMat66(g6cent,spaceArray[i].c_str()[0],dmc,primcell);
         switch (choiceAlgorithm) {
             case 1:  /* L1 */
             case 2:  /* L2 */
