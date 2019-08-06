@@ -1,7 +1,7 @@
 #ifndef CS6M_SELLING_REDUCE
   #define CS6M_SELLING_REDUCE
 
-  /* #define CS6M_DEBUG zz/* 
+  /* #define CS6M_DEBUG zz */ 
   #ifdef CS6M_DEBUG_PRINT_COUT
     #undef CS6M_DEBUG_PRINT_COUT
   #endif
@@ -21,9 +21,8 @@
   #ifdef __cplusplus
     #define CS6M_sqrt(x) std::sqrt(x)
   #else
-    #define CS6M_sqrt(x) dsqrt(x)
+    #define CS6M_sqrt(x) sqrt(x)
   #endif
-
 
  /* #define CS6M_DEBUG_PRINT_COUT yes */
   #define CS6M_S6BC 0
@@ -55,6 +54,15 @@
   #define CS6M_CELLBETA 4
   #define CS6M_CELLGAMMA 5
 
+  #define CS6M_V7A 0
+  #define CS6M_V7B 1
+  #define CS6M_V7C 2
+  #define CS6M_V7ASTARINV 3
+  #define CS6M_V7BSTARINV 4
+  #define CS6M_V7CSTARINV 5
+  #define CS6M_V7VOLCROOT 6
+  
+
 
   #define CS6M_abs(x) ((x)<0?-(x):(x))
 
@@ -72,14 +80,6 @@
 
   #define CS6M_comptovec6(a,b,c,d,e,f,vec6) { \
     vec6[0]=a;vec6[1]=b;vec6[2]=c;vec6[3]=d;vec6[4]=e;vec6[5]=f; }
-
-  #define CS6M_CelldegtoG6(celldeg,g6vec) { \
-    g6vec[CS6M_G6A2] = celldeg[CS6M_CELLA]*celldeg[CS6M_CELLA]; \
-    g6vec[CS6M_G6B2] = celldeg[CS6M_CELLB]*celldeg[CS6M_CELLB]; \
-    g6vec[CS6M_G6C2] = celldeg[CS6M_CELLC]*celldeg[CS6M_CELLC]; \
-    g6vec[CS6M_G62BC] = celldeg[CS6M_CELLB]*celldeg[CS6M_CELLC]*2.*cos(celldeg[CS6M_CELLALPHA]*atan2(1.,1)/45.); \
-    g6vec[CS6M_G62AC] = celldeg[CS6M_CELLA]*celldeg[CS6M_CELLC]*2.*cos(celldeg[CS6M_CELLBETA]*atan2(1.,1)/45.); \
-    g6vec[CS6M_G62AB] = celldeg[CS6M_CELLA]*celldeg[CS6M_CELLB]*2.*cos(celldeg[CS6M_CELLGAMMA]*atan2(1.,1)/45.); }
 
   #define CS6M_CellradtoG6(cellrad,g6vec) { \
     g6vec[CS6M_G6A2] = cellrad[CS6M_CELLA]*cellrad[CS6M_CELLA]; \
@@ -108,45 +108,84 @@
     s6vec[CS6M_S6CD] = (-d7vec[CS6M_D7_B_D_2]-d7vec[CS6M_D7_A_D_2]+d7vec[CS6M_D7B2]+d7vec[CS6M_D7A2])/2;\
   }
 
-  #define CS6M_G6toCelldeg(g6vec,cell) { \
-    double cosalpha, cosbeta, cosgamma; \
-    cell[CS6M_CELLA] = CS6M_sqrt(g6vec[CS6M_G6A2]); \
-    cell[CS6M_CELLB] = CS6M_sqrt(g6vec[CS6M_G6B2]); \
-    cell[CS6M_CELLC] = CS6M_sqrt(g6vec[CS6M_G6C2]); \
-    cosalpha =  cosbeta = cosgamma = -1.;       \
-    if (cell[CS6M_CELLB] > 0. && cell[CS6M_CELLC] > 0.) \
-      cosalpha =  g6vec[CS6M_G62BC]/(2.*cell[CS6M_CELLB]*cell[CS6M_CELLC]); \
-    if (cell[CS6M_CELLA] > 0. && cell[CS6M_CELLC] > 0.) \
-      cosbeta  =  g6vec[CS6M_G62AC]/(2.*cell[CS6M_CELLA]*cell[CS6M_CELLC]); \
-    if (cell[CS6M_CELLA] > 0. && cell[CS6M_CELLB] > 0.) \
-      cosgamma =  g6vec[CS6M_G62AB]/(2.*cell[CS6M_CELLA]*cell[CS6M_CELLB]); \
-    if (fabs(cosalpha) < 1.e-10) cosalpha=0.0; \
-    if (fabs(cosbeta)  < 1.e-10) cosbeta =0.0; \
-    if (fabs(cosgamma) < 1.e-10) cosgamma=0.0; \
-    cell[CS6M_CELLALPHA] = 45./atan2(1.,1)*atan2(CS6M_sqrt(1.-cosalpha*cosalpha),cosalpha); \
-    cell[CS6M_CELLBETA] = 45./atan2(1.,1)*atan2(CS6M_sqrt(1.-cosbeta*cosbeta),cosbeta); \
-    cell[CS6M_CELLGAMMA] = 45./atan2(1.,1)*atan2(CS6M_sqrt(1.-cosgamma*cosgamma)),cosgamma); \
+  #define CS6M_G6toCell(g6vec,cell) {                                                     \
+    double cosalpha, cosbeta, cosgamma;                                                   \
+    double sinalpha, sinbeta, singamma;                                                   \
+    cell[CS6M_CELLA]=CS6M_sqrt(fabs(g6vec[CS6M_G6A2]));                                   \
+    cell[CS6M_CELLB]=CS6M_sqrt(fabs(g6vec[CS6M_G6B2]));                                   \
+    cell[CS6M_CELLC]=CS6M_sqrt(fabs(g6vec[CS6M_G6C2]));                                   \
+    cosalpha=g6vec[CS6M_G62BC]/(cell[CS6M_CELLB]*cell[CS6M_CELLC]);                       \
+    cosbeta =g6vec[CS6M_G62BC]/(cell[CS6M_CELLB]*cell[CS6M_CELLC]);                       \
+    cosgamma=g6vec[CS6M_G62BC]/(cell[CS6M_CELLB]*cell[CS6M_CELLC]);                       \
+    sinalpha=CS6M_sqrt(fabs((1.-cosalpha*cosalpha)));                                      \
+    sinbeta =CS6M_sqrt(fabs((1.-cosbeta* cosbeta)));                                       \
+    singamma=CS6M_sqrt(fabs((1.-cosgamma*cosgamma)));                                      \
+    cell[CS6M_CELLALPHA]=atan2(sinalpha,cosalpha);                                        \
+    cell[CS6M_CELLBETA] =atan2(sinbeta, cosbeta);                                         \
+    cell[CS6M_CELLGAMMA]=atan2(singamma,cosgamma);                                        \
   }
 
-  #define CS6M_G6toCell(g6vec,cell) { \
-    double cosalpha, cosbeta, cosgamma; \
-    cell[CS6M_CELLA] = CS6M_sqrt(g6vec[CS6M_G6A2]); \
-    cell[CS6M_CELLB] = CS6M_sqrt(g6vec[CS6M_G6B2]); \
-    cell[CS6M_CELLC] = CS6M_sqrt(g6vec[CS6M_G6C2]); \
-    cosalpha =  cosbeta = cosgamma = -1.;       \
-    if (cell[CS6M_CELLB] > 0. && cell[CS6M_CELLC] > 0.) \
-      cosalpha =  g6vec[CS6M_G62BC]/(2.*cell[CS6M_CELLB]*cell[CS6M_CELLC]); \
-    if (cell[CS6M_CELLA] > 0. && cell[CS6M_CELLC] > 0.) \
-      cosbeta  =  g6vec[CS6M_G62AC]/(2.*cell[CS6M_CELLA]*cell[CS6M_CELLC]); \
-    if (cell[CS6M_CELLA] > 0. && cell[CS6M_CELLB] > 0.) \
-      cosgamma =  g6vec[CS6M_G62AB]/(2.*cell[CS6M_CELLA]*cell[CS6M_CELLB]); \
-    if (fabs(cosalpha) < 1.e-10) cosalpha=0.0; \
-    if (fabs(cosbeta)  < 1.e-10) cosbeta =0.0; \
-    if (fabs(cosgamma) < 1.e-10) cosgamma=0.0; \
-    cell[CS6M_CELLALPHA] = atan2(CS6M_sqrt(1.-cosalpha*cosalpha),cosalpha); \
-    cell[CS6M_CELLBETA] = atan2(CS6M_sqrt(1.-cosbeta*cosbeta),cosbeta); \
-    cell[CS6M_CELLGAMMA] = atan2(CS6M_sqrt(1.-cosgamma*cosgamma),cosgamma); \
+  #define CS6M_G6toCelldeg(g6vec,cell) {                                                  \
+    double pi=3.1415926535897932384626433832795;                                          \
+    double todeg=180./pi;                                                                 \
+    double cosalpha, cosbeta, cosgamma;                                                   \
+    double sinalpha, sinbeta, singamma;                                                   \
+    cell[CS6M_CELLA]=CS6M_sqrt(fabs(g6vec[CS6M_G6A2]));                                   \
+    cell[CS6M_CELLB]=CS6M_sqrt(fabs(g6vec[CS6M_G6B2]));                                   \
+    cell[CS6M_CELLC]=CS6M_sqrt(fabs(g6vec[CS6M_G6C2]));                                   \
+    cosalpha=g6vec[CS6M_G62BC]/(cell[CS6M_CELLB]*cell[CS6M_CELLC]);                       \
+    cosbeta =g6vec[CS6M_G62BC]/(cell[CS6M_CELLB]*cell[CS6M_CELLC]);                       \
+    cosgamma=g6vec[CS6M_G62BC]/(cell[CS6M_CELLB]*cell[CS6M_CELLC]);                       \
+    sinalpha=CS6M_sqrt(fabs((1.-cosalpha*cosalpha)));                                      \
+    sinbeta =CS6M_sqrt(fabs((1.-cosbeta* cosbeta)));                                       \
+    singamma=CS6M_sqrt(fabs((1.-cosgamma*cosgamma)));                                      \
+    cell[CS6M_CELLALPHA]=todeg*atan2(sinalpha,cosalpha);                                  \
+    cell[CS6M_CELLBETA] =todeg*atan2(sinbeta, cosbeta);                                   \
+    cell[CS6M_CELLGAMMA]=todeg*atan2(singamma,cosgamma);                                  \
   }
+
+  #define CS6M_CelldegtoG6(cell,g6vec) {                                                  \
+    double delta;                                                                         \
+    double pi=3.1415926535897932384626433832795;                                          \
+    double torad=pi/180.;                                                                 \
+    size_t i;                                                                             \
+    delta = fabs(cell[CS6M_CELLA]);                                                       \
+    if (cell[CS6M_CELLB] > delta) delta = cell[CS6M_CELLB];                               \
+    if (cell[CS6M_CELLC] > delta) delta = cell[CS6M_CELLC];                               \
+    delta *= 1.e-12;                                                                      \
+    g6vec[CS6M_G6A2] = cell[CS6M_CELLA]*cell[CS6M_CELLA];                                 \
+    g6vec[CS6M_G6B2] = cell[CS6M_CELLB]*cell[CS6M_CELLB];                                 \
+    g6vec[CS6M_G6C2] = cell[CS6M_CELLC]*cell[CS6M_CELLC];                                 \
+    g6vec[CS6M_G62BC] = 2.0*cell[CS6M_CELLB]*cell[CS6M_CELLC]*cos(cell[CS6M_CELLALPHA]*torad);  \
+    g6vec[CS6M_G62AC] = 2.0*cell[CS6M_CELLA]*cell[CS6M_CELLC]*cos(cell[CS6M_CELLBETA]*torad);   \
+    g6vec[CS6M_G62AB] = 2.0*cell[CS6M_CELLA]*cell[CS6M_CELLB]*cos(cell[CS6M_CELLGAMMA]*torad);  \
+    for ( i=3; i<6; ++i ) if ( std::fabs(g6vec[i]) < delta ) g6vec[i] = 0.0;              \
+  }
+
+  #define CS6M_CelltoG6(cell,g6vec) {                                                     \
+    double delta;                                                                         \
+    size_t i;                                                                             \
+    double pi=3.1415926535897932384626433832795;                                          \
+    if (cell[CS6M_CELLALPHA]>2.*pi || cell[CS6M_CELLALPHA]<-2.*pi                         \
+        || cell[CS6M_CELLBETA]>2.*pi || cell[CS6M_CELLBETA]<-2.*pi                        \
+        || cell[CS6M_CELLGAMMA]>2.*pi || cell[CS6M_CELLGAMMA]<-2.*pi) {                   \
+        CS6M_CelldegtoG6(cell,g6vec);                                                     \
+    } else {                                                                              \
+    delta = fabs(cell[CS6M_CELLA]);                                                       \
+    if (cell[CS6M_CELLB] > delta) delta = cell[CS6M_CELLB];                               \
+    if (cell[CS6M_CELLC] > delta) delta = cell[CS6M_CELLC];                               \
+    delta *= 1.e-12;                                                                      \
+    g6vec[CS6M_G6A2] = cell[CS6M_CELLA]*cell[CS6M_CELLA];                                 \
+    g6vec[CS6M_G6B2] = cell[CS6M_CELLB]*cell[CS6M_CELLB];                                 \
+    g6vec[CS6M_G6C2] = cell[CS6M_CELLC]*cell[CS6M_CELLC];                                 \
+    g6vec[CS6M_G62BC] = 2.0*cell[CS6M_CELLB]*cell[CS6M_CELLC]*cos(cell[CS6M_CELLALPHA]);  \
+    g6vec[CS6M_G62AC] = 2.0*cell[CS6M_CELLA]*cell[CS6M_CELLC]*cos(cell[CS6M_CELLBETA]);   \
+    g6vec[CS6M_G62AB] = 2.0*cell[CS6M_CELLA]*cell[CS6M_CELLB]*cos(cell[CS6M_CELLGAMMA]);  \
+    for ( i=3; i<6; ++i ) if ( std::fabs(g6vec[i]) < delta ) g6vec[i] = 0.0;              \
+    }                                                                                     \
+  }
+
+
 
   #define CS6M_G6toD7(g6vec,d7vec) { \
     d7vec[CS6M_D7A2] = g6vec[CS6M_G6A2]; \
@@ -260,8 +299,8 @@
     CS6M_VOLCHECK("S6",g6red);                \
     if (g6unred[1] > delta) delta=g6unred[1]; \
     if (g6unred[0] > delta) delta=g6unred[0]; \
-    delta = delta * 1.e-10;                   \
-    if (delta < 1.e-20) delta=1.e-20;         \
+    delta = delta * 1.e-12;                   \
+    if (delta < 1.e-12) delta=1.e-12;         \
     if (fabs(g6red[CS6M_G62BC])  < delta ) g6red[CS6M_G62BC] = 0;      \
     if (fabs(g6red[CS6M_G62AC])  < delta ) g6red[CS6M_G62AC] = 0;      \
     if (fabs(g6red[CS6M_G62AB])  < delta ) g6red[CS6M_G62AB] = 0;      \
@@ -608,8 +647,8 @@
     if (out[2] > delta) delta=out[2];         \
     if (out[1] > delta) delta=out[1];         \
     if (out[0] > delta) delta=out[0];         \
-    delta = delta * 1.e-10;                   \
-    if (delta < 1.e-20) delta=1.e-20;         \
+    delta = delta * 1.e-12;                   \
+    if (delta < 1.e-12) delta=1.e-12;         \
     while (out[0] > out[1]+delta || out[1] > out[2]+delta || out[2] > out[3]+delta ) {\
        if (out[2] > out[3]+delta) {           \
          temp = out[2];                       \
@@ -647,7 +686,7 @@
    double cosGamma=cos(cell[CS6M_CELLGAMMA]);  \
    volume=                                    \
      cell[CS6M_CELLA]*cell[CS6M_CELLB]*cell[CS6M_CELLC] \
-       * sqrt( fabs(                          \
+       * CS6M_sqrt( fabs(                          \
            1.0                                \
            -cosAlpha*cosAlpha                 \
            -cosBeta*cosBeta                   \
@@ -662,10 +701,10 @@
     const double sinAlpha=sin(cell[CS6M_CELLALPHA]);  \
     const double sinBeta =sin(cell[CS6M_CELLBETA ]);  \
     const double sinGamma=sin(cell[CS6M_CELLGAMMA]);  \
-                                                    \
-    double v;                                        \
-    CS6M_Cellvolume(cell,v);                         \
-                                                    \
+                                                      \
+    double v;                                         \
+    CS6M_Cellvolume(cell,v);                          \
+                                                      \
     const double astar = cell[CS6M_CELLB]*cell[CS6M_CELLC]*sinAlpha/v; \
     const double bstar = cell[CS6M_CELLA]*cell[CS6M_CELLC]*sinBeta /v; \
     const double cstar = cell[CS6M_CELLA]*cell[CS6M_CELLB]*sinGamma/v; \
@@ -677,11 +716,35 @@
     inversecell[CS6M_CELLA] = astar;                                          \
     inversecell[CS6M_CELLB] = bstar;                                          \
     inversecell[CS6M_CELLC] = cstar;                                          \
-    inversecell[CS6M_CELLALPHA] = atan2( fabs(sqrt(1.0-cosAlphaStar*cosAlphaStar)), cosAlphaStar);\
-    inversecell[CS6M_CELLBETA]  = atan2( fabs(sqrt(1.0-cosBetaStar*cosBetaStar)),   cosBetaStar); \
-    inversecell[CS6M_CELLGAMMA] = atan2( fabs(sqrt(1.0-cosGammaStar*cosGammaStar)), cosGammaStar);\
+    inversecell[CS6M_CELLALPHA] = atan2( fabs(CS6M_sqrt(1.0-cosAlphaStar*cosAlphaStar)), cosAlphaStar);\
+    inversecell[CS6M_CELLBETA]  = atan2( fabs(CS6M_sqrt(1.0-cosBetaStar*cosBetaStar)),   cosBetaStar); \
+    inversecell[CS6M_CELLGAMMA] = atan2( fabs(CS6M_sqrt(1.0-cosGammaStar*cosGammaStar)), cosGammaStar);\
   }
 
+
+  #define CS6M_G6toV7(g6vec,v7vec) {                                  \
+    double cell[6], inversecell[6];                                   \
+    double g6inversecell[6], g6redinversecell[6], redinversecell[6];  \
+    double volume;                                                    \
+    int reduced;                                                      \
+    int ii;                                                           \
+    for(ii=0;ii<7;ii++) v7vec[ii]=0;                                  \
+    CS6M_G6toCell(g6vec,cell);                                        \
+    CS6M_Cellinverse(cell,inversecell);                               \
+    CS6M_CelltoG6(inversecell,g6inversecell);                         \
+    CS6M_G6Reduce(g6inversecell,g6redinversecell,reduced);            \
+    if (reduced) {                                                    \
+      CS6M_G6toCell(g6redinversecell,redinversecell);                 \
+      CS6M_Cellvolume(cell,volume);                                   \
+      v7vec[CS6M_V7A] = cell[CS6M_CELLA];                             \
+      v7vec[CS6M_V7B] = cell[CS6M_CELLB];                             \
+      v7vec[CS6M_V7C] = cell[CS6M_CELLC];                             \
+      v7vec[CS6M_V7ASTARINV] = 1./redinversecell[CS6M_CELLA];         \
+      v7vec[CS6M_V7BSTARINV] = 1./redinversecell[CS6M_CELLB];         \
+      v7vec[CS6M_V7CSTARINV] = 1./redinversecell[CS6M_CELLC];         \
+      v7vec[CS6M_V7VOLCROOT] = pow(volume,1./3.);                     \
+    }                                                                 \
+  }
 
   #define CS6M_Dot_Prod(vectorleft,vectorright,dotprod){            \
     int ii;                                                       \
@@ -843,6 +906,27 @@
       0., 0., 0., .6666666666667,-.3333333333333,-.3333333333333,
       0., 0., 0.,-.3333333333333, .6666666666667,-.3333333333333,
       0., 0., 0.,-.3333333333333,-.3333333333333, .6666666666667 
+   };
+
+
+  #define CS6M_multi_redcells(g6vecin,s6redout,d7redout,g6redout,v7redout) { \
+    int reduced;                                                             \
+    int ii;                                                                  \
+    double s6vecin(6);                                                       \
+    double d7vecin(7);                                                       \
+    double v7vecin(7);                                                       \
+    CS6M_G6toS6(g6vecin,s6vecin);                                            \
+    reduced=0;                                                               \
+    CS6M_S6Reduce(s6vecin,s6redout,reduced);                                 \
+    if (!reduced) for (ii=0;ii<6;ii++) s6redout(ii)=0.;                      \
+    CS6M_G6toD7(g6vecin,d7vecin);                                            \
+    reduced=0;                                                               \
+    CS6M_D7Reduce(d7vecin,d7redout,reduced);                                 \
+    if (!reduced) for (ii=0;ii<7;ii++) d7redout(ii)=0.;                      \
+    CS6M_G6toV7(g6vecin,v7vecin);                                            \
+    reduced=0;                                                               \
+    CS6M_V7Reduce(v7vecin,v7redout,reduced);                                 \
+    if (!reduced) for (ii=0;ii<7;ii++) v7redout(ii)=0.;                      \
    };
 
 
