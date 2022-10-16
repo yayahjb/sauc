@@ -5,16 +5,16 @@
 #
 #  Assumes a working sauc kit in SAUCDIR
 #
-cd /home/yaya/threadripper/sauc_6Aug19/sauc
-setenv HTTPDSERVER http://flops.arcib.org:8084
-setenv SEARCHURL http://flops.arcib.org:8084/sauc-1.1.1/
+cd /mnt/ntfs2/SAUC/sauc_10Oct22/sauc
+setenv HTTPDSERVER flops.arcib.org:8084
+setenv SEARCHURL http://flops.arcib.org:8084/sauc-1.2.1
 setenv CGIPATH http://flops.arcib.org:8084/cgi-bin
-setenv PDBCELLINDEXURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
-setenv PDBENTRIESURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
+setenv PDBCELLINDEXURL https://files.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
+setenv PDBENTRIESURL https://files.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 setenv CGIMETHOD GET
-setenv CGIBIN /var/www/cgi-bin
+setenv CGIBIN /root/public_html/cgi-bin
 setenv BINDEST /var/www/cgi-bin
-setenv HTDOCS /var/www/html/sauc-1.0.2
+setenv HTDOCS /var/www/html/sauc-1.2.1
 if ( -e crystal.idx ) then
   rm -f newdb/crystal.idx
   make newdb/crystal.idx
@@ -25,8 +25,8 @@ if ( -e crystal.idx ) then
     set check_update=1
   else
     set check_update=0
-    make sauc-1.1.2.exe
-    ./sauc-1.1.2.exe < rebuild.inp
+    make sauc-1.2.1.exe
+    ./sauc-1.2.1.exe < rebuild.inp
     touch resultL1
     touch resultL2
     touch resultNCDist

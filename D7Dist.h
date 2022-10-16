@@ -1444,7 +1444,9 @@ static double oD7Dist_2bds(double gvec1[7], double rgvec1[7],
 
 
 
-
+#ifdef DCUT
+#undef DCUT
+#endif
 #define DCUT 0.999995
 #define fudge(d) DCUT*d
 

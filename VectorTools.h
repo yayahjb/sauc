@@ -14,7 +14,7 @@ class G6;
 
 namespace VectorTools {
 
-    static G6 FromString( const std::string& s );
+        G6 FromString( const std::string& s );
 
 
 	void CleanVector(VecN& v);

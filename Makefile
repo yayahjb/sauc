@@ -1,14 +1,15 @@
 #
 #  Makefile for SAUC
 #
-#  Herbert J. Bernstein, Bernstein + Sons
-#  Lawrence C. Andrews, Micro Encoder Inc.
+#  Herbert J. Bernstein, Ronin Institute for Independent Scholarship
+#  Lawrence C. Andrews, Ronin Institute for Independent Scholarship
 #
 #  1 July 2012
 #  Rev 13 July 2013
 #  Rev 21 April 2014
 #  Rev 142 August 2015
 #  Rev 17 Dec 2017
+#  Rev 18 Sep 2022
 #
 #  Modify the following definitions for your system
 #
@@ -25,7 +26,7 @@ HTTPDSERVER	?=	flops.arcib.org:8084
 #
 #  SAUCVERSION is used to allow multiple co-existing versions
 #
-SAUCVERSION = 1.1.2
+SAUCVERSION = 1.2.1
 #
 #  SEARCHURL IS THE URL FOR NEW SEARCH
 #
@@ -60,8 +61,8 @@ HTDOCSEXT   ?=   /sauc-$(SAUCVERSION)
 #
 #  PDBCELLINDEXURL is the URL from which to retrieve the
 #  fixed-field PDB cell index
-PDBCELLINDEXURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
-PDBENTRIESURL ?= ftp://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
+PDBCELLINDEXURL ?= https://files.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
+PDBENTRIESURL ?= https://files.wwpdb.org/pub/pdb/derived_data/index/entries.idx
 #
 #  Default compile flag definition to select debug mode under unix
 #CXXFLAGS ?= -Wall -O0 -DUSE_LOCAL_HEADERS -g -fopenmp  -ftree-parallelize-loops=8
@@ -171,25 +172,29 @@ $(DMPFILES):	CODentries.dmp.bz2  PDBcells.dmp.bz2 PDBentries.dmp.bz2 \
 		sauc_NT_S6_ckp.dmp.bz2
 		bunzip2 < $@.bz2 > $@
 
-OBIGFILES	=  crystal.idx  PDBcelldatabase.csv  \
-		cod.tsv         entries.idx  \
-		PDBcelldatabase.tsv  
+OBIGFILES	=  crystal.idx  \
+		cod.tsv         entries.idx
 
-BIGFILES	=  crystal.idx.bz2  PDBcelldatabase.csv.bz2  \
+BIGFILES	=  crystal.idx.bz2  \
 		cod.tsv.bz2         entries.idx.bz2  \
 		PDBcelldatabase.tsv.bz2  
 
-$(OBIGFILES):	prepbigfiles crystal.idx.bz2  PDBcelldatabase.csv.bz2 \
+$(OBIGFILES):	prepbigfiles crystal.idx.bz2 \
 		cod.tsv.bz2         entries.idx.bz2 \
 		PDBcelldatabase.tsv.bz2  
 		bunzip2 < $@.bz2 > $@
 		touch $@
 
+PDBcelldatabase.tsv.bz2:  crystal.idx idx2tsv
+		./idx2tsv < crystal.idx | bzip2 >  PDBcelldatabase.tsv.bz2
+
+PDBcelldatabase.tsv:  PDBcelldatabase.tsv.bz2
+		bunzip2 <  PDBcelldatabase.tsv.bz2 > PDBcelldatabase.tsv
+
 prepbigfiles:
 		touch crystal.tsv.bz2
 		touch cod.tsv.bz2
 		touch entries.idx.bz2
-		touch PDBcelldatabase.csv.bz2
 		touch PDBcelldatabase.tsv.bz2
 		touch *.m4
 
@@ -275,6 +280,21 @@ install:	edit $(SAUCEXE) $(SAUCCGI) $(SAUCHTML) \
 		ln -f -s $(HTDOCS)/$(SAUCHTML) $(HTDOCS)/index.html
 		cp -r $(MATHSCRIBEPATH) $(HTDOCS)/$(MATHSCRIBEPATH)
 
+NCDist.o:  NCDist.c cdistances.h
+	$(CC) $(CFLAGS) -c NCDist.c
+
+CD6Dist.o:  CS6Dist.c cdistances.h
+	$(CC) $(CFLAGS) -c CS6Dist.c
+
+D7Dist.o:  D7Dist.c cdistances.h
+	$(CC) $(CFLAGS) -c D7Dist.c
+
+pststrmgr.o:  pststrmgr.c pststrmgr.h
+	$(CC) $(CFLAGS) -c pststrmgr.c
+
+unitcell.o: unitcell.cpp unitcell.h
+	$(CXX) $(CXXFLAGS) -c unitcell.cpp
+
 #		
 $(SAUCEXE): \
 	BasicDistance.cpp    \
@@ -309,6 +329,7 @@ $(SAUCEXE): \
 	sauc.cpp \
 	TNear.h \
 	triple.h \
+	unitcell.cpp \
 	unitcell.h \
 	V7.cpp \
 	V7.h \
@@ -319,8 +340,13 @@ $(SAUCEXE): \
 	VecN.h \
 	VecN.cpp \
 	VectorTools.h \
-	VectorTools.cpp
-	$(CC) $(CFLAGS) -c pststrmgr.c
+	VectorTools.cpp \
+	unitcell.o \
+	pststrmgr.o \
+	NCDist.o \
+	CS6Dist.o \
+	D7Dist.o \
+	unitcell.o
 	$(CXX) $(CXXFLAGS) -o $(SAUCEXE) \
 	BasicDistance.cpp    \
 	Cell.cpp \
@@ -340,14 +366,16 @@ $(SAUCEXE): \
 	VectorTools.cpp \
 	Vec_N_Tools.cpp \
 	vector_3d.cpp \
+	unitcell.o \
+	NCDist.o \
+	CS6Dist.o \
+	D7Dist.o \
 	pststrmgr.o -lpthread
 
 sauc_psm_files_create: \
 	sauc_psm_files_create.c \
 	sauc_psm_files_create.h \
-	    pststrmgr.c \
-	    pststrmgr.h \
-	fgetln.c
+	fgetln.c pststrmgr.o
 	$(CC) $(CFLAGS) -c pststrmgr.c
 	$(CC) $(CFLAGS) -o sauc_psm_files_create \
 	sauc_psm_files_create.c fgetln.c \

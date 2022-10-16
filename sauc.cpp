@@ -8,7 +8,8 @@
  rev  6 Jul 2013 -- HJB
  rev 22 Apr 2014 -- HJB
  rev 20 Jan 2015 -- HJB
- rec 12 Noc 2016 -- HJB
+ rev 12 Nov 2016 -- HJB
+ rev 19 Sep 2022 -- HJB
  
  *******************************************************
  You may redistribute this program under the terms
@@ -68,7 +69,6 @@
 #include "TNear.h"
 #include "triple.h"
 #include "rhrand.h"
-#include "unitcell.h"
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -124,14 +124,15 @@ using namespace std;
 
 CNearTree <unitcell> * cellTree[6] = {NULL,NULL,NULL,NULL,NULL,NULL};
 CNearTree <unitcell>::iterator cellTree_itend[6];
-string sauc_NT_ckp_names[6] =
+string sauc_NT_ckp_names[7] =
 {
     "sauc_NT_L1_ckp.dmp",
     "sauc_NT_L2_ckp.dmp",
     "sauc_NT_NCDist_ckp.dmp",
     "sauc_NT_V7_ckp.dmp",
     "sauc_NT_D7_ckp.dmp",
-    "sauc_NT_S6_ckp.dmp"
+    "sauc_NT_S6_ckp.dmp",
+    "sauc_NT_DC7unsrt_ckp.dmp"
 };
 
 PSM_localpsm_handle PDBentries=NULL;
@@ -153,7 +154,7 @@ vector <sixarray<double> > cellDArray;
 vector <std::string> spaceArray;
 vector <int> zArray;
 vector <std::string> idArray;
-double probeArray[6];
+double probeArray[7];
 G6 primredprobe;
 string probelattice;
 double avglen=1.;
@@ -170,7 +171,7 @@ int sauc_batch_mode = 0;
 int sauc_javascript = 0;
 
 
-//*****************************************************************************
+//*****************************************************************************/
 double convertToDouble(string value)
 {
     double number;
@@ -179,7 +180,7 @@ double convertToDouble(string value)
     return number;
 }
 
-//*****************************************************************************
+//*****************************************************************************/
 int convertToInt(string zvalue)
 {
     int number = 0;
@@ -348,13 +349,16 @@ int load_cellDSGZArrays(void) {
                             << a << ", " << b << ", " << c << ", " << alpha << ", " << beta << ", " << gamma 
                             << " Z: " << Z  << std::endl; 
                 } */
-                if (pdbid.length() == 4 && a > 1. && b > 1. && c > 1.
+                if (pdbid.length() >= 4 && 
+                    pdbid.length() < 25 && 
+                    a > 1. && b > 1. && c > 1.
                     && a==a && b==b && c==c && a <  1.e6 && b < 1.e6 && c < 1.e6
                     && alpha >= 5. && alpha <= 175.
                     && beta  >= 5. && beta  <= 175.
                     && gamma >= 5. && gamma <= 175.
                     && (SG.substr(0,1) == "P" || SG.substr(0,1) == "p"
                         || SG.substr(0,1) == "V" || SG.substr(0,1) == "v"
+                        || SG.substr(0,1) == "U" || SG.substr(0,1) == "u"
                         || SG.substr(0,1) == "I" || SG.substr(0,1) == "i"
                         || SG.substr(0,1) == "F" || SG.substr(0,1) == "f"
                         || SG.substr(0,1) == "A" || SG.substr(0,1) == "a"
@@ -415,6 +419,7 @@ int load_cellDSGZArrays(void) {
                     && gamma >= 5. && gamma <= 175.
                     && (SG.substr(0,1) == "P" || SG.substr(0,1) == "p"
                         || SG.substr(0,1) == "V" || SG.substr(0,1) == "v"
+                        || SG.substr(0,1) == "U" || SG.substr(0,1) == "u"
                         || SG.substr(0,1) == "I" || SG.substr(0,1) == "i"
                         || SG.substr(0,1) == "F" || SG.substr(0,1) == "f"
                         || SG.substr(0,1) == "A" || SG.substr(0,1) == "a"
@@ -469,6 +474,7 @@ int load_cellDSGZArrays(void) {
                     && gamma >= 5. && gamma <= 175.
                     && (SG.substr(0,1) == "P" || SG.substr(0,1) == "p"
                         || SG.substr(0,1) == "V" || SG.substr(0,1) == "v"
+                        || SG.substr(0,1) == "U" || SG.substr(0,1) == "u"
                         || SG.substr(0,1) == "I" || SG.substr(0,1) == "i"
                         || SG.substr(0,1) == "F" || SG.substr(0,1) == "f"
                         || SG.substr(0,1) == "A" || SG.substr(0,1) == "a"
@@ -518,19 +524,19 @@ int make_mmapfiles(void) {
     CODentries = make_psmfile(CODentries_mmap_file, CODentries_raw_file,
                               2, CODfieldnumbers,
                               CODentries_skip_lines, CODentries_sep_char, 0);
-    if (PDBcells != 0) {
+    if (PDBcells != 0 && PDBcells->str_index_len > 0) {
         numdb++;
         std::cout << "PDB cells available: " << PDBcells->str_index_len <<std::endl;
     }
-    if (PDBentries != 0 ) {
+    if (PDBentries != 0 && PDBentries->str_index_len > 0 ) {
         numdb++;
         std::cout << "PDB entries available: " << PDBentries->str_index_len <<std::endl;
     }
-    if (CSDcells != 0 ) {
+    if (CSDcells != 0  && CSDcells->str_index_len > 0 ) {
         numdb++;
         std::cout << "CSD data available: " << CSDcells->str_index_len << std::endl;
     }
-    if (CODentries != 0 ) {
+    if (CODentries != 0  && CODentries->str_index_len > 0 ) {
         numdb++;
         std::cout << "COD data available: " << CODentries->str_index_len << std::endl;
     }
@@ -616,6 +622,7 @@ bool makeprimredprobe( void )
         case 2:  /* L2 */
         case 3:  /* NCDist */
         case 4:  /* V7 */
+        case 7:  /* DC7unsrt */
              CS6M_G6Reduce(primcell,redprimcell,reduced);
              break;
         case 5:  /* D7Dist */
@@ -623,7 +630,8 @@ bool makeprimredprobe( void )
              CS6M_D7Reduce(d7cell,d7red,reduced);
              CS6M_D7toG6(d7red,redprimcell);
              break;
-        default: /* S6Dist and anything else */
+        case 6:  /* S6Dist */
+        default: /* and anything else */
              CS6M_G6toS6(primcell,s6cell);
              std::cout<<"G6toS6: " << "[" <<primcell[0]<<","  <<primcell[1]<<"," <<primcell[2]<<"," <<primcell[3]<<"," <<primcell[4]<<"," <<primcell[5]<<"],"
              << "[" <<s6cell[0]<<","  <<s6cell[1]<<"," <<s6cell[2]<<"," <<s6cell[3]<<"," <<s6cell[4]<<"," <<s6cell[5]<<"]"<<std::endl;
@@ -631,8 +639,7 @@ bool makeprimredprobe( void )
              std::cout<<"S6Reduce: " << "[" <<s6red[0]<<","  <<s6red[1]<<"," <<s6red[2]<<"," <<s6red[3]<<"," <<s6red[4]<<"," <<s6red[5]<<"]"<<std::endl;
              CS6M_S6toG6(s6red,redprimcell);
              break;
-    }
-
+    }  
     primredprobe = Cell(redprimcell).CellWithDegrees();
     std::cout << "Primitive Reduced Probe Cell: " <<
     primredprobe[0]<<" "<<
@@ -725,12 +732,13 @@ if (value != ULONG_MAX) { \
 } \
 
 
-//*****************************************************************************
+//*****************************************************************************/
 void buildNearTree( void )
 {
     Mat66 m;
     Mat66 mc;
     G6 searchcell;
+    double dsearchcell[6];
     std::ofstream serialout;
     std::ifstream serialin;
     size_t si;
@@ -775,7 +783,7 @@ void buildNearTree( void )
                                        break;
                                    }
             serialin >> Algorithm;
-            if (!serialin.good() || algorithm != choiceAlgorithm) {
+            if (!serialin.good() || unitcell::algorithm != choiceAlgorithm) {
                 std::cout << sauc_NT_ckp_names[choiceAlgorithm-1] << " badly formatted, algorithm value wrong" << std::endl;
                 break;
             }
@@ -1108,7 +1116,7 @@ void buildNearTree( void )
     
     std::cout << "processing " << (int)(cellDArray.size()) << " cells" << std::endl;
     
-    for (int i = 0; i < (int)(cellDArray.size()); i++)
+    for (size_t i = 0; i < (size_t)(cellDArray.size()); i++)
     {
         double d7cell[7];
         double d7red[7];
@@ -1126,6 +1134,7 @@ void buildNearTree( void )
             case 2:  /* L2 */
             case 3:  /* NCDist */
             case 4:  /* V7 */
+            case 7:  /* DC7unsrt */
                  CS6M_G6Reduce(primcell,redprimcell,reduced);
                  break;
             case 5:  /* D7Dist */
@@ -1133,7 +1142,8 @@ void buildNearTree( void )
                  CS6M_D7Reduce(d7cell,d7red,reduced);
                  CS6M_D7toG6(d7red,redprimcell);
                  break;
-            default: /* S6Dist and anything else */
+            case 6:  /* S6Dist */
+            default: /* and anything else */
                  CS6M_G6toS6(primcell,s6cell);
                  CS6M_S6Reduce(s6cell,s6red,reduced);
                  CS6M_S6toG6(s6red,redprimcell);
@@ -1167,9 +1177,13 @@ void buildNearTree( void )
           primcell[5] << std::endl;
         };
         searchcell = Cell(redprimcell).CellWithDegrees();
-        unitcell cellData(searchcell[0],searchcell[1],searchcell[2],
-                          searchcell[3],searchcell[4],searchcell[5],
-                          0,0,0,0,0,0, (double)i, cellDB[i]);
+        dsearchcell[0]=searchcell[0];
+        dsearchcell[1]=searchcell[1];
+        dsearchcell[2]=searchcell[2];
+        dsearchcell[3]=searchcell[3];
+        dsearchcell[4]=searchcell[4];
+        dsearchcell[5]=searchcell[5];
+        unitcell cellData(dsearchcell,spaceArray[i].c_str()[0],(size_t)i,cellDB[i],choiceAlgorithm);
         cellTree[choiceAlgorithm-1]->insert(cellData);
         
     }
@@ -1297,7 +1311,7 @@ void buildNearTree( void )
 }
 
 
-//*****************************************************************************
+//*****************************************************************************/
 void NearestInputReport( std::ostream& out, const G6& probeArray, const G6& primredprobe )
 {
     out << "Raw Unknown Cell [" <<
@@ -1327,7 +1341,7 @@ void findNearest( int k, double distance, int dont_sort_by_family )
     double dtest;
     
     std::cout << "entering findNearest " << k << distance << std::endl;
-    unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
+    unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5],(size_t)0L,'p');
     NearestInputReport( std::cout, probeArray, primredprobe );
     
     std::cout <<  "crootvol: " << crootvol << std::endl;
@@ -1446,7 +1460,7 @@ void SphereResults( std::ostream& out,
         char dbtype;
         const unitcell * const cell = & myvector[ind];
         std::string dbname;
-        numRow = (int)(*cell).getRow();
+        numRow = (int)(*((unitcell *)cell)).getRow();
         dbtype = cellDB[numRow];
         entry =  PSM_getstrindex_by_key(
                                         (dbtype==PDB_DBTYPE)?PDBentries:
@@ -1571,7 +1585,7 @@ void SphereResults( std::ostream& out,
         {
             char dbtype;
             const unitcell * const cell = & myvector[ind];
-            numRow = (int)(*cell).getRow();
+            numRow = (int)((*(unitcell *)cell).getRow());
             dbtype = cellDB[numRow];
             entry =  PSM_getstrindex_by_key(
                                             (dbtype==PDB_DBTYPE)?PDBentries:
@@ -1657,12 +1671,12 @@ void SphereResults( std::ostream& out,
                 out << ", ";
             }
             out << " Prim. Red. Cell: ["<<
-            (*cell).getData(0) << ", " <<
-            (*cell).getData(1) << ", " <<
-            (*cell).getData(2) << ", " <<
-            (*cell).getData(3) << ", " <<
-            (*cell).getData(4) << ", " <<
-            (*cell).getData(5) << "]" << std::endl;
+            (*((unitcell *)cell)).getData(0) << ", " <<
+            (*((unitcell *)cell)).getData(1) << ", " <<
+            (*((unitcell *)cell)).getData(2) << ", " <<
+            (*((unitcell *)cell)).getData(3) << ", " <<
+            (*((unitcell *)cell)).getData(4) << ", " <<
+            (*((unitcell *)cell)).getData(5) << "]" << std::endl;
             dbtype = cellDB[numRow];
             entry =  PSM_getstrindex_by_key(
                                             (dbtype==PDB_DBTYPE)?PDBentries:
@@ -1743,7 +1757,7 @@ void SphereResults( std::ostream& out,
         while (ind >= 0) {
             char dbtype;
             const unitcell * const cell = & myvector[ind];
-            numRow = (int)(*cell).getRow();
+            numRow = (int)(*((unitcell *)cell)).getRow();
             dbtype = cellDB[numRow];
             entry =  PSM_getstrindex_by_key(
                                             (dbtype==PDB_DBTYPE)?PDBentries:
@@ -1841,12 +1855,12 @@ void SphereResults( std::ostream& out,
                 out << ", ";
             }
             out << " Prim. Red. Cell: ["<<
-            (*cell).getData(0) << ", " <<
-            (*cell).getData(1) << ", " <<
-            (*cell).getData(2) << ", " <<
-            (*cell).getData(3) << ", " <<
-            (*cell).getData(4) << ", " <<
-            (*cell).getData(5) << "]" << std::endl;
+            (*((unitcell *)cell)).getData(0) << ", " <<
+            (*((unitcell *)cell)).getData(1) << ", " <<
+            (*((unitcell *)cell)).getData(2) << ", " <<
+            (*((unitcell *)cell)).getData(3) << ", " <<
+            (*((unitcell *)cell)).getData(4) << ", " <<
+            (*((unitcell *)cell)).getData(5) << "]" << std::endl;
             dbtype = cellDB[numRow];
             entry =  PSM_getstrindex_by_key(
                                             (dbtype==PDB_DBTYPE)?PDBentries:
@@ -1921,7 +1935,7 @@ void SphereResults( std::ostream& out,
     
 }
 
-//*****************************************************************************
+//*****************************************************************************/
 void SphereInputReport( std::ostream& out )
 {
     out << "Raw Unknown Cell: ["<<
@@ -1941,10 +1955,10 @@ void SphereInputReport( std::ostream& out )
     primredprobe[5] << "]" << std::endl;
 }
 
-//*****************************************************************************
+//*****************************************************************************/
 void findSphere( int limit, int dont_sort_by_family )
 {
-    unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5], 0, 0, 0, 0, 0, 0, 0);
+    unitcell unknownCell = unitcell(primredprobe[0], primredprobe[1], primredprobe[2], primredprobe[3], primredprobe[4], primredprobe[5],(size_t)0L,'p');
     
     std::cout << std::endl;
     SphereInputReport( std::cout );
@@ -1979,7 +1993,7 @@ void findSphere( int limit, int dont_sort_by_family )
     }
 }
 
-//*****************************************************************************
+//*****************************************************************************/
 void findRange( void )
 {
     std::cout << std::endl;
@@ -2034,7 +2048,7 @@ void findRange( void )
 
 
 
-//*****************************************************************************
+//*****************************************************************************/
 int main ()
 {
     
@@ -2047,6 +2061,7 @@ int main ()
     std::cout << "Rev 0.9, 18 Jul 2015, Herbert J. Bernstein" << std::endl;
     std::cout << "Rev 1.0, 4 Oct 2018, Herbert J. Bernstein" << std::endl;
     std::cout << "Rev 1.1, 11 Apr 2019, Herbert J. Bernstein" << std::endl;
+    std::cout << "Rev 1.2, 15 Oct 2022, Herbert J. Bernstein" << std::endl;
     
     // Check for sauc html run
     
@@ -2069,23 +2084,82 @@ int main ()
         {
             int ii;
             double edgemax;
-            for (ii=0; ii < 6; ii++) probeArray[ii] = 0;
+            for (ii=0; ii < 7; ii++) probeArray[ii] = 0;
             std::cout << "Search of Alternate Unit Cells\n";
             if (!sauc_batch_mode) std::cout << "\nPlease Input Your Data\n";
-            if (!sauc_batch_mode) std::cout << "Lattice Centering (P, A, B, C, F, I, R, H, V): ";
+            if (!sauc_batch_mode) std::cout << "Lattice Centering (P, A, B, C, F, I, R, H, V, U): ";
             std::cin >> probelattice; std::cin.clear();
-            if (!sauc_batch_mode) std::cout << "A: ";
-            std::cin >> probeArray[0]; std::cin.clear();
-            if (!sauc_batch_mode) std::cout << "B: ";
-            std::cin >> probeArray[1]; std::cin.clear();
-            if (!sauc_batch_mode) std::cout << "C: ";
-            std::cin >> probeArray[2]; std::cin.clear();
-            if (!sauc_batch_mode) std::cout << "Alpha: ";
-            std::cin >> probeArray[3]; std::cin.clear();
-            if (!sauc_batch_mode) std::cout << "Beta: ";
-            std::cin >> probeArray[4]; std::cin.clear();
-            if (!sauc_batch_mode) std::cout << "Gamma: ";
-            std::cin >> probeArray[5]; std::cin.clear();
+            if (probelattice.size() == 0 ||
+                probelattice[0]=='V' || probelattice[0]=='v' ||
+                probelattice[0]=='U' || probelattice[0]=='u') {
+              if (!sauc_batch_mode) std::cout << "r: ";
+              std::cin >> probeArray[0]; std::cin.clear();
+              if (!sauc_batch_mode) std::cout << "s: ";
+              std::cin >> probeArray[1]; std::cin.clear();
+              if (!sauc_batch_mode) std::cout << "t:: ";
+              std::cin >> probeArray[2]; std::cin.clear();
+              if (probelattice[0]=='V' || probelattice[0]=='v' && !sauc_batch_mode) {
+                std::cout << "u: ";
+              } else if (!sauc_batch_mode) {
+                std::cout << "s+t-|u|: ";
+              }
+              std::cin >> probeArray[3]; std::cin.clear();
+              if (probelattice[0]=='V' || probelattice[0]=='v' && !sauc_batch_mode) {
+                std::cout << "v: ";
+              } else if (!sauc_batch_mode) {
+                std::cout << "r+t-|v|: ";
+              }
+              std::cin >> probeArray[4]; std::cin.clear();
+              if (probelattice[0]=='V' || probelattice[0]=='v' && !sauc_batch_mode) {
+                std::cout << "w: ";
+              } else if (!sauc_batch_mode) {
+                std::cout << "r+s-|w|: ";
+              }
+              std::cin >> probeArray[5]; std::cin.clear();
+              if (probelattice[0]=='U' || probelattice[0]=='u' ) {
+                double absu, absv, absw, tau;
+                if (!sauc_batch_mode) std::cout << "MDB^2: ";
+                std::cin >> probeArray[6]; std::cin.clear();
+                absu=probeArray[1]+probeArray[2]-probeArray[3];
+                absv=probeArray[0]+probeArray[2]-probeArray[4];
+                absw=probeArray[0]+probeArray[1]-probeArray[5];
+                tau=probeArray[0]+probeArray[1]+probeArray[2]-absu-absv-absw;
+                if (absu < -1.e-6 || absv < -1.e-6 || absw < -1.e-6 || tau > probeArray[6]+1.e-6 ) {
+                  std::cout << "Invalid DC7 unsorted cell: " 
+                    << probeArray[0] << " "
+                    << probeArray[1] << " "
+                    << probeArray[2] << " "
+                    << probeArray[3] << " "
+                    << probeArray[4] << " "
+                    << probeArray[5] << " "
+                    << probeArray[6] << std::endl;
+                }
+                if (tau < probeArray[6]-1.e-6) {
+                  probeArray[3]=absu;
+                  probeArray[4]=absv;
+                  probeArray[5]=absw;
+                } else {
+                  probeArray[3]=-absu;
+                  probeArray[4]=-absv;
+                  probeArray[5]=-absw;
+                }
+                probeArray[6]=0.;
+                probelattice[0]='v';
+              }
+            } else {
+              if (!sauc_batch_mode) std::cout << "A: ";
+              std::cin >> probeArray[0]; std::cin.clear();
+              if (!sauc_batch_mode) std::cout << "B: ";
+              std::cin >> probeArray[1]; std::cin.clear();
+              if (!sauc_batch_mode) std::cout << "C: ";
+              std::cin >> probeArray[2]; std::cin.clear();
+              if (!sauc_batch_mode) std::cout << "Alpha: ";
+              std::cin >> probeArray[3]; std::cin.clear();
+              if (!sauc_batch_mode) std::cout << "Beta: ";
+              std::cin >> probeArray[4]; std::cin.clear();
+              if (!sauc_batch_mode) std::cout << "Gamma: ";
+              std::cin >> probeArray[5]; std::cin.clear();
+            }
             std::cout << std::endl;
             if (sauc_batch_mode) {
                 std::cout << "Centering and Probe cell :"<<  probelattice << " "
@@ -2133,7 +2207,8 @@ int main ()
             if (!sauc_batch_mode) std::cout << "\n4. V7";
             if (!sauc_batch_mode) std::cout << "\n5. D7Dist";
             if (!sauc_batch_mode) std::cout << "\n6. S6Dist";
-            if (!sauc_batch_mode) std::cout << "\n7. Quit";
+            if (!sauc_batch_mode) std::cout << "\n7. DC7unsrt";
+            if (!sauc_batch_mode) std::cout << "\n8. Quit";
             if (!sauc_batch_mode) std::cout << "\nChoose a Metric: ";
             priorAlgorithm = choiceAlgorithm;
             std::cin >> choiceAlgorithm; std::cin.clear();
@@ -2141,7 +2216,7 @@ int main ()
             std::cout << choiceAlgorithm << std::endl;
 
             
-            if (sauc_batch_mode && choiceAlgorithm > 0 && choiceAlgorithm < 7 ) {
+            if (sauc_batch_mode && choiceAlgorithm > 0 && choiceAlgorithm < 8 ) {
                 switch (choiceAlgorithm) {
                     case 1: std::cout << "L1 metric search algorithm" << std::endl; break;
                     case 2: std::cout << "L2 metric search algorithm" << std::endl; break;
@@ -2149,9 +2224,10 @@ int main ()
                     case 4: std::cout << "V7 metric search algorithm" << std::endl; break;
                     case 5: std::cout << "D7Dist metric search algorithm" << std::endl; break;
                     case 6: std::cout << "S6Dist metric search algorithm" << std::endl; break;
+                    case 7: std::cout << "DC7unsrt metric search algorithm" << std::endl; break;
                 }
             }
-            if ( choiceAlgorithm > 0 && choiceAlgorithm < 7 ) {
+            if ( choiceAlgorithm > 0 && choiceAlgorithm < 8 ) {
                 double d7cell[7],d7red[7],s6cell[6],s6red[6];
                 int reduced;
                 G6 redprimcell;
@@ -2159,7 +2235,8 @@ int main ()
                     case 1:  /* L1 */
                     case 2:  /* L2 */
                     case 3:  /* NCDist */
-                    case 4:  /* V7 */  
+                    case 4:  /* V7 */
+                    case 7:  /* DC7unsrt */
                          CS6M_G6Reduce(primcell,redprimcell,reduced);
                          break; 
                     case 5:  /* D7Dist */
@@ -2167,7 +2244,8 @@ int main ()
                          CS6M_D7Reduce(d7cell,d7red,reduced);
                          CS6M_D7toG6(d7red,redprimcell);
                          break;
-                    default: /* S6Dist and anything else */
+                    case 6:  /* S6Dist */
+                    default: /* or anything else */
                          CS6M_G6toS6(primcell,s6cell);
                          CS6M_S6Reduce(s6cell,s6red,reduced);
                          CS6M_S6toG6(s6red,redprimcell);
@@ -2239,11 +2317,20 @@ int main ()
             }
             else if (choiceAlgorithm == 7 && priorAlgorithm!= 7)
             {
+                cell.changeOperator(2);
+                cell.changeAlgorithm(7);
+                cell.changeScaledist(0.1);
+                quitAlgorithm = 1;
+                //Build Tree
+                if (!cellTree[choiceAlgorithm-1]) buildNearTree();
+            }
+            else if (choiceAlgorithm == 8 && priorAlgorithm!= 8)
+            {
                 quitAlgorithm = 1;
                 endProgram = 1;
                 quitContinue = 1;
             }
-            else if (choiceAlgorithm < 1 || choiceAlgorithm > 7)
+            else if (choiceAlgorithm < 1 || choiceAlgorithm > 8)
             {
                 std::cout << "Incorrect Choice. Please Choose Again.\n";
                 choiceAlgorithm = priorAlgorithm;
@@ -2296,8 +2383,8 @@ int main ()
                 ll = token.length();
                 if (ll > 1 && token[ll-1]=='%') {
                     sphereRange=convertToDouble(token.substr(0,ll-1))*crootvol/100.;
-                    cout << "crootvol: " << crootvol << endl;
-                    cout << "sphereRange: " << sphereRange << endl;
+                    std::cout << "crootvol: " << crootvol << std::endl;
+                    std::cout << "sphereRange: " << sphereRange << std::endl;
                 } else {
                     sphereRange=convertToDouble(token);
                 }
@@ -2420,3 +2507,4 @@ int main ()
     
     return 0;
 }
+

@@ -22,6 +22,7 @@
 #include "G6.h"
 #include "Mat66.h"
 #include "D7.h"
+#include "DC7unsrt.h"
 
 #define MAKE_TOSTRING
 #ifdef MAKE_TOSTRING
@@ -110,6 +111,10 @@ static std::string ToString( const D7& v ) { // specialized for D7
 
 static std::string ToString( const G6& v ) { // specialized for G6
    return ToString( v[0], v[1], v[2], v[3], v[4], v[5] );
+}
+
+static std::string ToString( const DC7unsrt& v ) { // specialized for DC7unsrt
+   return ToString( v[0], v[1], v[2], v[3], v[4], v[5], v[6] );
 }
 
 static std::string ToString( const Mat66& m ) {

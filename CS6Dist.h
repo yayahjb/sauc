@@ -659,7 +659,9 @@ static double s6eucldist(double v1[6], double v2[6]) {
 }
 
 
-
+#ifdef CS6M_min2
+#undef CS6M_min2
+#endif
 #define CS6M_min2(a,b) (((a)<(b))?(a):(b))
 #define CS6M_min3(a,b,c) ((CS6M_min2(a,b)<(c))?(CS6M_min2(a,b)):(c))
 #define CS6M_min4(a,b,c,d) ((CS6M_min3(a,b,c)<(d))?(CS6M_min3(a,b,c)):(d))
@@ -1268,7 +1270,7 @@ static double S6Dist_pass(double gvec1[6], double gvec2[6], double dist) {
 
 
 
-static double CS6Dist(double gvec1[6], double gvec2[6]) {
+double CS6Dist(double gvec1[6], double gvec2[6]) {
     double dist, dist1, dist2, distmin;
     dist1 = s6minbddist(gvec1);
     dist2 = s6minbddist(gvec2);

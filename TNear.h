@@ -293,6 +293,9 @@
 #if !defined(TNEAR_H_INCLUDED)
 #define TNEAR_H_INCLUDED
 
+#include <vector>
+#include <set>
+#include <iterator>
 #include <stdlib.h>
 #include <limits.h>
 #include <cfloat>
@@ -308,19 +311,18 @@
 #define USE_LOCAL_HEADERS
 #endif
 #ifndef USE_LOCAL_HEADERS
+#include <G6.h>
+#include <unitcell.h>
 #include <rhrand.h>
 #include <triple.h>
 #else
+#include "G6.h"
+#include "unitcell.h"
 #include "rhrand.h"
 #include "triple.h"
 #endif
 
-#include "G6.h"
 
-
-#include <vector>
-#include <set>
-#include <iterator>
 
 #ifdef CNEARTREE_SAFE_TRIANG
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0) \
@@ -330,7 +332,7 @@
 #define TRIANG(a,b,c) (  (((b)+(c))-(a) >= 0))
 #endif
 
-#define CNEARTREE_COLLIDE 1.e-36
+#define CNEARTREE_COLLIDE 1.e-6
 
 //=======================================================================
 // CNearTree is the root class for the neartree. The actual data of the
@@ -402,6 +404,12 @@ public:
     static inline DistanceType DistanceBetween( const G6& t1, const G6& t2 )
     {
         DistanceType d = (t1-t2).norm();
+        return( d>0?d:-d );
+    }
+
+    static inline DistanceType DistanceBetween( const unitcell& t1, const unitcell& t2 )
+    {
+        DistanceType d = ((unitcell *)(&t1))->distance_from(*((unitcell *)(&t2)));
         return( d>0?d:-d );
     }
     

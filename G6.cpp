@@ -13,8 +13,8 @@
 #include "Vec_N_Tools.h"
 #include "D7.h"
 #include "vector_3d.h"
-
 #include "Vec_N_Tools.h"
+#include "S6M_SellingReduce.h"
 
 #define Default6 6
 
@@ -22,13 +22,15 @@ G6::G6( void )
 : VecN( 6 ) {
    m_dim = 6;
    m_valid = true;
+   m_reduced = false;
 }
 
 G6::G6(const G6& v)
 : VecN(6) {
    m_dim = 6;
-    m_vec = v.m_vec;
+   m_vec = v.m_vec;
    m_valid = v.m_valid;
+   m_reduced = v.m_reduced;
 }
 
 G6::G6(const double v[6])
@@ -40,6 +42,7 @@ G6::G6(const double v[6])
     m_vec[3] = v[3];
     m_vec[4] = v[4];
     m_vec[5] = v[5];
+    m_reduced = false;
 }
 
 G6::G6(const Cell& c)
@@ -50,6 +53,7 @@ G6::G6(const Cell& c)
     m_vec[3] = 2.0 * c[1] * c[2] * cos(c[3]);
     m_vec[4] = 2.0 * c[0] * c[2] * cos(c[4]);
     m_vec[5] = 2.0 * c[0] * c[1] * cos(c[5]);
+    m_reduced = false;
 }
 
 
@@ -76,6 +80,7 @@ G6::G6( const D6& ds ) {
     g4 = 2.0*p;
     g5 = 2.0*q;
     g6 = 2.0*r;
+    m_reduced = false;
 }
 
 G6::G6(const DeloneTetrahedron& dt)
@@ -94,6 +99,7 @@ G6::G6( const VecN& v )
         m_vec = v.GetVector();
     }
     m_valid = true;
+    m_reduced = false;
 }
 
 G6::G6( const D7& v7 )
@@ -119,6 +125,7 @@ G6::G6( const D7& v7 )
    g6 = d7 - d1 - d2;
 //   g4 = (d4 -g1 -g2 -g3 -g5 -g6 + d5 - g2 -g3)/2.0; 
    m_valid = true;
+   m_reduced = false;
 }
 
 G6::G6( const std::string& s ) 
@@ -126,7 +133,8 @@ G6::G6( const std::string& s )
 {
   m_vec = Vec_N_Tools::FromString( s );
   m_dim = m_vec.size();
-   m_valid = true;
+  m_valid = true;
+  m_reduced = false;
   if ( m_dim != 6 ) throw "bad dimension in G6 from a string";
 }
 
@@ -136,7 +144,37 @@ G6::G6( const std::vector<double>& v )
   m_dim = v.size();
    if ( m_dim != 6 ) throw "bad dimension in G6 from a vector";
   m_vec = v;
-   m_valid = true;
+  m_valid = true;
+  m_reduced = false;
+}
+
+bool G6::reduce( void ) {
+   double  redcell[6];
+   int reduced;
+   reduced=0;
+   CS6M_G6Reduce(m_vec,redcell,reduced);
+   if (reduced) {
+      m_vec[0]=redcell[0];
+      m_vec[1]=redcell[1];
+      m_vec[2]=redcell[2];
+      m_vec[3]=redcell[3];
+      m_vec[4]=redcell[4];
+      m_vec[5]=redcell[5];
+      m_reduced=true;
+   }
+   return this->m_reduced;
+}
+
+bool G6::isreduced( void ) {
+   return this->m_reduced;
+}
+
+void G6::setreduced( void ) {
+   this->m_reduced=true;
+}
+
+void G6::unsetreduced( void ) {
+   this->m_reduced=false;
 }
 
 double G6::DistanceBetween( const G6& v1, const G6& v2 ) {
@@ -144,10 +182,12 @@ double G6::DistanceBetween( const G6& v1, const G6& v2 ) {
    for( size_t i=0; i<6; ++i )  sum += (v1[i]-v2[i])*(v1[i]-v2[i]);
    return sqrt( sum );
 }
+
 G6& G6::operator= ( const G6& v ) {
    m_vec = v.m_vec;
    m_dim = v.m_dim;
    m_valid = v.m_valid;
+   m_reduced = v.m_reduced;
    return *this;
 }
 

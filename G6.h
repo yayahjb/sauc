@@ -28,6 +28,11 @@ public:
    G6(const std::vector<double>& v);
    ~G6(void) {}
 
+   bool reduce(void);
+   bool isreduced(void);
+   void setreduced(void);
+   void unsetreduced(void);
+
    G6& operator= (const G6& v);
    G6& operator= (const std::string& s);
    G6& operator= (const D7& v);
@@ -37,7 +42,8 @@ public:
 
    static double DistanceBetween( const G6& v1, const G6& v2 );
    G6 InverseG6Vector( void ) const;
-
+private:
+   bool m_reduced;
 };
 
 #endif
