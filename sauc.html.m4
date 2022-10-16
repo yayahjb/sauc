@@ -173,6 +173,7 @@ Search of Alternate Unit Cells
 <br />Rev 0.9, 21 Jul 2015, Herbert J. Bernstein
 <br />Rev 1.0, 22 Nov 2016, Herbert J. Bernstein
 <br />Rev 1.1, 11 Apr 2019, Herbert J. Bernstein
+<br />Rev 1.2, 15 Oct 2022, Herbert J. Bernstein
 <br />Work Supported In Part By NIGMS
 <br />Original Contact Email: <A HREF=mailto:kjmcgill7@gmail.com>kjmcgill7@gmail.com</A>
 <br />Support Contact Email: <a href=mailto:yayahjb@gmail.com>yayahjb@gmail.com</a>
@@ -201,6 +202,9 @@ representing similar lattices will be found.  The space S<sup>6</sup> uses Selli
 to restrict the reduced cells considered to only cell with obtuse or 90 degree angles, 
 avoiding much of the complexity of boundaries for Niggli reduced cells. The comparison of results with those from
 older cell-based search algorithms suggests significant value in the new approach.
+The space of unsorted DC<sup>7</sup> cells consists of Niggli reduced cells that have
+been coverted to Wigner-Seitz cells in the form of the three cell edges, the three shorter
+face diagonals and the shortest body diagonal. 
 </font>
 <center>
 <br /><STRONG>
@@ -240,7 +244,7 @@ Metric:</th>
 <input type="radio" name="Algorithm" value="2" />L2<br />
 <input type="radio" name="Algorithm" value="3" />NCDist<br />
 <input type="radio" name="Algorithm" value="4" />V7<br />
-<input type="radio" name="Algorithm" value="5" />D7<br />
+<input type="radio" name="Algorithm" value="7" />DC7unsrt<br />
 <input type="radio" name="Algorithm" value="6" checked  />S6<br />
 </td></tr>
 </table>
