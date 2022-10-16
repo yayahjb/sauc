@@ -1,7 +1,7 @@
 #!/bin/sh
 HTTPDSERVER=http://flops.arcib.org:8084;export HTTPDSERVER
-HTDOCS=/var/www/html/sauc-1.0.2;export HTDOCS;
-SEARCHURL=http://flops.arcib.org:8084/sauc-1.1.1/;export SEARCHURL;
+HTDOCS=/var/www/html/sauc-1.2.1;export HTDOCS;
+SEARCHURL=http://flops.arcib.org:8084/sauc-1.2.1/;export SEARCHURL;
 CGIPATH=http://flops.arcib.org:8084/cgi-bin;export CGIPATH;
 CGIBIN=/var/www/cgi-bin;export CGIBIN;
 CGIMETHOD=GET;export CGIMETHOD;
