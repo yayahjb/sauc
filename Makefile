@@ -198,7 +198,6 @@ prepbigfiles:
 		touch PDBcelldatabase.tsv.bz2
 		touch *.m4
 
-
 all:		edit
 		@/bin/echo "  make edit_done   to build the kit after edits"
 		@/bin/echo "  make install     to install SAUC program and web site"
@@ -375,7 +374,7 @@ $(SAUCEXE): \
 sauc_psm_files_create: \
 	sauc_psm_files_create.c \
 	sauc_psm_files_create.h \
-	fgetln.c pststrmgr.o
+	fgetln.c
 	$(CC) $(CFLAGS) -c pststrmgr.c
 	$(CC) $(CFLAGS) -o sauc_psm_files_create \
 	sauc_psm_files_create.c fgetln.c \
@@ -478,6 +477,7 @@ last_update:	$(NEWDB)/last_update
 	cp $(NEWDB)/*.tsv.bz2 .
 	cp $(NEWDB)/last_update .
 	cp $(NEWDB)/entries.idx .
+	bzip2 < entries.idx > entries.idx.bz2
 	touch last_update
 
 $(NEWDB)/last_update:

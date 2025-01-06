@@ -5,16 +5,16 @@
 #
 #  Assumes a working sauc kit in SAUCDIR
 #
-cd /home/yaya/sauc-15Oct22/sauc
-setenv HTTPDSERVER http://flops.arcib.org:8084
-setenv SEARCHURL http://flops.arcib.org:8084/sauc-1.2.1/
-setenv CGIPATH http://flops.arcib.org:8084/cgi-bin
-setenv PDBCELLINDEXURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/crystal.idx
-setenv PDBENTRIESURL http://ftp.wwpdb.org/pub/pdb/derived_data/index/entries.idx
+cd /home/yaya/sauc_26Dec24/sauc
+setenv HTTPDSERVER http://blondie.arcib.org:8083
+setenv SEARCHURL http://blondie.arcib.org:8083/~yaya/sauc/
+setenv CGIPATH http://blondie.arcib.org:8083/~yaya/cgi-bin
+setenv PDBCELLINDEXURL https://files.rcsb.org/pub/pdb/derived_data/index/crystal.idx
+setenv PDBENTRIESURL https://files.rcsb.org/pub/pdb/derived_data/index/entries.idx
 setenv CGIMETHOD GET
-setenv CGIBIN /var/www/cgi-bin
-setenv BINDEST /var/www/cgi-bin
-setenv HTDOCS /var/www/html/sauc-1.2.1
+setenv CGIBIN /home/yaya/public_html/cgi-bin
+setenv BINDEST /home/yaya/public_html/cgi-bin
+setenv HTDOCS /home/yaya/public_html/sauc
 if ( -e crystal.idx ) then
   rm -f newdb/crystal.idx
   make newdb/crystal.idx
