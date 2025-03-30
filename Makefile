@@ -95,7 +95,7 @@ SHELL	=	/bin/bash
 #
 # mathscribe is used by the web page to set formulae
 #
-MATHSCRIBEVERSION ?= 0.2.0
+MATHSCRIBEVERSION ?= 0.4.6
 MATHSCRIBEPATH ?= mathscribe-$(MATHSCRIBEVERSION)
 MATHSCRIBETARBALL ?= $(MATHSCRIBEPATH).tar.gz
 MATHSCRIBETARBALLURL ?= http://downloads.sf.net/project/iterate/external_packages/$(MATHSCRIBETARBALL)

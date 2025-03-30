@@ -52,6 +52,8 @@ echo "<br />Rev 0.8, 24 Apr 2014 Mojgan Asadi, Herbert J. Bernstein"
 echo "<br />Rev 0.9.0, 14 Aug 2015 Herbert J. Bernstein"
 echo "<br />Rev 1.0.0, 22 Nov 2016 Herbert J. Bernstein"
 echo "<br />Rev 1.1.1, 17 Apr 2019 Herbert J. Bernstein"
+echo "<br />Rev 1.2, 15 Oct 2022, Herbert J. Bernstein"
+echo "<br />Rev 1.2.1, 10 Feb 2025, Herbert J. Bernstein"
 echo ''`</center>''`
 echo "<p>"
 echo "<center>"
@@ -80,6 +82,8 @@ else if ($Algorithm == 5) then
 	echo "D7"
 else if ($Algorithm == 6) then
 	echo "S6"
+else if ($Algorithm == 7) then
+	echo "DC7unsrt"
 else
 	echo "??"
 endif
